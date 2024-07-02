@@ -4,3 +4,6 @@
 [submodule "workflow/pypsa-earth-sec"]
 	path = workflow/pypsa-earth-sec
 	url = https://github.com/open-energy-transition/pypsa-earth-sec.git
+[submodule "workflow/pypsa-usa"]
+	path = workflow/pypsa-usa
+	url = https://github.com/PyPSA/pypsa-usa.git
