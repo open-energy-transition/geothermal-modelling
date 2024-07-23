@@ -40,7 +40,7 @@ import pypsa
 # Initial configurations
 
 # Set the paths
-base_path = pathlib.Path.cwd()
+base_path = pathlib.Path(__file__).parent
 log_file_dir = base_path / "logs"
 
 # Ensure the logs directory exists
