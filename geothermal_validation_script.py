@@ -41,10 +41,10 @@ import pypsa
 
 # Set the paths
 base_path = pathlib.Path.cwd()
-filestolog_path = base_path / "logs"
+log_file_dir = base_path / "logs"
 
 # Ensure the logs directory exists
-os.makedirs(filestolog_path, exist_ok=True)
+pathlib.Path(log_file_dir).mkdir(exist_ok=True)
 
 # Define paths
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
@@ -56,7 +56,7 @@ custom_power_plants_pypsa_earth = pathlib.Path(pypsa_earth_path, "data", "custom
 
 # Open log_output
 today_date = str(dt.datetime.now())
-log_output_file = open(filestolog_path / f'output_pypsa_earth_{today_date[:10]}.txt', 'w')
+log_output_file = open(log_file_dir / f'output_pypsa_earth_{today_date[:10]}.txt', 'w')
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
@@ -73,30 +73,30 @@ subprocess.run(["cp", custom_power_plants_geothermal, custom_power_plants_pypsa_
 os.chdir(pypsa_earth_path)
 
 log_output_file.write(f"Switch to PyPSA-Earth submodule folder {pathlib.Path.cwd()} \n")
-print(f"Switch to PyPSA-Earth submodule folder {pathlib.Path.cwd()}")
+print(f"Switch to PyPSA-Earth submodule folder {pathlib.Path.cwd()} \n")
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Execute build_powerplants \n")
-print("Execute build_powerplants")
+print("Execute build_powerplants \n")
 subprocess.run(["snakemake", "-call", "build_powerplants", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Execute add_electricity \n")
-print("Execute add_electricity")
+print("Execute add_electricity \n")
 subprocess.run(["snakemake", "-call", "add_electricity", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Execute prepare_network \n")
-print("Execute prepare_network")
+print("Execute prepare_network \n")
 subprocess.run(["snakemake", "-call", "prepare_network", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Set extendable carriers to False \n")
-print("Set extendable carriers to False")
+print("Set extendable carriers to False \n")
 
 network_to_modify = pypsa.Network(network_path)
 network_to_modify.generators.loc[:, "p_nom_extendable"] = False
@@ -104,8 +104,8 @@ network_to_modify.export_to_netcdf(network_path)
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
-log_output_file.write("Execute solve_all_networks\n")
-print("Execute solve_all_networks")
+log_output_file.write("Execute solve_all_networks \n")
+print("Execute solve_all_networks \n")
 subprocess.run(["snakemake", "-call", "solve_all_networks", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 
 log_output_file.close()
