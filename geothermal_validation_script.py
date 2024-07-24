@@ -75,6 +75,8 @@ os.chdir(pypsa_earth_path)
 log_output_file.write(f"Switch to PyPSA-Earth submodule folder {pathlib.Path.cwd()} \n")
 print(f"Switch to PyPSA-Earth submodule folder {pathlib.Path.cwd()} \n")
 
+subprocess.run(["snakemake", "--unlock"])
+
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Execute build_powerplants \n")
