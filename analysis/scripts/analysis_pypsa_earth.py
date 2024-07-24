@@ -38,11 +38,6 @@ import pandas as pd
 import pathlib
 import pypsa
 
-# Parse argument
-parser = argparse.ArgumentParser()
-parser.add_argument("--year", help="Year to consider for the comparison", default=2020, type=int)
-args = parser.parse_args()
-
 # Initial configurations
 eia_name = "EIA"
 pypsa_name = "PyPSA"
@@ -57,6 +52,16 @@ eia_generation_path = pathlib.Path(base_path, "analysis", "data", "generation_ei
 generation_plot_path = pathlib.Path(plot_dir_path, "electricity_generation.png")
 eia_capacity_path = pathlib.Path(base_path, "analysis", "data", "capacities_eia.xlsx")
 installed_capacity_plot_path = pathlib.Path(plot_dir_path, "installed_capacity.png")
+
+# Read reference data
+df_eia_generation = pd.read_csv(eia_generation_path, index_col="Unnamed: 0")
+df_eia_capacity = pd.read_excel(eia_capacity_path, skiprows=1, index_col="Energy Source")
+
+# Parse argument
+year_list = df_eia_generation["Period"].unique()
+parser = argparse.ArgumentParser()
+parser.add_argument("--year", help="Year to consider for the comparison", default=2020, type=int, choices=year_list)
+args = parser.parse_args()
 
 # Ensure the logs directory exists
 pathlib.Path(log_file_dir_path).mkdir(exist_ok=True)
@@ -80,9 +85,7 @@ log_output_file.write("Import data \n")
 print("Import data \n")
 
 df_network = pypsa.Network(network_path)
-df_eia_generation = pd.read_csv(eia_generation_path, index_col="Unnamed: 0")
 df_eia_generation_year = df_eia_generation.loc[df_eia_generation["Period"] == args.year].squeeze()
-df_eia_capacity = pd.read_excel(eia_capacity_path, skiprows=1, index_col="Energy Source")
 
 s_max_pu = df_network.lines["s_max_pu"].unique()[0]
 
