@@ -77,37 +77,79 @@ print(f"Switch to PyPSA-Earth submodule folder {pathlib.Path.cwd()} \n")
 
 subprocess.run(["snakemake", "--unlock"])
 
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write("Execute build_powerplants \n")
-print("Execute build_powerplants \n")
-subprocess.run(["snakemake", "-call", "build_powerplants", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
-
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write("Execute add_electricity \n")
-print("Execute add_electricity \n")
-subprocess.run(["snakemake", "-call", "add_electricity", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
-
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write("Execute prepare_network \n")
-print("Execute prepare_network \n")
-subprocess.run(["snakemake", "-call", "prepare_network", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
-
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write("Set extendable carriers to False \n")
-print("Set extendable carriers to False \n")
-
-network_to_modify = pypsa.Network(network_path)
-network_to_modify.generators.loc[:, "p_nom_extendable"] = False
-network_to_modify.export_to_netcdf(network_path)
-
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write("Execute solve_all_networks \n")
-print("Execute solve_all_networks \n")
-subprocess.run(["snakemake", "-call", "solve_all_networks", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Execute build_powerplants \n")
+# print("Execute build_powerplants \n")
+# subprocess.run(["snakemake", "-call", "build_powerplants", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Build renewable profile for onwind \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_onwind.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Build renewable profile for offwind-ac \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_offwind-ac.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Build renewable profile for offwind-dc \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_offwind-dc.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Build renewable profile for hydro \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_hydro.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Build renewable profile for solar \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_solar.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Build renewable profile for csp \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_csp.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Execute add_electricity \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "add_electricity", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Execute cluster_network \n")
+# print("Execute add_electricity \n")
+# subprocess.run(["snakemake", "-call", "networks/US_2021/elec_s_10.nc" , "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Execute prepare_network \n")
+# print("Execute prepare_network \n")
+# subprocess.run(["snakemake", "-call", "prepare_network", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Set extendable carriers to False \n")
+# print("Set extendable carriers to False \n")
+#
+# network_to_modify = pypsa.Network(network_path)
+# network_to_modify.generators.loc[:, "p_nom_extendable"] = False
+# network_to_modify.export_to_netcdf(network_path)
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Execute solve_all_networks \n")
+# print("Execute solve_all_networks \n")
+# subprocess.run(["snakemake", "-call", "solve_all_networks", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 
 log_output_file.close()
