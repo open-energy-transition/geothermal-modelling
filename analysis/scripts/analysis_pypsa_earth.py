@@ -105,9 +105,8 @@ print("Compare the installed capacity \n")
 
 # ---> Prepare the PyPSA results
 df_pypsa_capacity = df_network.generators.groupby("carrier").p_nom_opt.sum()
-df_pypsa_capacity.loc["coal"] += df_pypsa_capacity.loc["lignite"]
 df_pypsa_capacity.loc["wind"] = df_pypsa_capacity.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
-df_pypsa_capacity = df_pypsa_capacity.drop(["lignite", "offwind-ac", "offwind-dc", "onwind", "load"])
+df_pypsa_capacity = df_pypsa_capacity.drop(["offwind-ac", "offwind-dc", "onwind"])
 df_pypsa_capacity /= 1000
 df_pypsa_capacity = df_pypsa_capacity.round(2)
 df_pypsa_capacity.name = pypsa_name
@@ -147,9 +146,8 @@ print("Compare the electricity generation \n")
 # ---> Prepare the PyPSA results
 df_network.generators = df_network.generators.assign(p=df_network.generators_t.p.sum() * 24)
 df_pypsa_generation = df_network.generators.groupby("carrier").p.sum()
-df_pypsa_generation.loc["coal"] += df_pypsa_generation.loc["lignite"]
 df_pypsa_generation.loc["wind"] = df_pypsa_generation.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
-df_pypsa_generation = df_pypsa_generation.drop(["lignite", "offwind-ac", "offwind-dc", "onwind", "load"])
+df_pypsa_generation = df_pypsa_generation.drop(["offwind-ac", "offwind-dc", "onwind"])
 df_pypsa_generation /= 1e6
 df_pypsa_generation = df_pypsa_generation.round(2)
 df_pypsa_generation.name = pypsa_name
