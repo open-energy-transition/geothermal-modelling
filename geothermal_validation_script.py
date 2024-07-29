@@ -131,20 +131,20 @@ subprocess.run(["snakemake", "--unlock"])
 # print("Execute add_electricity \n")
 # subprocess.run(["snakemake", "-call", "networks/US_2021/elec_s_10.nc" , "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 #
-# log_output_file.write("        \n")
-# log_output_file.write("        \n")
-# log_output_file.write("Execute prepare_network \n")
-# print("Execute prepare_network \n")
-# subprocess.run(["snakemake", "-call", "prepare_network", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+# # log_output_file.write("        \n")
+# # log_output_file.write("        \n")
+# # log_output_file.write("Execute prepare_network \n")
+# # print("Execute prepare_network \n")
+# # subprocess.run(["snakemake", "-call", "prepare_network", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
 #
-# log_output_file.write("        \n")
-# log_output_file.write("        \n")
-# log_output_file.write("Set extendable carriers to False \n")
-# print("Set extendable carriers to False \n")
+# # log_output_file.write("        \n")
+# # log_output_file.write("        \n")
+# # log_output_file.write("Set extendable carriers to False \n")
+# # print("Set extendable carriers to False \n")
 #
-# network_to_modify = pypsa.Network(network_path)
-# network_to_modify.generators.loc[:, "p_nom_extendable"] = False
-# network_to_modify.export_to_netcdf(network_path)
+# # network_to_modify = pypsa.Network(network_path)
+# # network_to_modify.generators.loc[:, "p_nom_extendable"] = False
+# # network_to_modify.export_to_netcdf(network_path)
 #
 # log_output_file.write("        \n")
 # log_output_file.write("        \n")
