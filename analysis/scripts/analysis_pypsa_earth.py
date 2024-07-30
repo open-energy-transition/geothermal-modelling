@@ -115,8 +115,8 @@ df_pypsa_capacity.name = pypsa_name
 # ---> Prepare the EIA reference data
 df_eia_capacity.index = df_eia_capacity.index.str.lower()
 df_eia_capacity.loc["other biomass"] = df_eia_capacity.loc[["other biomass", "wood and wood-derived fuels"]].sum()
-df_eia_capacity = df_eia_capacity.rename(index={"hydroelectric conventional": "hydro", "hydroelectric pumped storage": "PHS" , "estimated total solar": "solar", "natural gas": "CCGT", "petroleum": "oil", "other biomass": "biomass"})
-df_eia_capacity = df_eia_capacity.drop(["solar photovoltaic", "solar thermal", "wood and wood-derived fuels", "other energy sources", "total", "small scale photovoltaic", "estimated total photovoltaic", "other gases",])
+df_eia_capacity = df_eia_capacity.rename(index={"hydroelectric conventional": "hydro", "hydroelectric pumped storage": "PHS" , "solar photovoltaic": "solar", "natural gas": "CCGT", "petroleum": "oil", "other biomass": "biomass"})
+df_eia_capacity = df_eia_capacity.drop(["estimated total solar", "solar thermal", "wood and wood-derived fuels", "other energy sources", "total", "small scale photovoltaic", "estimated total photovoltaic", "other gases",])
 df_eia_capacity = df_eia_capacity.iloc[:-1]
 df_eia_capacity.loc["solar", "Generator Nameplate Capacity"] = df_eia_capacity.loc["solar", "Net Summer Capacity"]
 df_eia_capacity = df_eia_capacity["Generator Nameplate Capacity"]
