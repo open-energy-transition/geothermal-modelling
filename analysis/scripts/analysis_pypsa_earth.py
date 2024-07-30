@@ -104,7 +104,8 @@ log_output_file.write("Compare the installed capacity \n")
 print("Compare the installed capacity \n")
 
 # ---> Prepare the PyPSA results
-df_pypsa_capacity = df_network.generators.groupby("carrier").p_nom_opt.sum()
+df_pypsa_hydro_phs_capacity = df_network.storage_units.groupby("carrier").p_nom_opt.sum()
+df_pypsa_capacity = pd.concat([df_network.generators.groupby("carrier").p_nom_opt.sum(), df_pypsa_hydro_phs_capacity])
 df_pypsa_capacity.loc["wind"] = df_pypsa_capacity.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
 df_pypsa_capacity = df_pypsa_capacity.drop(["offwind-ac", "offwind-dc", "onwind"])
 df_pypsa_capacity /= 1000
@@ -113,7 +114,7 @@ df_pypsa_capacity.name = pypsa_name
 
 # ---> Prepare the EIA reference data
 df_eia_capacity.index = df_eia_capacity.index.str.lower()
-df_eia_capacity = df_eia_capacity.rename(index={"hydroelectric conventional": "ror", "hydroelectric pumped storage": "PHS" , "estimated total solar": "solar", "other biomass": "biomass", "natural gas": "CCGT"})
+df_eia_capacity = df_eia_capacity.rename(index={"hydroelectric conventional": "hydro", "hydroelectric pumped storage": "PHS" , "estimated total solar": "solar", "other biomass": "biomass", "natural gas": "CCGT"})
 df_eia_capacity = df_eia_capacity.drop(["solar photovoltaic", "solar thermal", "wood and wood-derived fuels", "other energy sources", "total", "small scale photovoltaic", "estimated total photovoltaic"])
 df_eia_capacity = df_eia_capacity.iloc[:-1]
 df_eia_capacity.loc["solar", "Generator Nameplate Capacity"] = df_eia_capacity.loc["solar", "Net Summer Capacity"]
