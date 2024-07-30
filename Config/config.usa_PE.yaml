@@ -15,7 +15,7 @@ countries: ["US"]
 
 enable:
   retrieve_databundle: false  #  Recommended 'true', for the first run. Otherwise data might be missing.
-  retrieve_cost_data: true  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
+  retrieve_cost_data: false  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
   download_osm_data: false  # If 'true', OpenStreetMap data will be downloaded for the above given countries
   build_natura_raster: false  # If True, then an exclusion raster will be build
   build_cutout: false

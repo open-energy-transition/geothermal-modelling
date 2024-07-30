@@ -55,6 +55,8 @@ custom_power_plants_geothermal = pathlib.Path(base_path, "data", "custom_powerpl
 custom_power_plants_pypsa_earth = pathlib.Path(pypsa_earth_path, "data", "custom_powerplants.csv")
 north_america_geothermal = pathlib.Path(base_path, "data", "NorthAmerica.csv")
 north_america_pypsa_earth = pathlib.Path(pypsa_earth_path, "data", "ssp2-2.6", "2030", "era5_2013", "NorthAmerica.csv")
+costs_geothermal = pathlib.Path(base_path, "data", "costs.csv")
+costs_pypsa_earth = pathlib.Path(pypsa_earth_path, "resources", "US_2021", "costs.csv")
 
 # Open log_output
 today_date = str(dt.datetime.now())
@@ -132,6 +134,12 @@ subprocess.run(["snakemake", "--unlock"])
 # log_output_file.write("Build renewable profile for csp \n")
 # print("Execute add_electricity \n")
 # subprocess.run(["snakemake", "-call", "resources/US_2021/renewable_profiles/profile_csp.nc", "--cores", "all", "--printshellcmds", "--configfile", "config.yaml"])
+#
+# log_output_file.write("        \n")
+# log_output_file.write("        \n")
+# log_output_file.write("Copy costs.csv to PyPSA-Earth \n")
+# print("Copy costs.csv to PyPSA-Earth \n")
+# subprocess.run(["cp", costs_geothermal, costs_pypsa_earth])
 #
 # log_output_file.write("        \n")
 # log_output_file.write("        \n")
