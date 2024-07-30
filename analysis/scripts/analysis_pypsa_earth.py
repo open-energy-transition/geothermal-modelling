@@ -114,8 +114,9 @@ df_pypsa_capacity.name = pypsa_name
 
 # ---> Prepare the EIA reference data
 df_eia_capacity.index = df_eia_capacity.index.str.lower()
-df_eia_capacity = df_eia_capacity.rename(index={"hydroelectric conventional": "hydro", "hydroelectric pumped storage": "PHS" , "estimated total solar": "solar", "other biomass": "biomass", "natural gas": "CCGT"})
-df_eia_capacity = df_eia_capacity.drop(["solar photovoltaic", "solar thermal", "wood and wood-derived fuels", "other energy sources", "total", "small scale photovoltaic", "estimated total photovoltaic"])
+df_eia_capacity.loc["other biomass"] = df_eia_capacity.loc[["other biomass", "wood and wood-derived fuels"]].sum()
+df_eia_capacity = df_eia_capacity.rename(index={"hydroelectric conventional": "hydro", "hydroelectric pumped storage": "PHS" , "estimated total solar": "solar", "natural gas": "CCGT", "petroleum": "oil", "other biomass": "biomass"})
+df_eia_capacity = df_eia_capacity.drop(["solar photovoltaic", "solar thermal", "wood and wood-derived fuels", "other energy sources", "total", "small scale photovoltaic", "estimated total photovoltaic", "other gases",])
 df_eia_capacity = df_eia_capacity.iloc[:-1]
 df_eia_capacity.loc["solar", "Generator Nameplate Capacity"] = df_eia_capacity.loc["solar", "Net Summer Capacity"]
 df_eia_capacity = df_eia_capacity["Generator Nameplate Capacity"]
@@ -124,7 +125,7 @@ df_eia_capacity /= 1000
 
 # ---> Prepare comparison dataframe
 df_compare_capacity = pd.concat([df_pypsa_capacity, df_eia_capacity], axis=1)
-df_compare_capacity["error"] = df_compare_capacity.apply(lambda x: abs(x[pypsa_name] - x[eia_name])*100 / x[eia_name], axis=1)
+#df_compare_capacity["error"] = df_compare_capacity.apply(lambda x: abs(x[pypsa_name] - x[eia_name])*100 / x[eia_name], axis=1)
 
 # ---> Plot
 df_compare_capacity.plot(kind="bar")
