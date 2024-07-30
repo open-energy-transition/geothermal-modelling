@@ -56,7 +56,7 @@ custom_power_plants_pypsa_earth = pathlib.Path(pypsa_earth_path, "data", "custom
 north_america_geothermal = pathlib.Path(base_path, "data", "NorthAmerica.csv")
 north_america_pypsa_earth = pathlib.Path(pypsa_earth_path, "data", "ssp2-2.6", "2030", "era5_2013", "NorthAmerica.csv")
 costs_geothermal = pathlib.Path(base_path, "data", "costs.csv")
-costs_pypsa_earth = pathlib.Path(pypsa_earth_path, "resources", "US_2021", "costs.csv")
+costs_pypsa_earth = pathlib.Path(pypsa_earth_path, "data", "costs.csv")
 
 # Open log_output
 today_date = str(dt.datetime.now())
