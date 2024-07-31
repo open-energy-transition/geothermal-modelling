@@ -146,8 +146,9 @@ log_output_file.write("Compare the electricity generation \n")
 print("Compare the electricity generation \n")
 
 # ---> Prepare the PyPSA results
+df_network.storage_units = df_network.storage_units.assign(p=df_network.storage_units_t.p.sum() * 24)
 df_network.generators = df_network.generators.assign(p=df_network.generators_t.p.sum() * 24)
-df_pypsa_generation = df_network.generators.groupby("carrier").p.sum()
+df_pypsa_generation = pd.concat([df_network.generators.groupby("carrier").p.sum(), df_network.storage_units.groupby("carrier").p.sum()])
 df_pypsa_generation.loc["wind"] = df_pypsa_generation.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
 df_pypsa_generation = df_pypsa_generation.drop(["offwind-ac", "offwind-dc", "onwind"])
 df_pypsa_generation /= 1e6
@@ -156,12 +157,13 @@ df_pypsa_generation.name = pypsa_name
 
 # ---> Prepare the EIA reference data
 pypsa_cols = ["Coal", "Natural Gas", "Other Gas", "Nuclear", "Hydro", "Estimated Total Solar", "PHS", "Petroleum", "Wind", "Other Waste Biomass", "Geothermal"]
-rename_cols = {"estimated total solar": "solar", "other waste biomass": "biomass", "hydro": "ror", "natural gas": "CCGT"}
+rename_cols = {"estimated total solar": "solar", "other waste biomass": "biomass", "natural gas": "CCGT", "petroleum": "oil", "phs": "PHS"}
 
 df_eia_generation_year = df_eia_generation_year[pypsa_cols]
 df_eia_generation_year.index = df_eia_generation_year.index.str.lower()
 df_eia_generation_year = df_eia_generation_year.rename(index=rename_cols)
 df_eia_generation_year.name = eia_name
+df_eia_generation_year = df_eia_generation_year.drop("other gas")
 
 # ---> Prepare comparison dataframe
 df_compare_generation = pd.concat([df_pypsa_generation, df_eia_generation_year], axis=1)
@@ -175,5 +177,13 @@ plt.title(f"Year = {args.year}")
 plt.grid(linestyle="--")
 plt.subplots_adjust(bottom=0.3)
 plt.savefig(generation_plot_path, dpi=800)
+
+print("Marginal costs of electricity\n")
+marginal_costs = df_network.generators.groupby("carrier").marginal_cost.first().sort_values()
+print(marginal_costs)
+
+print("\nTotal electricity generation (2020) \n")
+print(df_eia_generation_year.sum(), "TWh")
+print(df_pypsa_generation.sum(), "TWh \n")
 
 log_output_file.close()
