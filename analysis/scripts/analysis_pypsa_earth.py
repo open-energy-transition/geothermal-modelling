@@ -101,8 +101,9 @@ print("Compare the installed capacity \n")
 # ---> Prepare the PyPSA results
 df_pypsa_hydro_phs_capacity = df_network.storage_units.groupby("carrier").p_nom_opt.sum()
 df_pypsa_capacity = pd.concat([df_network.generators.groupby("carrier").p_nom_opt.sum(), df_pypsa_hydro_phs_capacity])
+df_pypsa_capacity.loc["CCGT"] = df_pypsa_capacity.loc[["CCGT", "OCGT"]].sum()
 df_pypsa_capacity.loc["wind"] = df_pypsa_capacity.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
-df_pypsa_capacity = df_pypsa_capacity.drop(["offwind-ac", "offwind-dc", "onwind"])
+df_pypsa_capacity = df_pypsa_capacity.drop(["offwind-ac", "offwind-dc", "onwind", "OCGT"])
 df_pypsa_capacity /= 1000
 df_pypsa_capacity = df_pypsa_capacity.round(2)
 df_pypsa_capacity.name = pypsa_name
@@ -217,25 +218,5 @@ for sheet in sheet_names:
         break
 
 df_eia_generation_state = pd.read_excel(eia_generation_by_state_path, sheet_name=sheet_to_consider, skiprows=4)
-
-# # ---> Prepare the PyPSA results
-# df_network.storage_units = df_network.storage_units.assign(p=df_network.storage_units_t.p.sum() * 24)
-# df_network.generators = df_network.generators.assign(p=df_network.generators_t.p.sum() * 24)
-# df_pypsa_generation = pd.concat([df_network.generators.groupby("carrier").p.sum(), df_network.storage_units.groupby("carrier").p.sum()])
-# df_pypsa_generation.loc["wind"] = df_pypsa_generation.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
-# df_pypsa_generation = df_pypsa_generation.drop(["offwind-ac", "offwind-dc", "onwind"])
-# df_pypsa_generation /= 1e6
-# df_pypsa_generation = df_pypsa_generation.round(2)
-# df_pypsa_generation.name = pypsa_name
-
-# # ---> Prepare the EIA reference data
-# pypsa_cols = ["Coal", "Natural Gas", "Other Gas", "Nuclear", "Hydro", "Estimated Total Solar", "PHS", "Petroleum", "Wind", "Other Waste Biomass", "Geothermal"]
-# rename_cols = {"estimated total solar": "solar", "other waste biomass": "biomass", "natural gas": "CCGT", "petroleum": "oil", "phs": "PHS"}
-
-df_eia_generation_year = df_eia_generation_year[pypsa_cols]
-df_eia_generation_year.index = df_eia_generation_year.index.str.lower()
-df_eia_generation_year = df_eia_generation_year.rename(index=rename_cols)
-df_eia_generation_year.name = eia_name
-df_eia_generation_year = df_eia_generation_year.drop("other gas")
 
 log_output_file.close()
