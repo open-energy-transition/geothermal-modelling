@@ -37,6 +37,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pathlib
 import pypsa
+import re
+from pathlib import Path
+import numpy as np
 
 # Initial configurations
 eia_name = "EIA"
@@ -47,12 +50,22 @@ base_path = pathlib.Path(__file__).parent.parent.parent
 log_file_dir_path = pathlib.Path(base_path, "logs")
 plot_dir_path = pathlib.Path(base_path, "analysis", "plots")
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
-network_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-24H.nc")
+network_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_500_ec_lcopt_Co2L-1000H.nc")
 eia_generation_path = pathlib.Path(base_path, "analysis", "data", "generation_eia.csv")
-eia_generation_by_state_path = pathlib.Path(base_path, "analysis", "data", "generation_monthly.csv")
 generation_plot_path = pathlib.Path(plot_dir_path, "electricity_generation.png")
 eia_capacity_path = pathlib.Path(base_path, "analysis", "data", "capacities_eia.xlsx")
 installed_capacity_plot_path = pathlib.Path(plot_dir_path, "installed_capacity.png")
+
+def extract_time_res(filename):
+    filename = str(network_path.name)
+    match = re.search(r'(\d+)H', filename)
+    if match:
+        return np.float64(match.group(1))
+    else:
+        return None
+
+filepath = Path(network_path)
+time_res = extract_time_res(filepath)
 
 # Read reference data
 df_eia_generation = pd.read_csv(eia_generation_path, index_col="Unnamed: 0")
@@ -69,6 +82,12 @@ pathlib.Path(log_file_dir_path).mkdir(exist_ok=True)
 
 # Ensure the plots directory exists
 pathlib.Path(plot_dir_path).mkdir(exist_ok=True)
+
+# print(base_path)
+# print(pypsa_earth_path)
+# print(network_path)
+# print(eia_generation_path)
+# print(eia_capacity_path)
 
 # Open log_output_file
 today_date = str(dt.datetime.now())
@@ -96,17 +115,21 @@ print(f"s_max_pu {s_max_pu} \n")
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Compare the installed capacity \n")
-print("Compare the installed capacity \n")
+print("Comparing the installed capacity... \n")
 
 # ---> Prepare the PyPSA results
+
+print(df_network.storage_units)
+
 df_pypsa_hydro_phs_capacity = df_network.storage_units.groupby("carrier").p_nom_opt.sum()
 df_pypsa_capacity = pd.concat([df_network.generators.groupby("carrier").p_nom_opt.sum(), df_pypsa_hydro_phs_capacity])
-df_pypsa_capacity.loc["CCGT"] = df_pypsa_capacity.loc[["CCGT", "OCGT"]].sum()
 df_pypsa_capacity.loc["wind"] = df_pypsa_capacity.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
-df_pypsa_capacity = df_pypsa_capacity.drop(["offwind-ac", "offwind-dc", "onwind", "OCGT"])
+df_pypsa_capacity = df_pypsa_capacity.drop(["offwind-ac", "offwind-dc", "onwind"])
 df_pypsa_capacity /= 1000
 df_pypsa_capacity = df_pypsa_capacity.round(2)
 df_pypsa_capacity.name = pypsa_name
+
+print("Installed capacity:\n", df_pypsa_capacity)
 
 # ---> Prepare the EIA reference data
 df_eia_capacity.index = df_eia_capacity.index.str.lower()
@@ -121,6 +144,7 @@ df_eia_capacity /= 1000
 
 # ---> Prepare comparison dataframe
 df_compare_capacity = pd.concat([df_pypsa_capacity, df_eia_capacity], axis=1)
+#df_compare_capacity["error"] = df_compare_capacity.apply(lambda x: abs(x[pypsa_name] - x[eia_name])*100 / x[eia_name], axis=1)
 
 # ---> Plot
 df_compare_capacity.plot(kind="bar")
@@ -138,17 +162,19 @@ plt.savefig(installed_capacity_plot_path, dpi=800)
 log_output_file.write("        \n")
 log_output_file.write("        \n")
 log_output_file.write("Compare the electricity generation \n")
-print("Compare the electricity generation \n")
+print("\nComparing the electricity generation... \n")
 
 # ---> Prepare the PyPSA results
-df_network.storage_units = df_network.storage_units.assign(p=df_network.storage_units_t.p.sum() * 24)
-df_network.generators = df_network.generators.assign(p=df_network.generators_t.p.sum() * 24)
+df_network.storage_units = df_network.storage_units.assign(p=df_network.storage_units_t.p.sum() * time_res)
+df_network.generators = df_network.generators.assign(p=df_network.generators_t.p.sum() * time_res)
 df_pypsa_generation = pd.concat([df_network.generators.groupby("carrier").p.sum(), df_network.storage_units.groupby("carrier").p.sum()])
 df_pypsa_generation.loc["wind"] = df_pypsa_generation.loc[["offwind-ac", "offwind-dc", "onwind"]].sum()
 df_pypsa_generation = df_pypsa_generation.drop(["offwind-ac", "offwind-dc", "onwind"])
 df_pypsa_generation /= 1e6
 df_pypsa_generation = df_pypsa_generation.round(2)
 df_pypsa_generation.name = pypsa_name
+
+print("Electricity generation:\n", df_pypsa_generation)
 
 # ---> Prepare the EIA reference data
 pypsa_cols = ["Coal", "Natural Gas", "Other Gas", "Nuclear", "Hydro", "Estimated Total Solar", "PHS", "Petroleum", "Wind", "Other Waste Biomass", "Geothermal"]
@@ -160,9 +186,9 @@ df_eia_generation_year = df_eia_generation_year.rename(index=rename_cols)
 df_eia_generation_year.name = eia_name
 df_eia_generation_year = df_eia_generation_year.drop("other gas")
 
-# ---> Prepare comparison dataframe
+## ---> Prepare comparison dataframe
 df_compare_generation = pd.concat([df_pypsa_generation, df_eia_generation_year], axis=1)
-df_compare_generation["error"] = df_compare_generation.apply(lambda x: abs(x[pypsa_name] - x[eia_name])*100 / x[eia_name], axis=1)
+#df_compare_generation["error"] = df_compare_generation.apply(lambda x: abs(x[pypsa_name] - x[eia_name])*100 / x[eia_name], axis=1)
 
 # ---> Plot
 df_compare_generation.plot(kind="bar")
@@ -173,50 +199,12 @@ plt.grid(linestyle="--")
 plt.subplots_adjust(bottom=0.3)
 plt.savefig(generation_plot_path, dpi=800)
 
-print("Marginal costs of electricity\n")
-marginal_costs = df_network.generators.groupby("carrier").marginal_cost.first().sort_values()
-print(marginal_costs)
+print("\nMarginal costs of electricity:")
+marginal_costs = pd.concat([df_network.generators.groupby("carrier").marginal_cost.first().sort_values(), df_network.storage_units.groupby("carrier").marginal_cost.first().sort_values()])
+print(marginal_costs.round(3))
 
-print("\nTotal electricity generation (2020) \n")
-print(df_eia_generation_year.sum(), "TWh")
-print(df_pypsa_generation.sum(), "TWh \n")
-
-###################################
-# Electricity generation by state #
-###################################
-
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write("Compare the electricity generation by state \n")
-print("Compare the electricity generation by state \n")
-
-sheet_names = [
-    "2001_2002_FINAL",
-    "2003_2004_FINAL",
-    "2005-2007_FINAL",
-    "2008-2009_FINAL",
-    "2010-2011_FINAL",
-    "2012_Final",
-    "2013_Final",
-    "2014_Final",
-    "2015_Final",
-    "2016_Final",
-    "2017_Final",
-    "2018_Final",
-    "2019_Final",
-    "2020_Final",
-    "2021_Final",
-    "2022_Final",
-    "2023_Preliminary",
-    "2024_Preliminary",
-]
-
-sheet_to_consider = ""
-for sheet in sheet_names:
-    if args.year in sheet:
-        sheet_to_consider = sheet
-        break
-
-df_eia_generation_state = pd.read_excel(eia_generation_by_state_path, sheet_name=sheet_to_consider, skiprows=4)
+print("\nTotal electricity generation (2020):")
+print("EIA: ", df_eia_generation_year.sum().round(2), "TWh")
+print("PyPSA: ", df_pypsa_generation.sum().round(2), "TWh \n")
 
 log_output_file.close()
