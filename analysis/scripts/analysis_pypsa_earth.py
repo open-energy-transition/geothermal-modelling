@@ -50,22 +50,36 @@ base_path = pathlib.Path(__file__).parent.parent.parent
 log_file_dir_path = pathlib.Path(base_path, "logs")
 plot_dir_path = pathlib.Path(base_path, "analysis", "plots")
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
-network_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_500_ec_lcopt_Co2L-1000H.nc")
+network_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-24H.nc")
 eia_generation_path = pathlib.Path(base_path, "analysis", "data", "generation_eia.csv")
 generation_plot_path = pathlib.Path(plot_dir_path, "electricity_generation.png")
 eia_capacity_path = pathlib.Path(base_path, "analysis", "data", "capacities_eia.xlsx")
 installed_capacity_plot_path = pathlib.Path(plot_dir_path, "installed_capacity.png")
 
+
 def extract_time_res(filename):
-    filename = str(network_path.name)
-    match = re.search(r'(\d+)H', filename)
+    # Convert the filename to a string (although you already did this, no need to use network_path.name)
+    filename = str(filename)
+
+    # Search for the pattern in the filename
+    match = re.search(r'(\d+)(H|SEG)', filename)
+
     if match:
-        return np.float64(match.group(1))
+        number = np.float64(match.group(1))
+        unit = match.group(2)
+
+        if unit == 'H':
+            return number
+        elif unit == 'SEG':
+            return 8760 / number
     else:
         return None
 
+
+# Example usage
 filepath = Path(network_path)
 time_res = extract_time_res(filepath)
+print(time_res)
 
 # Read reference data
 df_eia_generation = pd.read_csv(eia_generation_path, index_col="Unnamed: 0")
