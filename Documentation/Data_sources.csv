@@ -1,0 +1,6 @@
+Data,Source,Date Usage,Link,Data location in repo,Comments,,,
+Coal Powerplant list,EIA,Validation,,Analysis/data/EIA Generators/Coal Generators 2021.xlsx,,,,
+Full Generators list,EIA,Validation,https://www.eia.gov/electricity/data/eia860/,Analysis/data/EIA Generators/eia8602021,,,,
+Shape files,gadm.org,Clustering,https://gadm.org/download_country.html,Analysis/data/gadm41_USA_shp,,,,
+EIA atlas,EIA,Validation,https://atlas.eia.gov/apps/all-energy-infrastructure-and-resources/explore,,,,,
+EIA transmission line data,EIA,Validation,https://atlas.eia.gov/datasets/bd24d1a282c54428b024988d32578e59_0/explore?location=42.578128%2C-83.545628%2C8.00,Analysis/data/transmission_lines.csv,,,,
