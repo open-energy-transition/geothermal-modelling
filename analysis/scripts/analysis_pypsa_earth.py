@@ -50,12 +50,13 @@ base_path = pathlib.Path(__file__).parent.parent.parent
 log_file_dir_path = pathlib.Path(base_path, "logs")
 plot_dir_path = pathlib.Path(base_path, "analysis", "plots")
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
-network_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-24H.nc")
+network_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "your_network_name.nc")
 eia_generation_path = pathlib.Path(base_path, "analysis", "data", "generation_eia.csv")
 generation_plot_path = pathlib.Path(plot_dir_path, "electricity_generation.png")
 eia_capacity_path = pathlib.Path(base_path, "analysis", "data", "capacities_eia.xlsx")
 installed_capacity_plot_path = pathlib.Path(plot_dir_path, "installed_capacity.png")
 
+print(network_path)
 
 def extract_time_res(filename):
     # Convert the filename to a string (although you already did this, no need to use network_path.name)
@@ -79,7 +80,6 @@ def extract_time_res(filename):
 # Example usage
 filepath = Path(network_path)
 time_res = extract_time_res(filepath)
-print(time_res)
 
 # Read reference data
 df_eia_generation = pd.read_csv(eia_generation_path, index_col="Unnamed: 0")
@@ -115,13 +115,6 @@ print("Import data \n")
 df_network = pypsa.Network(network_path)
 df_eia_generation_year = df_eia_generation.loc[df_eia_generation["Period"] == args.year].squeeze()
 
-s_max_pu = df_network.lines["s_max_pu"].unique()[0]
-
-log_output_file.write("        \n")
-log_output_file.write("        \n")
-log_output_file.write(f"s_max_pu {s_max_pu} \n")
-print(f"s_max_pu {s_max_pu} \n")
-
 ######################
 # Installed capacity #
 ######################
@@ -132,8 +125,6 @@ log_output_file.write("Compare the installed capacity \n")
 print("Comparing the installed capacity... \n")
 
 # ---> Prepare the PyPSA results
-
-print(df_network.storage_units)
 
 df_pypsa_hydro_phs_capacity = df_network.storage_units.groupby("carrier").p_nom_opt.sum()
 df_pypsa_capacity = pd.concat([df_network.generators.groupby("carrier").p_nom_opt.sum(), df_pypsa_hydro_phs_capacity])
