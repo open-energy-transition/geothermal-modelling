@@ -4,3 +4,5 @@ Full Generators list,EIA,Validation,https://www.eia.gov/electricity/data/eia860/
 Shape files,gadm.org,Clustering,https://gadm.org/download_country.html,Analysis/data/gadm41_USA_shp,,,,
 EIA atlas,EIA,Validation,https://atlas.eia.gov/apps/all-energy-infrastructure-and-resources/explore,,,,,
 EIA transmission line data,EIA,Validation,https://atlas.eia.gov/datasets/bd24d1a282c54428b024988d32578e59_0/explore?location=42.578128%2C-83.545628%2C8.00,Analysis/data/transmission_lines.csv,,,,
+EIA state wise data,EIA SEDS,Validation,https://www.eia.gov/state/seds/seds-data-complete.php?,Not available,,,,
+EIA statewide overview,EIA SEDS,Validation for net interstate power flows,https://www.eia.gov/state/seds/sep_sum/html/sum_btu_1.html,Not available,,,,
