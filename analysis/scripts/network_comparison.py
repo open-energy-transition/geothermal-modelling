@@ -1,10 +1,7 @@
-import pandas as pd
 import pathlib
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pypsa
-import numpy as np
-import seaborn as sbn
 import cartopy.crs as ccrs
 
 
