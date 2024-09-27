@@ -55,8 +55,6 @@ def plot_intersection(pypsa_df, eia_df, voltage_class, fig_name):
 # Initial configurations
 eia_name = "EIA"
 pypsa_name = "PyPSA"
-#voltage_class_earth =
-#voltage_class_usa =
 
 # Set the paths
 base_path = pathlib.Path(__file__).parent.parent.parent
@@ -66,13 +64,13 @@ pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
 base_network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "networks", "US_2021", "base.nc")
 base_network_pypsa_usa_path = pathlib.Path(base_path.parent, "pypsa-usa", "workflow", "resources", "Default", "usa", "elec_base_network.nc")
 eia_base_network_path = pathlib.Path(base_path.parent, "US_Electric_Power_Transmission_Lines_5037807202786552385.geojson")
-#network_eia_earth_plot = pathlib.Path(plot_dir_path, "network_comparison_pusa_for_voltage_class_{}.png".format(str(voltage_class_earth)))
-#network_eia_usa_plot = pathlib.Path(plot_dir_path, "network_comparison_pusa_for_voltage_class_{}.png".format(str(voltage_class_usa)))
+gadm_shapes_path = pathlib.Path(base_path.parent, "analysis", "data", "gadm41_USA_1.json")
 
 # Load data
 base_network_pypsa_earth = pypsa.Network(base_network_pypsa_earth_path)
 base_network_pypsa_usa = pypsa.Network(base_network_pypsa_usa_path)
 eia_base_network = gpd.read_file(eia_base_network_path)
+gadm_shapes = gpd.read_file(gadm_shapes_path)
 
 # clean EIA data
 
@@ -114,7 +112,9 @@ v_nom_class_dict_pypsa_earth = {
 
 base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom_class"].replace(v_nom_class_dict_pypsa_earth)
 
-# Perform the plots for PyPSA-Earth
+# Comparison for the network topologies (PyPSA-Earth vs EIA)
+# --> plot the EIA reference network and the PyPSA-Earth network
+# --> plot the intersections between the networks
 
 eia_voltage_classes = list(eia_base_network["VOLT_CLASS"].unique())
 
@@ -123,3 +123,17 @@ for selected_voltage_class in eia_voltage_classes:
     plot_network_comparison(base_network_pypsa_earth, eia_base_network, selected_voltage_class, "PyPSA-Earth base network", fig_name_map)
     fig_name_intersection = pathlib.Path(plot_dir_path, "network_comparison_intersection_{}.png".format(str(selected_voltage_class)))
     plot_intersection(base_network_pypsa_earth, eia_base_network, selected_voltage_class, fig_name_intersection)
+
+# Comparison for the number of crossings (PyPSA-Earth vs EIA)
+
+
+# --> plot the EIA reference network and the PyPSA-Earth network
+
+eia_base_network_subset = eia_base_network[["ID", "TYPE", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "geometry"]]
+eia_base_network_subset["geometry"] = eia_base_network_subset["geometry"].boundaries
+spatial_join_gadm_eia = eia_base_network_subset.sjoin(gadm_shapes_path, how="inner")[["ID", "TYPE", "GID_1", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "ISO_1", "NAME_1", "geometry"]]
+
+
+
+
+# --> plot the intersections between the networks
