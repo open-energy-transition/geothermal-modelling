@@ -1,35 +1,9 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
-##################################################
-#                                                #
-# Author: Fabrizio Finozzi	                     #
-# Email: fabrizio.finozzi.business@gmail.com     #
-# Version: 0.1                                   #
-# Date: 23.07.2024                               #
-#                                                #
-# Created for Open Energy Transition GmbH        #
-#                                                #
-##################################################
-
-#########################################################################
-#                                                                       #
-# IMPORTANT                                                             #
-#                                                                       #
-# This software is distributed without any warranty.                    #
-#                                                                       #
-# Neither the author nor Open Energy Transition GmbH                    #
-# are liable for any damage caused directly or indirectly by the use    #
-# or misuse of this software.                                           #
-#                                                                       #
-#########################################################################
-
-#############################################################
-#                                                           #
-# CHANGELOG                                                 #
-#                                                           #
-# 0.1 - In progress                                         #
-#                                                           #
-#############################################################
+# -*- coding: utf-8 -*-
 
 import argparse
 import datetime as dt
