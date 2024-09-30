@@ -1,35 +1,9 @@
-# coding=utf-8
-
-##################################################
-#                                                #
-# Author: Fabrizio Finozzi	                     #
-# Email: fabrizio.finozzi.business@gmail.com     #
-# Version: 0.1                                   #
-# Date: 23.07.2024                               #
-#                                                #
-# Created for Open Energy Transition GmbH        #
-#                                                #
-##################################################
-
-#########################################################################
-#                                                                       #
-# IMPORTANT                                                             #
-#                                                                       #
-# This software is distributed without any warranty.                    #
-#                                                                       #
-# Neither the author nor Open Energy Transition GmbH                    #
-# are liable for any damage caused directly or indirectly by the use    #
-# or misuse of this software.                                           #
-#                                                                       #
-#########################################################################
-
-#############################################################
-#                                                           #
-# CHANGELOG                                                 #
-#                                                           #
-# 0.1 - In progress                                         #
-#                                                           #
-#############################################################
+# coding=utf-8# -*- coding: utf-8 -*-
+# # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
+# #
+# # SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# # -*- coding: utf-8 -*-
 
 import argparse
 import pathlib
@@ -53,6 +27,7 @@ def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_na
     pypsa_df.plot(line_widths=pypsa_df.lines["line_width"], bus_sizes=0,
                                   line_colors="white", ax=ax2)
     eia_df.loc[eia_df["VOLT_CLASS"] == voltage_class].plot(ax=ax2, color="orange")
+
     fig.suptitle("Comparison for voltage class: {}".format(voltage_class))
     ax1.set_aspect('equal')
     ax1.title.set_text(pypsa_title)
@@ -61,16 +36,15 @@ def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_na
     fig.savefig(fig_name)
 
 
-def plot_intersection(pypsa_df, eia_df, voltage_class, fig_name):
+def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
     base_network_pe_volt_class = pypsa_df.lines.loc[
-        base_network_pypsa_earth.lines["v_nom_class"] == voltage_class]
+        pypsa_df.lines["v_nom_class"] == voltage_class]
     base_network_pe_volt_class = gpd.GeoDataFrame(base_network_pe_volt_class,
                                                   geometry=gpd.GeoSeries.from_wkt(base_network_pe_volt_class.geometry),
                                                   crs="EPSG:4326")
     base_network_pe_volt_class["union_geo"] = 0
     base_network_pe_volt_class = base_network_pe_volt_class.dissolve(by="union_geo")
     base_network_pe_volt_class = base_network_pe_volt_class.to_crs(3857)
-
     eia_base_network_volt_class = eia_df.loc[eia_df["VOLT_CLASS"] == voltage_class]
     eia_base_network_volt_class["union_geo"] = 0
     eia_base_network_volt_class = eia_base_network_volt_class.dissolve(by="union_geo")
@@ -79,10 +53,45 @@ def plot_intersection(pypsa_df, eia_df, voltage_class, fig_name):
 
     fig, ax = plt.subplots(figsize=(20, 4))
     ax.set_axis_off()
-
     base_network_pe_volt_class.plot(ax=ax, color="blue", kind="geo")
     eia_base_network_volt_class.plot(ax=ax, color="orange", kind="geo")
     intersection_geometries.plot(ax=ax, color="black", markersize=8)
+    fig.savefig(fig_name)
+
+
+def plot_network_crossings(pypsa_df, eia_df, gadm_shapes_df, voltage_class, fig_name):
+
+    # EIA
+    eia_base_network_subset = eia_df[
+        ["ID", "TYPE", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "geometry"]]
+    eia_base_network_subset["geometry"] = eia_base_network_subset["geometry"].boundary
+    spatial_join_gadm_eia = eia_base_network_subset.sjoin(gadm_shapes_df, how="inner")[
+        ["ID", "TYPE", "GID_1", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "ISO_1", "NAME_1", "geometry"]]
+    count_eia_df = (spatial_join_gadm_eia.groupby(["ID"])["ID"].count() - 1).to_frame(name="crossings_count").reset_index()
+    spatial_join_gadm_eia = pd.merge(spatial_join_gadm_eia, count_eia_df, how="inner", on="ID")
+    spatial_join_gadm_eia_voltage_class = spatial_join_gadm_eia[spatial_join_gadm_eia["VOLT_CLASS"] == voltage_class]
+    eia_crossings_count_per_us_state_df = (spatial_join_gadm_eia_voltage_class.groupby("ISO_1")["crossings_count"].sum()).to_frame(name="crossings_count_per_state").reset_index()
+    gadm_shapes_crossings_eia_df = pd.merge(gadm_shapes_df, eia_crossings_count_per_us_state_df, how="inner", on="ISO_1")
+
+    # PyPSA-Earth
+    base_network_pe_volt_class = pypsa_df.lines.loc[
+        pypsa_df.lines["v_nom_class"] == voltage_class]
+    base_network_pe_volt_class = gpd.GeoDataFrame(base_network_pe_volt_class,
+                                                  geometry=gpd.GeoSeries.from_wkt(base_network_pe_volt_class.geometry),
+                                                  crs="EPSG:4326").reset_index()
+    spatial_join_gadm_pypsa = base_network_pe_volt_class.sjoin(gadm_shapes_df, how="inner")[
+        ["Line", "v_nom", "v_nom_class", "bounds", "num_parallel", "ISO_1", "geometry"]]
+    count_pypsa_df = (spatial_join_gadm_pypsa.groupby(["Line"])["Line"].count() - 1).to_frame(
+        name="crossings_count").reset_index()
+    spatial_join_gadm_pypsa = pd.merge(spatial_join_gadm_pypsa, count_pypsa_df, how="inner", on="Line")
+    pypsa_crossings_count_per_us_state_df = (spatial_join_gadm_pypsa.groupby("ISO_1")["crossings_count"].sum()).to_frame(name="crossings_count_per_state").reset_index()
+    gadm_shapes_crossings_pypsa_df = pd.merge(gadm_shapes_df, pypsa_crossings_count_per_us_state_df, how="inner", on="ISO_1")
+
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(20, 4))
+    ax1.set_xlim(-167, -50)
+    ax2.set_xlim(-167, -50)
+    gadm_shapes_crossings_eia_df.plot("crossings_count_per_state", legend=True, ax=ax1)
+    gadm_shapes_crossings_pypsa_df.plot("crossings_count_per_state", legend=True, ax=ax2)
     fig.savefig(fig_name)
 
 
@@ -165,15 +174,13 @@ if args.plot_network_topology:
         fig_name_map = pathlib.Path(plot_dir_path, "network_comparison_pearth_for_voltage_class_{}.png".format(str(selected_voltage_class)))
         plot_network_comparison(base_network_pypsa_earth, eia_base_network, selected_voltage_class, "PyPSA-Earth base network", fig_name_map)
         fig_name_intersection = pathlib.Path(plot_dir_path, "network_comparison_intersection_{}.png".format(str(selected_voltage_class)))
-        plot_intersection(base_network_pypsa_earth, eia_base_network, selected_voltage_class, fig_name_intersection)
+        plot_network_intersection(base_network_pypsa_earth, eia_base_network, selected_voltage_class, fig_name_intersection)
 
 # Comparison for the number of crossings (PyPSA-Earth vs EIA)
 
 
 # --> plot the EIA reference network and the PyPSA-Earth network
-
-eia_base_network_subset = eia_base_network[["ID", "TYPE", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "geometry"]]
-eia_base_network_subset["geometry"] = eia_base_network_subset["geometry"].boundary
-spatial_join_gadm_eia = eia_base_network_subset.sjoin(gadm_shapes, how="inner")[["ID", "TYPE", "GID_1", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "ISO_1", "NAME_1", "geometry"]]
-count_df = (spatial_join_gadm_eia.groupby(["ID"])["ID"].count()-1).to_frame(name="crossings_count").reset_index()
-spatial_join_gadm_eia = pd.merge(spatial_join_gadm_eia, count_df, how="inner", on="ID")
+if args.plot_network_crossings:
+    for selected_voltage_class in eia_voltage_classes:
+        fig_name_crossings = pathlib.Path(plot_dir_path, "network_crossings_eia_for_voltage_class_{}.png".format(str(selected_voltage_class)))
+        plot_network_crossings(base_network_pypsa_earth, eia_base_network, gadm_shapes, selected_voltage_class, fig_name_crossings)
