@@ -33,7 +33,7 @@ eia_generation_reference = pd.read_excel(eia_generation_reference_path, sheet_na
 gadm_gdp_usa = gpd.read_file(gadm_shapes_path)
 
 # Parse argument
-year_list = list(eia_generation_reference.columns)
+year_list = [val for val in list(eia_generation_reference.columns) if val not in ["Data_Status", "State", "MSN"]]
 parser = argparse.ArgumentParser()
 parser.add_argument("--year", help="Year to consider for the comparison", default=2020, type=int, choices=year_list)
 args = parser.parse_args()
