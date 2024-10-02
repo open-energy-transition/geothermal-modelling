@@ -64,7 +64,7 @@ def plot_network_crossings(pypsa_df, eia_df, gadm_shapes_df, voltage_class, fig_
     # EIA
     eia_base_network_subset = eia_df[
         ["ID", "TYPE", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "geometry"]]
-    eia_base_network_subset["geometry"] = eia_base_network_subset["geometry"].boundary
+    eia_base_network_subset["boundaries"] = eia_base_network_subset["geometry"].boundary
     spatial_join_gadm_eia = eia_base_network_subset.sjoin(gadm_shapes_df, how="inner")[
         ["ID", "TYPE", "GID_1", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "ISO_1", "NAME_1", "geometry"]]
     count_eia_df = (spatial_join_gadm_eia.groupby(["ID"])["ID"].count() - 1).to_frame(name="crossings_count").reset_index()
