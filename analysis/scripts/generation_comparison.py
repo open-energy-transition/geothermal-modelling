@@ -12,6 +12,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pypsa
 import cartopy.crs as ccrs
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Initial configurations
 eia_name = "EIA"
@@ -41,6 +43,17 @@ args = parser.parse_args()
 # EIA select relevant year and relevant rows
 keywords_list = ["WYTCP", "NUETP", "HYTCP", "GEEGP"]
 eia_generation_reference_filtered = eia_generation_reference[eia_generation_reference["MSN"].isin(keywords_list)][["State", "MSN", args.year]]
+eia_generation_reference_filtered = eia_generation_reference_filtered.rename(columns={'MSN':'carrier'})
+eia_generation_reference_filtered.carrier = eia_generation_reference_filtered.carrier.map({"WYTCP":"onwind",
+                                                                                    "NUETP":"nuclear",
+                                                                                    "HYTCP":"hydro",
+                                                                                    "GEEGP":"geothermal"})
+eia_generation_reference_filtered.set_index(['carrier','State'],inplace=True)
+eia_generation_reference_filtered[2021] /= 1e3 #conversion from million kWh i.e., GWh to TWh
+
+# Calculating the annual generation from each of the generators in MWh
+time_res = 24
+network_pypsa_earth.generators = network_pypsa_earth.generators.assign(gen_MWh=network_pypsa_earth.generators_t.p.sum() * time_res)
 
 # PyPSA-Earth mapping the generators bus to the state names
 gadm_gdp_usa_state = gadm_gdp_usa[["GID_1", "ISO_1"]]
@@ -48,10 +61,29 @@ gadm_gdp_usa_state["state"] = gadm_gdp_usa_state["ISO_1"].str[-2:]
 gadm_gdp_usa_state["GID_1_new"] = gadm_gdp_usa_state["GID_1"].str.replace("USA", "US")
 gadm_gdp_usa_state = gadm_gdp_usa_state[["GID_1_new", "state"]]
 usa_state_dict = dict(gadm_gdp_usa_state.values)
-network_pypsa_earth.generators.index = network_pypsa_earth.generators.index.map(usa_state_dict)
-network_pypsa_earth.generators.to_csv("gen.csv")
+network_pypsa_earth.generators.bus = network_pypsa_earth.generators.bus.str.replace("_AC","")
+network_pypsa_earth.generators.bus = network_pypsa_earth.generators.bus.str.replace("_DC","")
+network_pypsa_earth.generators.bus = network_pypsa_earth.generators.bus.str.replace(" csp","")
+network_pypsa_earth.generators.bus = network_pypsa_earth.generators.bus.map(usa_state_dict)
 
+# Selecting relevant data from PyPSA results
+pypsa_generation_filtered = network_pypsa_earth.generators.reset_index()[['carrier','bus','gen_MWh']]
+pypsa_generation_filtered = pypsa_generation_filtered.rename(columns={'bus':'State'})
+pypsa_generation_filtered.set_index(['carrier','State'],inplace=True)
+pypsa_generation_filtered['gen_MWh'] /= 1e6
 
+# Joining EIA and PyPSA generations to compare them
+comparison_generation = pypsa_generation_filtered.copy()
+comparison_generation = comparison_generation.join(eia_generation_reference_filtered)
+comparison_generation = comparison_generation.rename(columns={'gen_MWh':'PyPSA',2021:'EIA'})
 
+# iterate through each carrier, filter and plot the comparison between PyPSA and EIA generation statewise
+for car in ['nuclear','onwind','hydro','geothermal']:
+    comparison_generation_filter = comparison_generation.reset_index().query('carrier == @car')
+    comparison_generation_filter = comparison_generation_filter.set_index('State')[['PyPSA','EIA']]
+    fig = px.bar(comparison_generation_filter,barmode='group')
+    fig.update_layout(title=f"Carrier = {car}",yaxis_title='Generation (TWh)')
+    fig.show()
 
-
+# Compute error %s of the generation
+comparison_generation['error %'] = comparison_generation.apply(lambda x: (x['EIA']-x['PyPSA'])*100/x['EIA'], axis=1)
