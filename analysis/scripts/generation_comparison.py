@@ -7,13 +7,9 @@
 
 import argparse
 import pathlib
-import geopandas as gpd
 import pandas as pd
-import matplotlib.pyplot as plt
 import pypsa
-import cartopy.crs as ccrs
 import plotly.express as px
-import plotly.graph_objects as go
 import _helpers_usa as h
 
 # Initial configurations
@@ -25,8 +21,8 @@ base_path = pathlib.Path(__file__).parent.parent.parent
 log_file_dir_path = pathlib.Path(base_path, "logs")
 plot_dir_path = pathlib.Path(base_path, "analysis", "plots")
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
-#network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-25H.nc")
-network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_50_ec_lcopt_Co2L-24H.nc") # just to test it
+network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-25H.nc")
+#network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "results", "US_2021", "networks", "elec_s_50_ec_lcopt_Co2L-24H.nc") # just to test it
 eia_generation_reference_path = pathlib.Path(base_path.parent, "geothermal-modelling", "analysis", "data", "EIA_statewise_data", "use_all_phy.xlsx")
 
 # Load data
