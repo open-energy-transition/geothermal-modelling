@@ -79,7 +79,7 @@ pypsa_name = "PyPSA"
 
 # Set the paths
 base_path = pathlib.Path(__file__).parent.parent.parent
-log_file_dir_path = pathlib.Path(base_path, "logs")
+log_file_dir_path = pathlib.Path(base_path, "analysis", "logs")
 plot_dir_path = pathlib.Path(base_path, "analysis", "plots")
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
 base_network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "networks", "US_2021", "base.nc")
