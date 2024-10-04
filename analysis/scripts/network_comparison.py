@@ -14,6 +14,7 @@ import pypsa
 import cartopy.crs as ccrs
 import sys
 import pandas as pd
+import numpy as np
 
 
 def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_name):
@@ -239,3 +240,14 @@ if args.plot_network_crossing:
 # Comparison for the transmission capacities (PyPSA-Earth vs EIA)
 if args.plot_network_capacity:
 
+    # the source of this dictionary is at https://www.energy.gov/sites/default/files/2023-02/022423-DRAFTNeedsStudyforPublicComment.pdf (pdf page 112)
+    power_carrying_capacity_df = pd.Dataframe(
+        {
+            "Line length": [80.4672, 160.9344, 321.8688, 482.8032, 643.7376, 804.672, 965.6064],
+            "138": [145, 100, 60, 50, np.nan, np.nan, np.nan],
+            "161": [195, 130, 85, 65, np.nan, np.nan, np.nan],
+            "230": [390, 265, 170, 130, 105, np.nan, np.nan],
+            "345": [1260, 860, 545, 420, 335, 280, 250],
+            "500": [3040, 2080, 1320, 1010, 810, 680, 600],
+            "765": [6820, 4660, 2950, 2270, 1820, 1520, 1340],
+         })
