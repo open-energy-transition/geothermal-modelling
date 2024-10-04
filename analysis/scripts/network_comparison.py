@@ -7,11 +7,13 @@
 
 import argparse
 import pathlib
+import datetime as dt
 import geopandas as gpd
-import pandas as pd
 import matplotlib.pyplot as plt
 import pypsa
 import cartopy.crs as ccrs
+import sys
+import pandas as pd
 
 
 def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_name):
@@ -59,40 +61,8 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
     fig.savefig(fig_name)
 
 
-def plot_network_crossings(pypsa_df, eia_df, gadm_shapes_df, voltage_class, fig_name):
-
-    # EIA
-    eia_base_network_subset = eia_df[
-        ["ID", "TYPE", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "geometry"]]
-    eia_base_network_subset["boundaries"] = eia_base_network_subset["geometry"].boundary
-    spatial_join_gadm_eia = eia_base_network_subset.sjoin(gadm_shapes_df, how="inner")[
-        ["ID", "TYPE", "GID_1", "VOLTAGE", "VOLT_CLASS", "SUB_1", "SUB_2", "SHAPE__Len", "ISO_1", "NAME_1", "geometry"]]
-    count_eia_df = (spatial_join_gadm_eia.groupby(["ID"])["ID"].count() - 1).to_frame(name="crossings_count").reset_index()
-    spatial_join_gadm_eia = pd.merge(spatial_join_gadm_eia, count_eia_df, how="inner", on="ID")
-    spatial_join_gadm_eia_voltage_class = spatial_join_gadm_eia[spatial_join_gadm_eia["VOLT_CLASS"] == voltage_class]
-    eia_crossings_count_per_us_state_df = (spatial_join_gadm_eia_voltage_class.groupby("ISO_1")["crossings_count"].sum()).to_frame(name="crossings_count_per_state").reset_index()
-    gadm_shapes_crossings_eia_df = pd.merge(gadm_shapes_df, eia_crossings_count_per_us_state_df, how="inner", on="ISO_1")
-
-    # PyPSA-Earth
-    base_network_pe_volt_class = pypsa_df.lines.loc[
-        pypsa_df.lines["v_nom_class"] == voltage_class]
-    base_network_pe_volt_class = gpd.GeoDataFrame(base_network_pe_volt_class,
-                                                  geometry=gpd.GeoSeries.from_wkt(base_network_pe_volt_class.geometry),
-                                                  crs="EPSG:4326").reset_index()
-    spatial_join_gadm_pypsa = base_network_pe_volt_class.sjoin(gadm_shapes_df, how="inner")[
-        ["Line", "v_nom", "v_nom_class", "bounds", "num_parallel", "ISO_1", "geometry"]]
-    count_pypsa_df = (spatial_join_gadm_pypsa.groupby(["Line"])["Line"].count() - 1).to_frame(
-        name="crossings_count").reset_index()
-    spatial_join_gadm_pypsa = pd.merge(spatial_join_gadm_pypsa, count_pypsa_df, how="inner", on="Line")
-    pypsa_crossings_count_per_us_state_df = (spatial_join_gadm_pypsa.groupby("ISO_1")["crossings_count"].sum()).to_frame(name="crossings_count_per_state").reset_index()
-    gadm_shapes_crossings_pypsa_df = pd.merge(gadm_shapes_df, pypsa_crossings_count_per_us_state_df, how="inner", on="ISO_1")
-
-    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(20, 4))
-    ax1.set_xlim(-167, -50)
-    ax2.set_xlim(-167, -50)
-    gadm_shapes_crossings_eia_df.plot("crossings_count_per_state", legend=True, ax=ax1)
-    gadm_shapes_crossings_pypsa_df.plot("crossings_count_per_state", legend=True, ax=ax2)
-    fig.savefig(fig_name)
+def plot_network_crossings(pypsa_df, eia_df, voltage_class, pypsa_title, fig_name):
+    pass
 
 
 # To perform the network topology comparison, execute python network_comparison --plot_network_topology
@@ -100,7 +70,7 @@ def plot_network_crossings(pypsa_df, eia_df, gadm_shapes_df, voltage_class, fig_
 # To perform both actions, execute python network_comparison --plot_network_topology --plot_network_crossings
 parser = argparse.ArgumentParser()
 parser.add_argument("--plot_network_topology", help="Boolean: plot the network topology", action="store_true")
-parser.add_argument("--plot_network_crossings", help="Boolean: plot the network crossings", action="store_true")
+parser.add_argument("--plot_network_capacity", help="Boolean: plot the network capacity", action="store_true")
 args = parser.parse_args()
 
 # Initial configurations
@@ -114,16 +84,66 @@ plot_dir_path = pathlib.Path(base_path, "analysis", "plots")
 pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
 base_network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "networks", "US_2021", "base.nc")
 base_network_pypsa_usa_path = pathlib.Path(base_path.parent, "pypsa-usa", "workflow", "resources", "Default", "usa", "elec_base_network.nc")
-eia_base_network_path = pathlib.Path(base_path.parent, "US_Electric_Power_Transmission_Lines_5037807202786552385.geojson")
+eia_base_network_path = pathlib.Path(base_path.parent, "US_electric_transmission_lines_original.geojson")
 gadm_shapes_path = pathlib.Path(base_path, "analysis", "data", "gadm41_USA_1.json")
 
+###########
 # Load data
+###########
 base_network_pypsa_earth = pypsa.Network(base_network_pypsa_earth_path)
 base_network_pypsa_usa = pypsa.Network(base_network_pypsa_usa_path)
 eia_base_network = gpd.read_file(eia_base_network_path)
 gadm_shapes = gpd.read_file(gadm_shapes_path)
 
-# clean EIA data
+today_date = str(dt.datetime.now())
+log_output_file = open(log_file_dir_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
+
+
+
+
+##########
+# EIA data
+##########
+
+log_output_file.write("        \n")
+log_output_file.write("        \n")
+log_output_file.write(" Data preparation on the EIA input \n")
+log_output_file.write(" --> shape of eia_base_network after reading it {} \n".format(eia_base_network.shape))
+
+# add positions for the start- and end-points of the transmission lines
+
+# --> Step 1 - Identify the lines with geometry type MultiLineString
+eia_base_network["geometry_type"] = eia_base_network.geom_type
+lines_with_multilinestring_geometry = eia_base_network[eia_base_network["geometry_type"]=="MultiLineString"]["OBJECTID_1"].values.tolist()
+multilinestring_ratio = len(lines_with_multilinestring_geometry)/eia_base_network.shape[0]*100.0
+if multilinestring_ratio > 10.0:
+    sys.exit("The ratio of lines with geometry type MultiLineString is above 10%")
+else:
+    # exclude the lines with geometry MultiLineString. This is because the .boundary method yields (for this line) more than two boundary points
+    eia_base_network = eia_base_network[~eia_base_network["OBJECTID_1"].isin(lines_with_multilinestring_geometry)]
+
+log_output_file.write(" --> shape of eia_base_network after excluding multilinestrings {} \n".format(eia_base_network.shape))
+
+# --> Step 2 - Compute the start- and end-points of a line
+eia_base_network[["sub_0_coors", "sub_1_coors"]] = eia_base_network["geometry"].boundary.explode(index_parts=True).unstack()
+log_output_file.write(" --> shape of eia_base_network after computing boundaries {} \n".format(eia_base_network.shape))
+
+# --> Step 3 - Compute the start- and end-points of the line are located
+eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_0_coors")]
+eia_base_network_modified["geometry"] = eia_base_network_modified["sub_0_coors"]
+log_output_file.write(" --> shape of eia_base_network before sub_0 spatial join {} \n".format(eia_base_network.shape))
+spatial_join_gadm_eia_sub_0 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_0", "ISO_1": "iso_sub_0"})
+log_output_file.write(" --> shape of after sub_0 spatial join {} \n".format(spatial_join_gadm_eia_sub_0.shape))
+
+eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_1_coors")]
+eia_base_network_modified["geometry"] = eia_base_network_modified["sub_1_coors"]
+log_output_file.write(" --> shape of eia_base_network before sub_1 spatial join {} \n".format(eia_base_network_modified.shape))
+spatial_join_gadm_eia_sub_1 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_1", "ISO_1": "iso_sub_1"})
+log_output_file.write(" --> shape of after sub_1 spatial join {} \n".format(spatial_join_gadm_eia_sub_1.shape))
+
+eia_base_network = pd.merge(eia_base_network, spatial_join_gadm_eia_sub_0, how="inner", on="OBJECTID_1")
+eia_base_network = pd.merge(eia_base_network, spatial_join_gadm_eia_sub_1, how="inner", on="OBJECTID_1")
+log_output_file.write(" --> shape of eia_base_network_after spatial joins {} \n".format(eia_base_network.shape))
 
 # --> remove lines corresponding to voltage = -999999.0 kV
 eia_base_network = eia_base_network.loc[eia_base_network["VOLTAGE"] != -999999.0]
@@ -176,11 +196,6 @@ if args.plot_network_topology:
         fig_name_intersection = pathlib.Path(plot_dir_path, "network_comparison_intersection_{}.png".format(str(selected_voltage_class)))
         plot_network_intersection(base_network_pypsa_earth, eia_base_network, selected_voltage_class, fig_name_intersection)
 
-# Comparison for the number of crossings (PyPSA-Earth vs EIA)
-
-
-# --> plot the EIA reference network and the PyPSA-Earth network
-if args.plot_network_crossings:
-    for selected_voltage_class in eia_voltage_classes:
-        fig_name_crossings = pathlib.Path(plot_dir_path, "network_crossings_eia_for_voltage_class_{}.png".format(str(selected_voltage_class)))
-        plot_network_crossings(base_network_pypsa_earth, eia_base_network, gadm_shapes, selected_voltage_class, fig_name_crossings)
+# Comparison for the transmission capacities (PyPSA-Earth vs EIA)
+if args.plot_network_capacity:
+    pass
