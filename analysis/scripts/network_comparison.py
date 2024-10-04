@@ -98,17 +98,14 @@ gadm_shapes = gpd.read_file(gadm_shapes_path)
 today_date = str(dt.datetime.now())
 log_output_file = open(log_file_dir_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
-
-
-
 ##########
 # EIA data
 ##########
 
 log_output_file.write("        \n")
 log_output_file.write("        \n")
-log_output_file.write(" Data preparation on the EIA input \n")
-log_output_file.write(" --> shape of eia_base_network after reading it {} \n".format(eia_base_network.shape))
+log_output_file.write(" Data preparation on the EIA base network \n")
+log_output_file.write(" --> shape of eia_base_network after reading it in {} \n".format(eia_base_network.shape))
 
 # add positions for the start- and end-points of the transmission lines
 
@@ -133,28 +130,58 @@ eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_0_coors"
 eia_base_network_modified["geometry"] = eia_base_network_modified["sub_0_coors"]
 log_output_file.write(" --> shape of eia_base_network before sub_0 spatial join {} \n".format(eia_base_network.shape))
 spatial_join_gadm_eia_sub_0 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_0", "ISO_1": "iso_sub_0"})
-log_output_file.write(" --> shape of after sub_0 spatial join {} \n".format(spatial_join_gadm_eia_sub_0.shape))
+log_output_file.write(" --> shape of eia_base_network after sub_0 spatial join {} \n".format(spatial_join_gadm_eia_sub_0.shape))
 
+# --> Step 4 - Perform the spatial joins with the GADM shapes (Level 1)
 eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_1_coors")]
 eia_base_network_modified["geometry"] = eia_base_network_modified["sub_1_coors"]
 log_output_file.write(" --> shape of eia_base_network before sub_1 spatial join {} \n".format(eia_base_network_modified.shape))
 spatial_join_gadm_eia_sub_1 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_1", "ISO_1": "iso_sub_1"})
-log_output_file.write(" --> shape of after sub_1 spatial join {} \n".format(spatial_join_gadm_eia_sub_1.shape))
+log_output_file.write(" --> shape of eia_base_network after the sub_1 spatial join {} \n".format(spatial_join_gadm_eia_sub_1.shape))
 
+# --> Step 5 - Inner join the results
 eia_base_network = pd.merge(eia_base_network, spatial_join_gadm_eia_sub_0, how="inner", on="OBJECTID_1")
 eia_base_network = pd.merge(eia_base_network, spatial_join_gadm_eia_sub_1, how="inner", on="OBJECTID_1")
-log_output_file.write(" --> shape of eia_base_network_after spatial joins {} \n".format(eia_base_network.shape))
+log_output_file.write(" --> shape of eia_base_network after the inner joins {} \n".format(eia_base_network.shape))
 
-# --> remove lines corresponding to voltage = -999999.0 kV
+# Clean the EIA data from lines with unnecessary voltages and voltage classes
+
+# --> Step 6 - Remove lines corresponding to voltage = -999999.0 kV
 eia_base_network = eia_base_network.loc[eia_base_network["VOLTAGE"] != -999999.0]
+log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {} \n".format(eia_base_network.shape))
 
-# --> remove lines corresponding to voltage class 'DC'. All lines in the base.nc are AC
+# --> Step 7 - Remove lines corresponding to voltage class 'DC'. All lines in the base.nc are AC
 eia_base_network = eia_base_network.loc[eia_base_network["VOLT_CLASS"] != 'Dc']
+log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Dc' {} \n".format(eia_base_network.shape))
 
-# --> remove lines corresponding to voltage class 'Not Available'
+# --> Step 8 - Remove lines corresponding to voltage class 'Not Available'
 eia_base_network = eia_base_network.loc[eia_base_network["VOLT_CLASS"] != 'Not Available']
+log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {} \n".format(eia_base_network.shape))
 
-# assign a voltage class to the pypsa-earth base.nc
+#####################
+# PyPSA-Earth base.nc
+#####################
+
+log_output_file.write("        \n")
+log_output_file.write("        \n")
+log_output_file.write(" Data preparation on the PyPSA-Earth base network \n")
+
+# --> Step 1 - Perform the spatial joins with the GADM shapes (Level 1)
+log_output_file.write(" --> shape of pypsa-earth base network after reading it in {} \n".format(base_network_pypsa_earth.lines.shape))
+
+base_network_pypsa_earth_geopandas_bus_0 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_0_coors), crs="EPSG:4326").reset_index()
+
+spatial_join_gadm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_0", "ISO_1": "iso_bus_0"})
+
+base_network_pypsa_earth_geopandas_bus_1 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_1_coors), crs="EPSG:4326").reset_index()
+
+spatial_join_gadm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_1", "ISO_1": "iso_bus_1"})
+
+base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_gadm_pearth_bus_0, how="inner", on="Line")
+base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_gadm_pearth_bus_1, how="inner", on="Line")
+log_output_file.write(" --> shape of pypsa-earth base network after the spatial joins {} \n".format(base_network_pypsa_earth.lines.shape))
+
+# --> Step 2 - Assign a voltage class to the pypsa-earth base.nc
 base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom"]
 
 v_nom_class_dict_pypsa_earth = {
