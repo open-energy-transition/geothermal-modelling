@@ -241,9 +241,13 @@ if args.plot_network_crossing:
 if args.plot_network_capacity:
 
     # the source of this dictionary is at https://www.energy.gov/sites/default/files/2023-02/022423-DRAFTNeedsStudyforPublicComment.pdf (pdf page 112)
-    power_carrying_capacity_df = pd.Dataframe(
+    # The units are:
+    # - line length in miles
+    # - voltage in kV
+    # - carrying capacity in 100MW-mile or (GW*10-mile)
+    power_carrying_capacity_df = pd.DataFrame(
         {
-            "Line length": [80.4672, 160.9344, 321.8688, 482.8032, 643.7376, 804.672, 965.6064],
+            "Line length": [50, 100, 200, 300, 400, 500, 600],
             "138": [145, 100, 60, 50, np.nan, np.nan, np.nan],
             "161": [195, 130, 85, 65, np.nan, np.nan, np.nan],
             "230": [390, 265, 170, 130, 105, np.nan, np.nan],
@@ -251,3 +255,16 @@ if args.plot_network_capacity:
             "500": [3040, 2080, 1320, 1010, 810, 680, 600],
             "765": [6820, 4660, 2950, 2270, 1820, 1520, 1340],
          })
+
+    # Transform:
+    # -) length to km
+    # -) carrying capacity to GW
+    miles_to_km = 1.609344
+    power_carrying_capacity_df.loc[:, "Line length"] = power_carrying_capacity_df.loc[:, "Line length"]*miles_to_km
+    power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")] = power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")]/10.0
+
+    grouped_df = base_network_pypsa_earth.lines.groupby("v_nom_class")["s_nom"].agg(["min", "max"])
+    print(grouped_df/1000.0) # convert from MW to GW
+    print(power_carrying_capacity_df)
+
+
