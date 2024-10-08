@@ -68,7 +68,7 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_class, fig_name):
                        ("iso_sub_0", "iso_sub_1", "VOLT_CLASS", "ID")].rename(columns={"ID": "eia_num_crossings"})
     pearth_crossings_df = pypsa_df.lines.query("iso_bus_0 != iso_bus_1").groupby(
         ["iso_bus_0", "iso_bus_1", "v_nom_class"]).count().reset_index().loc[:,
-                          ("iso_bus_0", "iso_bus_1", "v_nom_class", "Line")].rename(
+                          ("iso_bus_0", "iso_bus_1", "v_nom_class", "Line", "num_parallel")].rename(
         columns={"Line": "pypsa_earth_num_crossings"})
     eia_crossings_df["coalesce"] = eia_crossings_df[["iso_sub_0", "iso_sub_1"]].agg('-->'.join, axis=1)
     pearth_crossings_df["coalesce"] = pearth_crossings_df[["iso_bus_0", "iso_bus_1"]].agg('-->'.join, axis=1)
@@ -76,16 +76,16 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_class, fig_name):
     print(eia_crossings_df.groupby("VOLT_CLASS")["eia_num_crossings"].sum())
     print(pearth_crossings_df.groupby("v_nom_class")["pypsa_earth_num_crossings"].sum())
 
-    #crossings_df_eia_pearth = pd.merge(eia_crossings_df, pearth_crossings_df, how="left",
-    #                                   left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
-    #                                   right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
-    #crossings_df_pearth_eia = pd.merge(eia_crossings_df, pearth_crossings_df, how="right",
-    #                                   left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
-    #                                   right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
-    # eia_crossings_df.to_csv("eia_crossing_count.csv")
-    # pearth_crossings_df.to_csv("pearth_crossing_count.csv")
-    # crossings_df_eia_pearth.to_csv("crossings_eia_pearth.csv")
-    # crossings_df_pearth_eia.to_csv("crossings_pearth_eia.csv")
+    crossings_df_eia_pearth = pd.merge(eia_crossings_df, pearth_crossings_df, how="left",
+                                       left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
+                                       right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
+    crossings_df_pearth_eia = pd.merge(eia_crossings_df, pearth_crossings_df, how="right",
+                                       left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
+                                       right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
+    eia_crossings_df.to_csv("eia_crossing_count.csv")
+    pearth_crossings_df.to_csv("pearth_crossing_count.csv")
+    crossings_df_eia_pearth.to_csv("crossings_eia_pearth.csv")
+    crossings_df_pearth_eia.to_csv("crossings_pearth_eia.csv")
 
 
 def parse_input_arguments():
@@ -101,7 +101,7 @@ def parse_input_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--plot_network_topology", help="Boolean: plot the network topology", action="store_true")
     parser.add_argument("--plot_network_crossings", help="Boolean: plot the network crossings", action="store_true")
-    parser.add_argument("--plot_network_capacity", help="Boolean: plot the network capacity", action="store_true")
+    parser.add_argument("--check_network_capacity", help="Boolean: plot the network capacity", action="store_true")
     return parser.parse_args()
 
 
@@ -267,7 +267,7 @@ if __name__ == '__main__':
             plot_network_crossings(network_pypsa_df, network_eia_df, selected_voltage_class, fig_name)
 
     # Comparison for the transmission capacities (PyPSA-Earth vs EIA)
-    if args.plot_network_capacity:
+    if args.check_network_capacity:
         # the source of this dictionary is at https://www.energy.gov/sites/default/files/2023-02/022423-DRAFTNeedsStudyforPublicComment.pdf (pdf page 112)
         # The units are:
         # - line length in miles
