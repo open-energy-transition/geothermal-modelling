@@ -62,7 +62,7 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
     fig.savefig(fig_name)
 
 
-def plot_network_crossings(pypsa_df, eia_df, voltage_class, fig_name):
+def plot_network_crossings(pypsa_df, eia_df):
     eia_crossings_df = eia_df.query("iso_sub_0 != iso_sub_1").groupby(
         ["iso_sub_0", "iso_sub_1", "VOLT_CLASS"]).count().reset_index().loc[:,
                        ("iso_sub_0", "iso_sub_1", "VOLT_CLASS", "ID")].rename(columns={"ID": "eia_num_crossings"})
@@ -262,9 +262,7 @@ if __name__ == '__main__':
 
     # Comparison for the transmission crossings (PyPSA-Earth vs EIA)
     if args.plot_network_crossings:
-        for selected_voltage_class in eia_voltage_classes:
-            fig_name = ""
-            plot_network_crossings(network_pypsa_df, network_eia_df, selected_voltage_class, fig_name)
+        plot_network_crossings(network_pypsa_df, network_eia_df)
 
     # Comparison for the transmission capacities (PyPSA-Earth vs EIA)
     if args.check_network_capacity:
