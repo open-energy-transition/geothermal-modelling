@@ -63,28 +63,24 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
 
 
 def plot_network_crossings(pypsa_df, eia_df):
-    eia_crossings_df = eia_df.query("state_0 != state_1").groupby(
-        ["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
-                       ("state_0", "state_1", "v_nom_class", "ID")].rename(columns={"ID": "eia_num_crossings"})
-    pearth_crossings_df = pypsa_df.lines.query("state_0 != state_1").groupby(
-        ["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
-                          ("state_0", "state_1", "v_nom_class", "Line", "num_parallel")].rename(
-        columns={"Line": "pypsa_earth_num_crossings"})
-    eia_crossings_df["coalesce"] = eia_crossings_df[["state_0", "state_1"]].agg('-->'.join, axis=1)
-    pearth_crossings_df["coalesce"] = pearth_crossings_df[["state_0", "state_1"]].agg('-->'.join, axis=1)
+    eia_crossings_df = eia_df.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
+                          ("state_0", "state_1", "v_nom_class", "ID")].rename(columns={"ID": "crossings"})
+    eia_crossings_df["source"] = "EIA"
 
+    pearth_crossings_df = pypsa_df.lines.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
+                          ("state_0", "state_1", "v_nom_class", "Line")].rename(columns={"Line": "crossings"})
+    pearth_crossings_df["source"] = "PyPSA"
 
+    pearth_crossings_parallel_df = pypsa_df.lines.groupby(
+        ["state_0", "state_1", "v_nom_class"])["num_parallel"].sum().reset_index().loc[:,
+                          ("state_0", "state_1", "v_nom_class", "num_parallel")].rename(columns={"num_parallel": "crossings"})
+    pearth_crossings_parallel_df["source"] = "PyPSA-parallel"
 
-    crossings_df_eia_pearth = pd.merge(eia_crossings_df, pearth_crossings_df, how="left",
-                                       left_on=["coalesce", "state_0", "state_1", "v_nom_class"],
-                                       right_on=["coalesce", "state_0", "state_1", "v_nom_class"])
-    crossings_df_pearth_eia = pd.merge(eia_crossings_df, pearth_crossings_df, how="right",
-                                       left_on=["coalesce", "state_0", "state_1", "v_nom_class"],
-                                       right_on=["coalesce", "state_0", "state_1", "v_nom_class"])
-    eia_crossings_df.to_csv("eia_crossing_count.csv")
-    pearth_crossings_df.to_csv("pearth_crossing_count.csv")
-    crossings_df_eia_pearth.to_csv("crossings_eia_pearth.csv")
-    crossings_df_pearth_eia.to_csv("crossings_pearth_eia.csv")
+    crossings = pd.concat([eia_crossings_df, pearth_crossings_df, pearth_crossings_parallel_df])
+    crossings = crossings.set_index(
+        ["source", "state_0", "state_1", "v_nom_class"]
+    ).unstack("source").droplevel(axis=1, level=0).reset_index()
+    crossings.to_csv("crossings.csv")
 
 
 def parse_input_arguments():
