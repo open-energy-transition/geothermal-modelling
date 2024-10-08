@@ -29,7 +29,7 @@ def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_na
                                   line_colors="blue", ax=ax1)
     pypsa_df.plot(line_widths=pypsa_df.lines["line_width"], bus_sizes=0,
                                   line_colors="white", ax=ax2)
-    eia_df.loc[eia_df["VOLT_CLASS"] == voltage_class].plot(ax=ax2, color="orange")
+    eia_df.loc[eia_df["v_nom_class"] == voltage_class].plot(ax=ax2, color="orange")
 
     fig.suptitle("Comparison for voltage class: {}".format(voltage_class))
     ax1.set_aspect('equal')
@@ -48,7 +48,7 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
     base_network_pe_volt_class["union_geo"] = 0
     base_network_pe_volt_class = base_network_pe_volt_class.dissolve(by="union_geo")
     base_network_pe_volt_class = base_network_pe_volt_class.to_crs(3857)
-    eia_base_network_volt_class = eia_df.loc[eia_df["VOLT_CLASS"] == voltage_class]
+    eia_base_network_volt_class = eia_df.loc[eia_df["v_nom_class"] == voltage_class]
     eia_base_network_volt_class["union_geo"] = 0
     eia_base_network_volt_class = eia_base_network_volt_class.dissolve(by="union_geo")
     eia_base_network_volt_class = eia_base_network_volt_class.to_crs(3857)
@@ -63,25 +63,24 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
 
 
 def plot_network_crossings(pypsa_df, eia_df):
-    eia_crossings_df = eia_df.query("iso_sub_0 != iso_sub_1").groupby(
-        ["iso_sub_0", "iso_sub_1", "VOLT_CLASS"]).count().reset_index().loc[:,
-                       ("iso_sub_0", "iso_sub_1", "VOLT_CLASS", "ID")].rename(columns={"ID": "eia_num_crossings"})
-    pearth_crossings_df = pypsa_df.lines.query("iso_bus_0 != iso_bus_1").groupby(
-        ["iso_bus_0", "iso_bus_1", "v_nom_class"]).count().reset_index().loc[:,
-                          ("iso_bus_0", "iso_bus_1", "v_nom_class", "Line", "num_parallel")].rename(
+    eia_crossings_df = eia_df.query("state_0 != state_1").groupby(
+        ["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
+                       ("state_0", "state_1", "v_nom_class", "ID")].rename(columns={"ID": "eia_num_crossings"})
+    pearth_crossings_df = pypsa_df.lines.query("state_0 != state_1").groupby(
+        ["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
+                          ("state_0", "state_1", "v_nom_class", "Line", "num_parallel")].rename(
         columns={"Line": "pypsa_earth_num_crossings"})
-    eia_crossings_df["coalesce"] = eia_crossings_df[["iso_sub_0", "iso_sub_1"]].agg('-->'.join, axis=1)
-    pearth_crossings_df["coalesce"] = pearth_crossings_df[["iso_bus_0", "iso_bus_1"]].agg('-->'.join, axis=1)
+    eia_crossings_df["coalesce"] = eia_crossings_df[["state_0", "state_1"]].agg('-->'.join, axis=1)
+    pearth_crossings_df["coalesce"] = pearth_crossings_df[["state_0", "state_1"]].agg('-->'.join, axis=1)
 
-    print(eia_crossings_df.groupby("VOLT_CLASS")["eia_num_crossings"].sum())
-    print(pearth_crossings_df.groupby("v_nom_class")["pypsa_earth_num_crossings"].sum())
+
 
     crossings_df_eia_pearth = pd.merge(eia_crossings_df, pearth_crossings_df, how="left",
-                                       left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
-                                       right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
+                                       left_on=["coalesce", "state_0", "state_1", "v_nom_class"],
+                                       right_on=["coalesce", "state_0", "state_1", "v_nom_class"])
     crossings_df_pearth_eia = pd.merge(eia_crossings_df, pearth_crossings_df, how="right",
-                                       left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
-                                       right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
+                                       left_on=["coalesce", "state_0", "state_1", "v_nom_class"],
+                                       right_on=["coalesce", "state_0", "state_1", "v_nom_class"])
     eia_crossings_df.to_csv("eia_crossing_count.csv")
     pearth_crossings_df.to_csv("pearth_crossing_count.csv")
     crossings_df_eia_pearth.to_csv("crossings_eia_pearth.csv")
@@ -150,14 +149,14 @@ def parse_inputs(base_path, log_file_dir_path):
     eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_0_coors")]
     eia_base_network_modified["geometry"] = eia_base_network_modified["sub_0_coors"]
     log_output_file.write(" --> shape of eia_base_network before sub_0 spatial join {} \n".format(eia_base_network.shape))
-    spatial_join_gadm_eia_sub_0 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_0", "ISO_1": "iso_sub_0"})
+    spatial_join_gadm_eia_sub_0 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_0", "ISO_1": "state_0"})
     log_output_file.write(" --> shape of eia_base_network after sub_0 spatial join {} \n".format(spatial_join_gadm_eia_sub_0.shape))
 
     # --> Step 4 - Perform the spatial joins with the GADM shapes (Level 1)
     eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_1_coors")]
     eia_base_network_modified["geometry"] = eia_base_network_modified["sub_1_coors"]
     log_output_file.write(" --> shape of eia_base_network before sub_1 spatial join {} \n".format(eia_base_network_modified.shape))
-    spatial_join_gadm_eia_sub_1 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_1", "ISO_1": "iso_sub_1"})
+    spatial_join_gadm_eia_sub_1 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_1", "ISO_1": "state_1"})
     log_output_file.write(" --> shape of eia_base_network after the sub_1 spatial join {} \n".format(spatial_join_gadm_eia_sub_1.shape))
 
     # --> Step 5 - Inner join the results
@@ -167,16 +166,18 @@ def parse_inputs(base_path, log_file_dir_path):
 
     # Clean the EIA data from lines with unnecessary voltages and voltage classes
 
+    eia_base_network = eia_base_network.rename(columns={"VOLTAGE": "v_nom", "VOLT_CLASS": "v_nom_class"})
+
     # --> Step 6 - Remove lines corresponding to voltage = -999999.0 kV
-    eia_base_network = eia_base_network.loc[eia_base_network["VOLTAGE"] != -999999.0]
+    eia_base_network = eia_base_network.loc[eia_base_network["v_nom"] != -999999.0]
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {} \n".format(eia_base_network.shape))
 
     # --> Step 7 - Remove lines corresponding to voltage class 'DC'. All lines in the base.nc are AC
-    eia_base_network = eia_base_network.loc[eia_base_network["VOLT_CLASS"] != 'Dc']
+    eia_base_network = eia_base_network.loc[eia_base_network["v_nom_class"] != 'Dc']
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Dc' {} \n".format(eia_base_network.shape))
 
     # --> Step 8 - Remove lines corresponding to voltage class 'Not Available'
-    eia_base_network = eia_base_network.loc[eia_base_network["VOLT_CLASS"] != 'Not Available']
+    eia_base_network = eia_base_network.loc[eia_base_network["v_nom_class"] != 'Not Available']
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {} \n".format(eia_base_network.shape))
 
     #####################
@@ -192,11 +193,11 @@ def parse_inputs(base_path, log_file_dir_path):
 
     base_network_pypsa_earth_geopandas_bus_0 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_0_coors), crs="EPSG:4326").reset_index()
 
-    spatial_join_gadm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_0", "ISO_1": "iso_bus_0"})
+    spatial_join_gadm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_0", "ISO_1": "state_0"})
 
     base_network_pypsa_earth_geopandas_bus_1 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_1_coors), crs="EPSG:4326").reset_index()
 
-    spatial_join_gadm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_1", "ISO_1": "iso_bus_1"})
+    spatial_join_gadm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_1", "ISO_1": "state_1"})
 
     base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_gadm_pearth_bus_0, how="inner", on="Line")
     base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_gadm_pearth_bus_1, how="inner", on="Line")
@@ -247,7 +248,7 @@ if __name__ == '__main__':
     # Comparison for the network topologies (PyPSA-Earth vs EIA)
     # --> plot the EIA reference network and the PyPSA-Earth network
     # --> plot the intersections between the networks
-    eia_voltage_classes = list(network_eia_df["VOLT_CLASS"].unique())
+    eia_voltage_classes = list(network_eia_df["v_nom_class"].unique())
 
     if args.plot_network_topology:
         for selected_voltage_class in eia_voltage_classes:
