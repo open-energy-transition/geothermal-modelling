@@ -62,18 +62,45 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
     fig.savefig(fig_name)
 
 
+def plot_network_crossings(pypsa_df, eia_df, voltage_class, fig_name):
+    eia_crossings_df = eia_df.query("iso_sub_0 != iso_sub_1").groupby(
+        ["iso_sub_0", "iso_sub_1", "VOLT_CLASS"]).count().reset_index().loc[:,
+                       ("iso_sub_0", "iso_sub_1", "VOLT_CLASS", "ID")].rename(columns={"ID": "eia_num_crossings"})
+    pearth_crossings_df = pypsa_df.lines.query("iso_bus_0 != iso_bus_1").groupby(
+        ["iso_bus_0", "iso_bus_1", "v_nom_class"]).count().reset_index().loc[:,
+                          ("iso_bus_0", "iso_bus_1", "v_nom_class", "Line")].rename(
+        columns={"Line": "pypsa_earth_num_crossings"})
+    eia_crossings_df["coalesce"] = eia_crossings_df[["iso_sub_0", "iso_sub_1"]].agg('-->'.join, axis=1)
+    pearth_crossings_df["coalesce"] = pearth_crossings_df[["iso_bus_0", "iso_bus_1"]].agg('-->'.join, axis=1)
+
+    print(eia_crossings_df.groupby("VOLT_CLASS")["eia_num_crossings"].sum())
+    print(pearth_crossings_df.groupby("v_nom_class")["pypsa_earth_num_crossings"].sum())
+
+    #crossings_df_eia_pearth = pd.merge(eia_crossings_df, pearth_crossings_df, how="left",
+    #                                   left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
+    #                                   right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
+    #crossings_df_pearth_eia = pd.merge(eia_crossings_df, pearth_crossings_df, how="right",
+    #                                   left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
+    #                                   right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
+    # eia_crossings_df.to_csv("eia_crossing_count.csv")
+    # pearth_crossings_df.to_csv("pearth_crossing_count.csv")
+    # crossings_df_eia_pearth.to_csv("crossings_eia_pearth.csv")
+    # crossings_df_pearth_eia.to_csv("crossings_pearth_eia.csv")
+
+
 def parse_input_arguments():
     """
-    To perform the network topology comparison, execute python network_comparison --plot_network_topology
-    To perform the network topology comparison, execute python network_comparison --plot_network_crossings
-    To perform both actions, execute python network_comparison --plot_network_topology --plot_network_crossings
+    Example:
+    -) to perform the network topology comparison, execute python network_comparison.py --plot_network_topology
+    -) to perform the network topology comparison, execute python network_comparison.py --plot_network_crossings
+    -) to perform both actions, execute python network_comparison.py --plot_network_topology --plot_network_crossings
 
     Returns
     Args
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--plot_network_topology", help="Boolean: plot the network topology", action="store_true")
-    parser.add_argument("--plot_network_crossing", help="Boolean: plot the network crossings", action="store_true")
+    parser.add_argument("--plot_network_crossings", help="Boolean: plot the network crossings", action="store_true")
     parser.add_argument("--plot_network_capacity", help="Boolean: plot the network capacity", action="store_true")
     return parser.parse_args()
 
@@ -234,27 +261,10 @@ if __name__ == '__main__':
                                       fig_name_intersection)
 
     # Comparison for the transmission crossings (PyPSA-Earth vs EIA)
-    if args.plot_network_crossing:
-        eia_crossings_df = network_eia_df.query("iso_sub_0 != iso_sub_1").groupby(
-            ["iso_sub_0", "iso_sub_1", "VOLT_CLASS"]).count().reset_index().loc[:,
-                           ("iso_sub_0", "iso_sub_1", "VOLT_CLASS", "ID")].rename(columns={"ID": "eia_num_crossings"})
-        pearth_crossings_df = network_pypsa_df.lines.query("iso_bus_0 != iso_bus_1").groupby(
-            ["iso_bus_0", "iso_bus_1", "v_nom_class"]).count().reset_index().loc[:,
-                              ("iso_bus_0", "iso_bus_1", "v_nom_class", "Line")].rename(
-            columns={"Line": "pypsa_earth_num_crossings"})
-        eia_crossings_df["coalesce"] = eia_crossings_df[["iso_sub_0", "iso_sub_1"]].agg('-->'.join, axis=1)
-        pearth_crossings_df["coalesce"] = pearth_crossings_df[["iso_bus_0", "iso_bus_1"]].agg('-->'.join, axis=1)
-        eia_crossings_df.to_csv("eia_crossing_count.csv")
-        pearth_crossings_df.to_csv("pearth_crossing_count.csv")
-
-        crossings_df_eia_pearth = pd.merge(eia_crossings_df, pearth_crossings_df, how="left",
-                                           left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
-                                           right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
-        crossings_df_eia_pearth.to_csv("crossings_eia_pearth.csv")
-        crossings_df_pearth_eia = pd.merge(eia_crossings_df, pearth_crossings_df, how="right",
-                                           left_on=["coalesce", "iso_sub_0", "iso_sub_1", "VOLT_CLASS"],
-                                           right_on=["coalesce", "iso_bus_0", "iso_bus_1", "v_nom_class"])
-        crossings_df_pearth_eia.to_csv("crossings_pearth_eia.csv")
+    if args.plot_network_crossings:
+        for selected_voltage_class in eia_voltage_classes:
+            fig_name = ""
+            plot_network_crossings(network_pypsa_df, network_eia_df, selected_voltage_class, fig_name)
 
     # Comparison for the transmission capacities (PyPSA-Earth vs EIA)
     if args.plot_network_capacity:
@@ -262,7 +272,7 @@ if __name__ == '__main__':
         # The units are:
         # - line length in miles
         # - voltage in kV
-        # - carrying capacity in 100MW-mile or (GW*10-mile)
+        # - carrying capacity in MW
         power_carrying_capacity_df = pd.DataFrame(
             {
                 "Line length": [50, 100, 200, 300, 400, 500, 600],
@@ -276,10 +286,10 @@ if __name__ == '__main__':
 
         # Transform:
         # -) length to km
-        # -) carrying capacity to GW
+        # -) carrying capacity in MW
         miles_to_km = 1.609344
         power_carrying_capacity_df.loc[:, "Line length"] = power_carrying_capacity_df.loc[:, "Line length"] * miles_to_km
-        power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")] = power_carrying_capacity_df.loc[:, ("138", "161", "230", "345","500", "765")] / 10.0
+        power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")] = power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")]
         grouped_df = network_pypsa_df.lines.groupby("v_nom_class")["s_nom"].agg(["min", "max"])
-        print(grouped_df / 1000.0)  # convert from MW to GW
+        print(grouped_df)
         print(power_carrying_capacity_df)
