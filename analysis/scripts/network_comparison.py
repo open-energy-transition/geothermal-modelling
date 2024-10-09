@@ -64,27 +64,31 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
 
 
 def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_list, output_base_path, plot_base_path):
-    eia_crossings_df = eia_df.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
+
+    ###############
+    # GADM shapes #
+    ###############
+    gadm_eia_crossings_df = eia_df.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
                           ("state_0", "state_1", "v_nom_class", "ID")].rename(columns={"ID": "crossings"})
-    eia_crossings_df["source"] = "EIA"
+    gadm_eia_crossings_df["source"] = "EIA"
 
-    pearth_crossings_df = pypsa_df.lines.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
+    gadm_pearth_crossings_df = pypsa_df.lines.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
                           ("state_0", "state_1", "v_nom_class", "Line")].rename(columns={"Line": "crossings"})
-    pearth_crossings_df["source"] = "PyPSA"
+    gadm_pearth_crossings_df["source"] = "PyPSA"
 
-    pearth_crossings_parallel_df = pypsa_df.lines.groupby(
+    gadm_pearth_crossings_parallel_df = pypsa_df.lines.groupby(
         ["state_0", "state_1", "v_nom_class"])["num_parallel"].sum().reset_index().loc[:,
                           ("state_0", "state_1", "v_nom_class", "num_parallel")].rename(columns={"num_parallel": "crossings"})
-    pearth_crossings_parallel_df["source"] = "PyPSA_parallel"
+    gadm_pearth_crossings_parallel_df["source"] = "PyPSA_parallel"
 
-    network_counts = pd.concat([eia_crossings_df, pearth_crossings_df, pearth_crossings_parallel_df])
-    network_counts = network_counts.set_index(
+    gadm_network_counts = pd.concat([gadm_eia_crossings_df, gadm_pearth_crossings_df, gadm_pearth_crossings_parallel_df])
+    gadm_network_counts = gadm_network_counts.set_index(
         ["source", "state_0", "state_1", "v_nom_class"]
     ).unstack("source").droplevel(axis=1, level=0).reset_index()
-    network_counts = network_counts[["state_0", "state_1", "v_nom_class", "PyPSA", "EIA", "PyPSA_parallel"]]
+    gadm_network_counts = gadm_network_counts[["state_0", "state_1", "v_nom_class", "PyPSA", "EIA", "PyPSA_parallel"]]
 
-    # investigate state crossings with GADM
-    state_crossings_counts = network_counts.query("state_0 != state_1")
+    # --> state crossings. The start and end states were assigned by means of a spatial join with the GADM shapes
+    state_crossings_counts = gadm_network_counts.query("state_0 != state_1")
 
     state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
@@ -119,12 +123,11 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
         xaxis_title="States", yaxis_title="Error (%)")
         fig.write_image(pathlib.Path(plot_base_path, "gadm_state_crossings_counts_for_voltage_{}.png".format(voltage_class)))
 
-    # investigate lines that remain in the state
-    state_lines_counts = network_counts.query("state_0 == state_1")
+    # --> state lines. The start and end states were assigned by means of a spatial join with the GADM shapes
+    state_lines_counts = gadm_network_counts.query("state_0 == state_1")
     state_lines_counts_by_voltage = state_lines_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
     state_lines_counts_by_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_lines_counts_by_voltage.csv"))
-
 
     fig = px.bar(state_lines_counts_by_voltage,
                  x="v_nom_class",
@@ -153,6 +156,68 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
         plt.subplots_adjust(bottom=0.3)
         plt.savefig(pathlib.Path(plot_base_path, "gadm_state_lines_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
 
+    ##############
+    # IPM shapes #
+    ##############
+    ipm_eia_crossings_df = eia_df.groupby(["ipm_region_0", "ipm_region_1", "v_nom_class"]).count().reset_index().loc[:,
+                          ("ipm_region_0", "ipm_region_1", "v_nom_class", "ID")].rename(columns={"ID": "crossings"})
+    ipm_eia_crossings_df["source"] = "EIA"
+
+    ipm_pearth_crossings_df = pypsa_df.lines.groupby(["ipm_region_0", "ipm_region_1", "v_nom_class"]).count().reset_index().loc[:,
+                          ("ipm_region_0", "ipm_region_1", "v_nom_class", "Line")].rename(columns={"Line": "crossings"})
+    ipm_pearth_crossings_df["source"] = "PyPSA"
+
+    ipm_pearth_crossings_parallel_df = pypsa_df.lines.groupby(
+        ["ipm_region_0", "ipm_region_1", "v_nom_class"])["num_parallel"].sum().reset_index().loc[:,
+                          ("ipm_region_0", "ipm_region_1", "v_nom_class", "num_parallel")].rename(columns={"num_parallel": "crossings"})
+    ipm_pearth_crossings_parallel_df["source"] = "PyPSA_parallel"
+
+    ipm_network_counts = pd.concat(
+        [ipm_eia_crossings_df, ipm_pearth_crossings_df, ipm_pearth_crossings_parallel_df])
+    ipm_network_counts = ipm_network_counts.set_index(
+        ["source", "ipm_region_0", "ipm_region_1", "v_nom_class"]
+    ).unstack("source").droplevel(axis=1, level=0).reset_index()
+    ipm_network_counts = ipm_network_counts[["ipm_region_0", "ipm_region_1", "v_nom_class", "PyPSA", "EIA", "PyPSA_parallel"]]
+
+    # --> ipm region crossings. The start and end ipm regions were assigned by means of a spatial join with the IPM shapes
+    region_crossings_counts = ipm_network_counts.query("ipm_region_0 != ipm_region_1")
+
+    region_crossings_counts_voltage = region_crossings_counts.groupby("v_nom_class")[
+        ["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
+        ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
+    region_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "ipm_region_crossings_counts_by_voltage.csv"))
+
+    fig = px.bar(region_crossings_counts_voltage,
+                 x="v_nom_class",
+                 y=["PyPSA", "PyPSA_parallel", "EIA"],
+                 barmode="group",
+                 color_discrete_map=color_dictionary,
+                 text_auto='.2s',
+                 title="Number of transmission line crossings per voltage class"
+                 ).update_layout(
+        xaxis_title="Voltage class (kV)", yaxis_title="Number of transmission line crossings"
+    )
+    fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
+    fig.write_image(pathlib.Path(plot_base_path, "ipm_region_crossings_counts_by_voltage.png"))
+
+    region_crossings_counts["delta_PyPSA"] = (region_crossings_counts["PyPSA"] - region_crossings_counts["EIA"]) / region_crossings_counts["EIA"] * 100.0
+    region_crossings_counts["delta_PyPSA_parallel"] = (region_crossings_counts["PyPSA_parallel"] - region_crossings_counts[
+        "EIA"]) / region_crossings_counts["EIA"] * 100.0
+    region_crossings_counts["coalesce"] = region_crossings_counts[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
+    region_crossings_counts.to_csv(pathlib.Path(output_base_path, "ipm_region_crossings_counts.csv"))
+
+    for voltage_class in voltage_classes_list:
+        filtered_df = region_crossings_counts.loc[region_crossings_counts["v_nom_class"] == voltage_class]
+        fig = px.scatter(filtered_df,
+                         x="coalesce",
+                         y=["delta_PyPSA", "delta_PyPSA_parallel"],
+                         color_discrete_map=color_dictionary,
+                         title="Voltage class: {}".format(voltage_class)
+                         ).update_layout(
+            xaxis_title="IPM Region", yaxis_title="Error (%)")
+        fig.write_image(
+            pathlib.Path(plot_base_path, "ipm_region_crossings_counts_for_voltage_{}.png".format(voltage_class)))
+
 
 def parse_input_arguments():
     """
@@ -177,6 +242,7 @@ def parse_inputs(base_path, log_file_dir_path):
     eia_base_network_path = pathlib.Path(base_path.parent, "US_electric_transmission_lines_original.geojson")
     gadm_shapes_path = pathlib.Path(base_path, "analysis", "data", "gadm41_USA_1.json")
     ipm_shapes_path = pathlib.Path(base_path, "analysis", "data", "ipm_v6_regions", "IPM_Regions_201770405.shp")
+    transmission_capacities_path = pathlib.Path(base_path, "analysis", "data", "transmission_single_epaipm.csv")
 
 
     ###########
@@ -186,6 +252,7 @@ def parse_inputs(base_path, log_file_dir_path):
     eia_base_network = gpd.read_file(eia_base_network_path)
     gadm_shapes = gpd.read_file(gadm_shapes_path)
     ipm_shapes = gpd.read_file(ipm_shapes_path).to_crs("4326")
+    transmission_capacities = pd.read_csv(transmission_capacities_path)
     today_date = str(dt.datetime.now())
     log_output_file = open(log_file_dir_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
@@ -245,7 +312,6 @@ def parse_inputs(base_path, log_file_dir_path):
     log_output_file.write(" --> shape of eia_base_network after the inner joins {} \n".format(eia_base_network.shape))
 
     # Clean the EIA data from lines with unnecessary voltages and voltage classes
-
     eia_base_network = eia_base_network.rename(columns={"VOLTAGE": "v_nom", "VOLT_CLASS": "v_nom_class"})
 
     # --> Remove lines corresponding to voltage = -999999.0 kV
