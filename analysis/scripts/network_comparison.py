@@ -10,6 +10,8 @@ import pathlib
 import datetime as dt
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 import pypsa
 import cartopy.crs as ccrs
 import sys
@@ -82,19 +84,25 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
     ).unstack("source").droplevel(axis=1, level=0).reset_index()
     network_counts = network_counts[["state_0", "state_1", "v_nom_class", "PyPSA", "EIA", "PyPSA-parallel"]]
 
-
     # investigate state crossings
     state_crossings_counts = network_counts.query("state_0 != state_1")
 
-    state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA-parallel"]].sum().sort_values(by="v_nom_class")
+    state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA-parallel"]].sum().reindex(
+        ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
     state_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "state_crossings_counts_by_voltage.csv"))
 
-    state_crossings_counts_voltage.plot(kind="bar")
-    plt.xlabel("Voltage classes (kV)")
-    plt.ylabel("Number of state line crossings")
-    plt.grid(linestyle="--")
-    plt.subplots_adjust(bottom=0.3)
-    plt.savefig(pathlib.Path(plot_base_path, "state_crossings_counts_by_voltage.png"), dpi=800)
+    fig = px.bar(state_crossings_counts_voltage,
+                 x="v_nom_class",
+                 y=["PyPSA", "PyPSA-parallel", "EIA"],
+                 barmode="group",
+                 color_discrete_sequence=["#00008B", "#006400", "#FF8C00"],
+                 text_auto='.2s',
+                 title="Number of transmission line crossings per voltage class"
+                 ).update_layout(
+        xaxis_title="Voltage class (kV)", yaxis_title="Number of transmission line crossings"
+    )
+    fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
+    fig.write_image(pathlib.Path(plot_base_path, "state_crossings_counts_by_voltage.png"))
 
     state_crossings_counts["delta_PyPSA"] = np.abs(state_crossings_counts["PyPSA"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
     state_crossings_counts["delta_PyPSA_parallel"] = np.abs(state_crossings_counts["PyPSA-parallel"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
@@ -108,7 +116,7 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
         plt.ylabel("Error (%)")
         plt.xticks(rotation="vertical")
         plt.title("Voltage class: {}".format(voltage_class))
-        plt.grid(linestyle="--")
+        #plt.grid(linestyle="--")
         plt.subplots_adjust(bottom=0.3)
         plt.savefig(pathlib.Path(plot_base_path, "state_crossings_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
 
@@ -121,7 +129,7 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
     state_lines_counts_by_voltage.plot(kind="bar")
     plt.xlabel("Voltage classes (kV)")
     plt.ylabel("Number of state lines")
-    plt.grid(linestyle="--")
+    #plt.grid(linestyle="--")
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(pathlib.Path(plot_base_path, "state_lines_counts_by_voltage.png"), dpi=800)
 
@@ -136,7 +144,7 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
         plt.ylabel("Error (%)")
         plt.xticks(rotation="vertical")
         plt.title("Voltage class: {}".format(voltage_class))
-        plt.grid(linestyle="--")
+        #plt.grid(linestyle="--")
         plt.subplots_adjust(bottom=0.3)
         plt.savefig(pathlib.Path(plot_base_path, "state_lines_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
 
