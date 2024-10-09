@@ -82,6 +82,8 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
     ).unstack("source").droplevel(axis=1, level=0).reset_index()
     network_counts = network_counts[["state_0", "state_1", "v_nom_class", "PyPSA", "EIA", "PyPSA-parallel"]]
 
+
+    # investigate state crossings
     state_crossings_counts = network_counts.query("state_0 != state_1")
 
     state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA-parallel"]].sum().sort_values(by="v_nom_class")
@@ -94,6 +96,23 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(pathlib.Path(plot_base_path, "state_crossings_counts_by_voltage.png"), dpi=800)
 
+    state_crossings_counts["delta_PyPSA"] = np.abs(state_crossings_counts["PyPSA"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
+    state_crossings_counts["delta_PyPSA_parallel"] = np.abs(state_crossings_counts["PyPSA-parallel"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
+    state_crossings_counts["coalesce"] = state_crossings_counts[["state_0", "state_1"]].agg('-->'.join, axis=1)
+    state_crossings_counts.to_csv(pathlib.Path(output_base_path, "state_crossings_counts.csv"))
+
+    for voltage_class in voltage_classes_list:
+        ax1 = state_crossings_counts.loc[state_crossings_counts["v_nom_class"] == voltage_class].plot.scatter(x="coalesce", y="delta_PyPSA", c="blue", label="PyPSA")
+        state_crossings_counts.loc[state_crossings_counts["v_nom_class"] == voltage_class].plot.scatter(x="coalesce", y="delta_PyPSA_parallel", c="green", ax=ax1, label="PyPSA-parallel")
+        plt.xlabel("US state")
+        plt.ylabel("Error (%)")
+        plt.xticks(rotation="vertical")
+        plt.title("Voltage class: {}".format(voltage_class))
+        plt.grid(linestyle="--")
+        plt.subplots_adjust(bottom=0.3)
+        plt.savefig(pathlib.Path(plot_base_path, "state_crossings_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
+
+    # investigate lines that remain in the state
     state_lines_counts = network_counts.query("state_0 == state_1")
     state_lines_counts_by_voltage = state_lines_counts.groupby("v_nom_class")[
         ["PyPSA", "EIA", "PyPSA-parallel"]].sum().sort_values(by="v_nom_class")
@@ -105,6 +124,22 @@ def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_p
     plt.grid(linestyle="--")
     plt.subplots_adjust(bottom=0.3)
     plt.savefig(pathlib.Path(plot_base_path, "state_lines_counts_by_voltage.png"), dpi=800)
+
+    state_lines_counts["delta_PyPSA"] = np.abs(state_lines_counts["PyPSA"] - state_lines_counts["EIA"]) / state_lines_counts["EIA"]*100.0
+    state_lines_counts["delta_PyPSA_parallel"] = np.abs(state_lines_counts["PyPSA-parallel"] - state_lines_counts["EIA"]) / state_lines_counts["EIA"]*100.0
+    state_lines_counts.to_csv(pathlib.Path(output_base_path, "state_lines_counts.csv"))
+
+    for voltage_class in voltage_classes_list:
+        ax1 = state_lines_counts.loc[state_lines_counts["v_nom_class"] == voltage_class].plot.scatter(x="state_0", y="delta_PyPSA", c="blue", label="PyPSA")
+        state_lines_counts.loc[state_lines_counts["v_nom_class"] == voltage_class].plot.scatter(x="state_0", y="delta_PyPSA_parallel", c="green", ax=ax1, label="PyPSA-parallel")
+        plt.xlabel("US state")
+        plt.ylabel("Error (%)")
+        plt.xticks(rotation="vertical")
+        plt.title("Voltage class: {}".format(voltage_class))
+        plt.grid(linestyle="--")
+        plt.subplots_adjust(bottom=0.3)
+        plt.savefig(pathlib.Path(plot_base_path, "state_lines_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
+
 
 
 
