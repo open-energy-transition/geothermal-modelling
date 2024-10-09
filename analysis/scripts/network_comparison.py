@@ -62,7 +62,7 @@ def plot_network_intersection(pypsa_df, eia_df, voltage_class, fig_name):
     fig.savefig(fig_name)
 
 
-def plot_network_crossings(pypsa_df, eia_df):
+def plot_network_crossings(pypsa_df, eia_df, voltage_classes_list, output_base_path, plot_base_path):
     eia_crossings_df = eia_df.groupby(["state_0", "state_1", "v_nom_class"]).count().reset_index().loc[:,
                           ("state_0", "state_1", "v_nom_class", "ID")].rename(columns={"ID": "crossings"})
     eia_crossings_df["source"] = "EIA"
@@ -76,11 +76,37 @@ def plot_network_crossings(pypsa_df, eia_df):
                           ("state_0", "state_1", "v_nom_class", "num_parallel")].rename(columns={"num_parallel": "crossings"})
     pearth_crossings_parallel_df["source"] = "PyPSA-parallel"
 
-    crossings = pd.concat([eia_crossings_df, pearth_crossings_df, pearth_crossings_parallel_df])
-    crossings = crossings.set_index(
+    network_counts = pd.concat([eia_crossings_df, pearth_crossings_df, pearth_crossings_parallel_df])
+    network_counts = network_counts.set_index(
         ["source", "state_0", "state_1", "v_nom_class"]
     ).unstack("source").droplevel(axis=1, level=0).reset_index()
-    crossings.to_csv("crossings.csv")
+    network_counts = network_counts[["state_0", "state_1", "v_nom_class", "PyPSA", "EIA", "PyPSA-parallel"]]
+
+    state_crossings_counts = network_counts.query("state_0 != state_1")
+
+    state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA-parallel"]].sum().sort_values(by="v_nom_class")
+    state_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "state_crossings_counts_by_voltage.csv"))
+
+    state_crossings_counts_voltage.plot(kind="bar")
+    plt.xlabel("Voltage classes (kV)")
+    plt.ylabel("Number of state line crossings")
+    plt.grid(linestyle="--")
+    plt.subplots_adjust(bottom=0.3)
+    plt.savefig(pathlib.Path(plot_base_path, "state_crossings_counts_by_voltage.png"), dpi=800)
+
+    state_lines_counts = network_counts.query("state_0 == state_1")
+    state_lines_counts_by_voltage = state_lines_counts.groupby("v_nom_class")[
+        ["PyPSA", "EIA", "PyPSA-parallel"]].sum().sort_values(by="v_nom_class")
+    state_lines_counts_by_voltage.to_csv(pathlib.Path(output_base_path,"state_lines_counts_by_voltage.csv"))
+
+    state_lines_counts_by_voltage.plot(kind="bar")
+    plt.xlabel("Voltage classes (kV)")
+    plt.ylabel("Number of state lines")
+    plt.grid(linestyle="--")
+    plt.subplots_adjust(bottom=0.3)
+    plt.savefig(pathlib.Path(plot_base_path, "state_lines_counts_by_voltage.png"), dpi=800)
+
+
 
 
 def parse_input_arguments():
@@ -236,6 +262,7 @@ if __name__ == '__main__':
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs")
     plot_path = pathlib.Path(default_path, "analysis", "plots")
+    output_path = pathlib.Path(default_path, "analysis", "outputs")
 
     network_eia_df, network_pypsa_df = parse_inputs(default_path, log_path)
 
@@ -259,7 +286,7 @@ if __name__ == '__main__':
 
     # Comparison for the transmission crossings (PyPSA-Earth vs EIA)
     if args.plot_network_crossings:
-        plot_network_crossings(network_pypsa_df, network_eia_df)
+        plot_network_crossings(network_pypsa_df, network_eia_df, eia_voltage_classes, output_path, plot_path)
 
     # Comparison for the transmission capacities (PyPSA-Earth vs EIA)
     if args.check_network_capacity:
