@@ -11,7 +11,6 @@ import datetime as dt
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import plotly.express as px
-import plotly.graph_objects as go
 import pypsa
 import cartopy.crs as ccrs
 import sys
@@ -84,12 +83,12 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
     ).unstack("source").droplevel(axis=1, level=0).reset_index()
     network_counts = network_counts[["state_0", "state_1", "v_nom_class", "PyPSA", "EIA", "PyPSA_parallel"]]
 
-    # investigate state crossings
+    # investigate state crossings with GADM
     state_crossings_counts = network_counts.query("state_0 != state_1")
 
     state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
-    state_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "state_crossings_counts_by_voltage.csv"))
+    state_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_crossings_counts_by_voltage.csv"))
 
     fig = px.bar(state_crossings_counts_voltage,
                  x="v_nom_class",
@@ -102,12 +101,12 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
         xaxis_title="Voltage class (kV)", yaxis_title="Number of transmission line crossings"
     )
     fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
-    fig.write_image(pathlib.Path(plot_base_path, "state_crossings_counts_by_voltage.png"))
+    fig.write_image(pathlib.Path(plot_base_path, "gadm_state_crossings_counts_by_voltage.png"))
 
     state_crossings_counts["delta_PyPSA"] = (state_crossings_counts["PyPSA"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
     state_crossings_counts["delta_PyPSA_parallel"] = (state_crossings_counts["PyPSA_parallel"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
     state_crossings_counts["coalesce"] = state_crossings_counts[["state_0", "state_1"]].agg('-->'.join, axis=1)
-    state_crossings_counts.to_csv(pathlib.Path(output_base_path, "state_crossings_counts.csv"))
+    state_crossings_counts.to_csv(pathlib.Path(output_base_path, "gadm_state_crossings_counts.csv"))
 
     for voltage_class in voltage_classes_list:
         filtered_df = state_crossings_counts.loc[state_crossings_counts["v_nom_class"] == voltage_class]
@@ -118,13 +117,13 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
                          title="Voltage class: {}".format(voltage_class)
                          ).update_layout(
         xaxis_title="States", yaxis_title="Error (%)")
-        fig.write_image(pathlib.Path(plot_base_path, "state_crossings_counts_for_voltage_{}.png".format(voltage_class)))
+        fig.write_image(pathlib.Path(plot_base_path, "gadm_state_crossings_counts_for_voltage_{}.png".format(voltage_class)))
 
     # investigate lines that remain in the state
     state_lines_counts = network_counts.query("state_0 == state_1")
     state_lines_counts_by_voltage = state_lines_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
-    state_lines_counts_by_voltage.to_csv(pathlib.Path(output_base_path,"state_lines_counts_by_voltage.csv"))
+    state_lines_counts_by_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_lines_counts_by_voltage.csv"))
 
 
     fig = px.bar(state_lines_counts_by_voltage,
@@ -138,11 +137,11 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
         xaxis_title="Voltage class (kV)", yaxis_title="Number of state lines"
     )
     fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
-    fig.write_image(pathlib.Path(plot_base_path, "state_lines_counts_by_voltage.png"))
+    fig.write_image(pathlib.Path(plot_base_path, "gadm_state_lines_counts_by_voltage.png"))
 
     state_lines_counts["delta_PyPSA"] = (state_lines_counts["PyPSA"] - state_lines_counts["EIA"]) / state_lines_counts["EIA"]*100.0
     state_lines_counts["delta_PyPSA_parallel"] = (state_lines_counts["PyPSA_parallel"] - state_lines_counts["EIA"]) / state_lines_counts["EIA"]*100.0
-    state_lines_counts.to_csv(pathlib.Path(output_base_path, "state_lines_counts.csv"))
+    state_lines_counts.to_csv(pathlib.Path(output_base_path, "gadm_state_lines_counts.csv"))
 
     for voltage_class in voltage_classes_list:
         ax1 = state_lines_counts.loc[state_lines_counts["v_nom_class"] == voltage_class].plot.scatter(x="state_0", y="delta_PyPSA", c="blue", label="PyPSA")
@@ -151,9 +150,8 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
         plt.ylabel("Error (%)")
         plt.xticks(rotation="vertical")
         plt.title("Voltage class: {}".format(voltage_class))
-        #plt.grid(linestyle="--")
         plt.subplots_adjust(bottom=0.3)
-        plt.savefig(pathlib.Path(plot_base_path, "state_lines_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
+        plt.savefig(pathlib.Path(plot_base_path, "gadm_state_lines_counts_for_voltage_{}.png".format(voltage_class)), dpi=800)
 
 
 def parse_input_arguments():
@@ -178,6 +176,8 @@ def parse_inputs(base_path, log_file_dir_path):
     base_network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "networks", "US_2021", "base.nc")
     eia_base_network_path = pathlib.Path(base_path.parent, "US_electric_transmission_lines_original.geojson")
     gadm_shapes_path = pathlib.Path(base_path, "analysis", "data", "gadm41_USA_1.json")
+    ipm_shapes_path = pathlib.Path(base_path, "analysis", "data", "ipm_v6_regions", "IPM_Regions_201770405.shp")
+
 
     ###########
     # Load data
@@ -185,6 +185,7 @@ def parse_inputs(base_path, log_file_dir_path):
     base_network_pypsa_earth = pypsa.Network(base_network_pypsa_earth_path)
     eia_base_network = gpd.read_file(eia_base_network_path)
     gadm_shapes = gpd.read_file(gadm_shapes_path)
+    ipm_shapes = gpd.read_file(ipm_shapes_path).to_crs("4326")
     today_date = str(dt.datetime.now())
     log_output_file = open(log_file_dir_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
@@ -198,7 +199,7 @@ def parse_inputs(base_path, log_file_dir_path):
 
     # add positions for the start- and end-points of the transmission lines
 
-    # --> Step 1 - Identify the lines with geometry type MultiLineString
+    # --> Identify the lines with geometry type MultiLineString
     eia_base_network["geometry_type"] = eia_base_network.geom_type
     lines_with_multilinestring_geometry = eia_base_network[eia_base_network["geometry_type"]=="MultiLineString"]["OBJECTID_1"].values.tolist()
     multilinestring_ratio = len(lines_with_multilinestring_geometry)/eia_base_network.shape[0]*100.0
@@ -210,42 +211,52 @@ def parse_inputs(base_path, log_file_dir_path):
 
     log_output_file.write(" --> shape of eia_base_network after excluding multilinestrings {} \n".format(eia_base_network.shape))
 
-    # --> Step 2 - Compute the start- and end-points of a line
+    # --> Compute the start- and end-points of a line
     eia_base_network[["sub_0_coors", "sub_1_coors"]] = eia_base_network["geometry"].boundary.explode(index_parts=True).unstack()
     log_output_file.write(" --> shape of eia_base_network after computing boundaries {} \n".format(eia_base_network.shape))
 
-    # --> Step 3 - Compute the start- and end-points of the line are located
+    # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
+    # joins with:
+    #  -) the GADM shapes (level 1) to get the US state
+    #  -) the IPM shapes to get the IPM region
     eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_0_coors")]
     eia_base_network_modified["geometry"] = eia_base_network_modified["sub_0_coors"]
     log_output_file.write(" --> shape of eia_base_network before sub_0 spatial join {} \n".format(eia_base_network.shape))
-    spatial_join_gadm_eia_sub_0 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_0", "ISO_1": "state_0"})
-    log_output_file.write(" --> shape of eia_base_network after sub_0 spatial join {} \n".format(spatial_join_gadm_eia_sub_0.shape))
+    spatial_join_gadm_eia_sub_0 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "ISO_1")].rename(columns={"ISO_1": "state_0"})
+    spatial_join_ipm_eia_sub_0 = eia_base_network_modified.sjoin(ipm_shapes, how="left").loc[:, ("OBJECTID_1", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
+    spatial_join_eia_sub_0 = pd.merge(spatial_join_gadm_eia_sub_0, spatial_join_ipm_eia_sub_0, how="inner", on="OBJECTID_1")
+    log_output_file.write(" --> shape of eia_base_network after sub_0 spatial join with gadm {} \n".format(spatial_join_gadm_eia_sub_0.shape))
+    log_output_file.write(" --> shape of eia_base_network after sub_0 spatial join with ipm{} \n".format(spatial_join_ipm_eia_sub_0.shape))
+    log_output_file.write(" --> shape of eia_base_network after sub_0 spatial join {} \n".format(spatial_join_eia_sub_0.shape))
 
-    # --> Step 4 - Perform the spatial joins with the GADM shapes (Level 1)
     eia_base_network_modified = eia_base_network.loc[:, ("OBJECTID_1", "sub_1_coors")]
     eia_base_network_modified["geometry"] = eia_base_network_modified["sub_1_coors"]
     log_output_file.write(" --> shape of eia_base_network before sub_1 spatial join {} \n".format(eia_base_network_modified.shape))
-    spatial_join_gadm_eia_sub_1 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_sub_1", "ISO_1": "state_1"})
-    log_output_file.write(" --> shape of eia_base_network after the sub_1 spatial join {} \n".format(spatial_join_gadm_eia_sub_1.shape))
+    spatial_join_gadm_eia_sub_1 = eia_base_network_modified.sjoin(gadm_shapes, how="left").loc[:, ("OBJECTID_1", "ISO_1")].rename(columns={"ISO_1": "state_1"})
+    spatial_join_ipm_eia_sub_1 = eia_base_network_modified.sjoin(ipm_shapes, how="left").loc[:, ("OBJECTID_1", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
+    spatial_join_eia_sub_1 = pd.merge(spatial_join_gadm_eia_sub_1, spatial_join_ipm_eia_sub_1, how="inner", on="OBJECTID_1")
+    log_output_file.write(" --> shape of eia_base_network after sub_1 spatial join with gadm {} \n".format(spatial_join_gadm_eia_sub_1.shape))
+    log_output_file.write(" --> shape of eia_base_network after sub_1 spatial join with ipm{} \n".format(spatial_join_ipm_eia_sub_1.shape))
+    log_output_file.write(" --> shape of eia_base_network after sub_1 spatial join {} \n".format(spatial_join_eia_sub_1.shape))
 
-    # --> Step 5 - Inner join the results
-    eia_base_network = pd.merge(eia_base_network, spatial_join_gadm_eia_sub_0, how="inner", on="OBJECTID_1")
-    eia_base_network = pd.merge(eia_base_network, spatial_join_gadm_eia_sub_1, how="inner", on="OBJECTID_1")
+    # --> Inner join the results
+    eia_base_network = pd.merge(eia_base_network, spatial_join_eia_sub_0, how="inner", on="OBJECTID_1")
+    eia_base_network = pd.merge(eia_base_network, spatial_join_eia_sub_1, how="inner", on="OBJECTID_1")
     log_output_file.write(" --> shape of eia_base_network after the inner joins {} \n".format(eia_base_network.shape))
 
     # Clean the EIA data from lines with unnecessary voltages and voltage classes
 
     eia_base_network = eia_base_network.rename(columns={"VOLTAGE": "v_nom", "VOLT_CLASS": "v_nom_class"})
 
-    # --> Step 6 - Remove lines corresponding to voltage = -999999.0 kV
+    # --> Remove lines corresponding to voltage = -999999.0 kV
     eia_base_network = eia_base_network.loc[eia_base_network["v_nom"] != -999999.0]
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {} \n".format(eia_base_network.shape))
 
-    # --> Step 7 - Remove lines corresponding to voltage class 'DC'. All lines in the base.nc are AC
+    # --> Remove lines corresponding to voltage class 'DC'. All lines in the base.nc are AC
     eia_base_network = eia_base_network.loc[eia_base_network["v_nom_class"] != 'Dc']
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Dc' {} \n".format(eia_base_network.shape))
 
-    # --> Step 8 - Remove lines corresponding to voltage class 'Not Available'
+    # --> Remove lines corresponding to voltage class 'Not Available'
     eia_base_network = eia_base_network.loc[eia_base_network["v_nom_class"] != 'Not Available']
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {} \n".format(eia_base_network.shape))
 
@@ -257,22 +268,35 @@ def parse_inputs(base_path, log_file_dir_path):
     log_output_file.write("        \n")
     log_output_file.write(" Data preparation on the PyPSA-Earth base network \n")
 
-    # --> Step 1 - Perform the spatial joins with the GADM shapes (Level 1)
+    # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
+    # joins with:
+    #  -) the GADM shapes (level 1) to get the US state
+    #  -) the IPM shapes to get the IPM region
     log_output_file.write(" --> shape of pypsa-earth base network after reading it in {} \n".format(base_network_pypsa_earth.lines.shape))
 
     base_network_pypsa_earth_geopandas_bus_0 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_0_coors), crs="EPSG:4326").reset_index()
 
-    spatial_join_gadm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_0", "ISO_1": "state_0"})
+    spatial_join_gadm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(gadm_shapes, how="left").loc[:, ("Line", "ISO_1")].rename(columns={"ISO_1": "state_0"})
+    spatial_join_ipm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(ipm_shapes, how="left").loc[:, ("Line", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
+    spatial_join_pearth_bus_0 = pd.merge(spatial_join_gadm_pearth_bus_0, spatial_join_ipm_pearth_bus_0, how="inner", on="Line")
+    log_output_file.write(" --> shape of base.nc after sub_0 spatial join with gadm {} \n".format(spatial_join_gadm_pearth_bus_0.shape))
+    log_output_file.write(" --> shape of base.nc after sub_0 spatial join with ipm{} \n".format(spatial_join_ipm_pearth_bus_0.shape))
+    log_output_file.write(" --> shape of base.nc after sub_0 spatial join {} \n".format(spatial_join_pearth_bus_0.shape))
 
     base_network_pypsa_earth_geopandas_bus_1 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_1_coors), crs="EPSG:4326").reset_index()
 
-    spatial_join_gadm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(gadm_shapes, how="left").loc[:, ("Line", "GID_1", "ISO_1")].rename(columns={"GID_1": "gid_bus_1", "ISO_1": "state_1"})
+    spatial_join_gadm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(gadm_shapes, how="left").loc[:, ("Line", "ISO_1")].rename(columns={"ISO_1": "state_1"})
+    spatial_join_ipm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(ipm_shapes, how="left").loc[:, ("Line", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
+    spatial_join_pearth_bus_1 = pd.merge(spatial_join_gadm_pearth_bus_1, spatial_join_ipm_pearth_bus_1, how="inner", on="Line")
+    log_output_file.write(" --> shape of base.nc after sub_1 spatial join with gadm {} \n".format(spatial_join_gadm_pearth_bus_1.shape))
+    log_output_file.write(" --> shape of base.nc after sub_1 spatial join with ipm{} \n".format(spatial_join_ipm_pearth_bus_1.shape))
+    log_output_file.write(" --> shape of base.nc after sub_1 spatial join {} \n".format(spatial_join_pearth_bus_1.shape))
 
-    base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_gadm_pearth_bus_0, how="inner", on="Line")
-    base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_gadm_pearth_bus_1, how="inner", on="Line")
+    base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_pearth_bus_0, how="inner", on="Line")
+    base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_pearth_bus_1, how="inner", on="Line")
     log_output_file.write(" --> shape of pypsa-earth base network after the spatial joins {} \n".format(base_network_pypsa_earth.lines.shape))
 
-    # --> Step 2 - Assign a voltage class to the pypsa-earth base.nc
+    # --> Assign a voltage class to the pypsa-earth base.nc
     base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom"]
 
     v_nom_class_dict_pypsa_earth = {
