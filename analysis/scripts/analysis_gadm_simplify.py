@@ -27,4 +27,8 @@ m.save(outfp)
 
 m = df.difference(df_simplify).explore()
 outfp = f"{plots_path}/GADM_difference.html"
-m.save(outfp)    
+m.save(outfp)  
+
+m = df.intersection(df_simplify).explore()
+outfp = f"{plots_path}/GADM_intersection.html"
+m.save(outfp)     
