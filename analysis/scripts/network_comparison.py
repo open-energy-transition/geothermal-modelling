@@ -219,7 +219,7 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
             pathlib.Path(plot_base_path, "ipm_region_crossings_counts_for_voltage_{}.png".format(voltage_class)))
 
 
-def plot_network_capacity(pypsa_df, base_path, output_base_path):
+def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_path, plot_base_path):
     transmission_capacities_path = pathlib.Path(base_path, "analysis", "data", "transmission_single_epaipm.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
         "region_from": "ipm_region_0",
@@ -232,6 +232,7 @@ def plot_network_capacity(pypsa_df, base_path, output_base_path):
     transmission_capacities_df.to_csv("ipm_test_cap.csv")
 
     pypsa_df.lines["s_nom_num_parallel"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"]
+    #pypsa_df.lines["s_nom_num_parallel_pu"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"] * pypsa_df.lines["s_max_pu"]
     ipm_region_pearth_transmission_capacities = pypsa_df.lines.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
                           ("ipm_region_0", "ipm_region_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "capacity (MW)"})
     ipm_region_pearth_transmission_capacities["source"] = "PyPSA"
@@ -243,17 +244,25 @@ def plot_network_capacity(pypsa_df, base_path, output_base_path):
         ["source", "ipm_region_0", "ipm_region_1"]
     ).unstack("source").droplevel(axis=1, level=0).reset_index()
     capacity_df["Error (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["IPM"]*100.0
+    capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
     capacity_df.to_csv(pathlib.Path(output_base_path, "ipm_pearth_capacities.csv"))
+
     fig = px.scatter(capacity_df,
                      x="coalesce",
-                     y=["delta_PyPSA", "delta_PyPSA_parallel"],
+                     y="Error (%)",
                      color_discrete_map=color_dictionary,
-                     title="Voltage class: {}".format(voltage_class)
+                     title="Transmission capacities"
                      ).update_layout(
         xaxis_title="IPM Region", yaxis_title="Error (%)")
     fig.write_image(
-        pathlib.Path(plot_base_path, "ipm_region_crossings_counts_for_voltage_{}.png".format(voltage_class)))
+        pathlib.Path(plot_base_path, "transmission_capacities.png"))
 
+    fig = px.box(capacity_df,
+                     y="Error (%)",
+                     title="Error Box Plot on Transmission capacities"
+                     )
+    fig.write_image(
+        pathlib.Path(plot_base_path, "box_transmission_capacities.png"))
 
 
 def parse_input_arguments():
@@ -435,7 +444,7 @@ if __name__ == '__main__':
     log_path = pathlib.Path(default_path, "analysis", "logs")
     plot_path = pathlib.Path(default_path, "analysis", "plots")
     output_path = pathlib.Path(default_path, "analysis", "outputs")
-    ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22"}
+    ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
 
     network_eia_df, network_pypsa_df = parse_inputs(default_path, log_path)
 
@@ -461,33 +470,5 @@ if __name__ == '__main__':
     if args.plot_network_crossings:
         plot_network_crossings(network_pypsa_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
 
-    # Comparison for the transmission capacities (PyPSA-Earth vs EIA)
-    if args.check_network_capacity:
-        # the source of this dictionary is at https://www.energy.gov/sites/default/files/2023-02/022423-DRAFTNeedsStudyforPublicComment.pdf (pdf page 112)
-        # The units are:
-        # - line length in miles
-        # - voltage in kV
-        # - carrying capacity in MW
-        power_carrying_capacity_df = pd.DataFrame(
-            {
-                "Line length": [50, 100, 200, 300, 400, 500, 600],
-                "138": [145, 100, 60, 50, np.nan, np.nan, np.nan],
-                "161": [195, 130, 85, 65, np.nan, np.nan, np.nan],
-                "230": [390, 265, 170, 130, 105, np.nan, np.nan],
-                "345": [1260, 860, 545, 420, 335, 280, 250],
-                "500": [3040, 2080, 1320, 1010, 810, 680, 600],
-                "765": [6820, 4660, 2950, 2270, 1820, 1520, 1340],
-            })
-
-        # Transform:
-        # -) length to km
-        # -) carrying capacity in MW
-        miles_to_km = 1.609344
-        power_carrying_capacity_df.loc[:, "Line length"] = power_carrying_capacity_df.loc[:, "Line length"] * miles_to_km
-        power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")] = power_carrying_capacity_df.loc[:, ("138", "161", "230", "345", "500", "765")]
-        grouped_df = network_pypsa_df.lines.groupby("v_nom_class")["s_nom"].agg(["min", "max"])
-        print(grouped_df)
-        print(power_carrying_capacity_df)
-
     if args.plot_network_capacity:
-        plot_network_capacity(network_pypsa_df, default_path, output_path)
+        plot_network_capacity(network_pypsa_df, ccs_color_dict, default_path, output_path, plot_path)
