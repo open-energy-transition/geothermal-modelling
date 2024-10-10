@@ -210,7 +210,8 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
         "region_from": "ipm_region_0",
         "region_to": "ipm_region_1",
-        "firm_ttc_mw": "capacity (MW)"
+        #"firm_ttc_mw": "capacity (MW)"
+        "nonfirm_ttc_mw": "capacity (MW)"
     })
     transmission_capacities_df["source"] = "IPM"
     transmission_capacities_df = transmission_capacities_df.loc[:, ("ipm_region_0", "ipm_region_1", "capacity (MW)", "source")]
