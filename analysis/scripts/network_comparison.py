@@ -15,7 +15,6 @@ import pypsa
 import cartopy.crs as ccrs
 import sys
 import pandas as pd
-import numpy as np
 
 
 def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_name):
@@ -219,7 +218,7 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     transmission_capacities_df.to_csv("ipm_test_cap.csv")
 
     pypsa_df.lines["s_nom_num_parallel"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"]
-    #pypsa_df.lines["s_nom_num_parallel_pu"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"] * pypsa_df.lines["s_max_pu"]
+    pypsa_df.lines["s_nom_num_parallel_pu"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"] * pypsa_df.lines["s_max_pu"]
     ipm_region_pearth_transmission_capacities = pypsa_df.lines.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
                           ("ipm_region_0", "ipm_region_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "capacity (MW)"})
     ipm_region_pearth_transmission_capacities["source"] = "PyPSA"
@@ -229,27 +228,57 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
 
     capacity_df = capacity_df.set_index(
         ["source", "ipm_region_0", "ipm_region_1"]
-    ).unstack("source").droplevel(axis=1, level=0).reset_index()
-    capacity_df["Error (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["IPM"]*100.0
+    ).unstack("source").droplevel(axis=1, level=0)
+
+    # remove values where IPM is zero or None
+    capacity_df = capacity_df.query("IPM != 0.0 & ~IPM.isna() & ~PyPSA.isna()").reset_index()
+
+    # compute percentage error
+    capacity_df["Error wrt IPM (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["IPM"]*100.0
+    capacity_df["Error wrt PyPSA (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["PyPSA"]*100.0
+
     capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
+
     capacity_df.to_csv(pathlib.Path(output_base_path, "ipm_pearth_capacities.csv"))
+
+    print("median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
+    print("mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
+    print("median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
+    print("mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
-                     y="Error (%)",
+                     y="Error wrt IPM (%)",
                      color_discrete_map=color_dictionary,
                      title="Transmission capacities"
                      ).update_layout(
         xaxis_title="IPM Region", yaxis_title="Error (%)")
     fig.write_image(
-        pathlib.Path(plot_base_path, "transmission_capacities.png"))
+        pathlib.Path(plot_base_path, "transmission_capacities_wrt_IPM.png"))
+
+    fig = px.scatter(capacity_df,
+                     x="coalesce",
+                     y="Error wrt PyPSA (%)",
+                     color_discrete_map=color_dictionary,
+                     title="Transmission capacities"
+                     ).update_layout(
+        xaxis_title="IPM Region", yaxis_title="Error (%)")
+    fig.write_image(
+        pathlib.Path(plot_base_path, "transmission_capacities_wrt_PyPSA.png"))
 
     fig = px.box(capacity_df,
-                     y="Error (%)",
+                     y="Error wrt IPM (%)",
                      title="Error Box Plot on Transmission capacities"
                      )
     fig.write_image(
-        pathlib.Path(plot_base_path, "box_transmission_capacities.png"))
+        pathlib.Path(plot_base_path, "box_transmission_capacities_wrt_IPM.png"))
+
+    fig = px.box(capacity_df,
+                     y="Error wrt PyPSA (%)",
+                     title="Error Box Plot on Transmission capacities"
+                     )
+    fig.write_image(
+        pathlib.Path(plot_base_path, "box_transmission_capacities_wrt_PyPSA.png"))
 
 
 def parse_input_arguments():
@@ -367,7 +396,7 @@ def parse_inputs(base_path, log_file_dir_path):
     log_output_file.write("        \n")
     log_output_file.write(" Data preparation on the PyPSA-Earth base network \n")
 
-    # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
+    # --> Determine where the start- and end-points of the lines are located. In particular, we perform the spatial
     # joins with:
     #  -) the GADM shapes (level 1) to get the US state
     #  -) the IPM shapes to get the IPM region
@@ -436,6 +465,10 @@ if __name__ == '__main__':
     ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
 
     network_eia_df, network_pypsa_df = parse_inputs(default_path, log_path)
+
+    # output dataframes after pre-processing
+    network_pypsa_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_base.nc"))
+    network_eia_df.to_csv(pathlib.Path(output_path, "modified_eia_base.csv"))
 
     args = parse_input_arguments()
 
