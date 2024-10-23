@@ -301,6 +301,8 @@ def parse_input_arguments():
 def parse_inputs(base_path, log_file_dir_path):
     pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
     base_network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "networks", "US_2021", "base.nc")
+    lines_osm_raw_path = pathlib.Path(pypsa_earth_path, "resources", "US_2021",  "osm", "raw", "all_raw_lines.geojson")
+    lines_osm_clean_path = pathlib.Path(pypsa_earth_path, "resources", "US_2021", "osm", "clean", "all_clean_lines.geojson")
     eia_base_network_path = pathlib.Path(base_path.parent, "US_electric_transmission_lines_original.geojson")
     gadm_shapes_path = pathlib.Path(base_path, "analysis", "data", "gadm41_USA_1.json")
     ipm_shapes_path = pathlib.Path(base_path, "analysis", "data", "ipm_v6_regions", "IPM_Regions_201770405.shp")
@@ -309,6 +311,8 @@ def parse_inputs(base_path, log_file_dir_path):
     # Load data
     ###########
     base_network_pypsa_earth = pypsa.Network(base_network_pypsa_earth_path)
+    lines_osm_raw = gpd.read_file(lines_osm_raw_path)
+    lines_osm_clean = gpd.read_file(lines_osm_clean_path)
     eia_base_network = gpd.read_file(eia_base_network_path)
     gadm_shapes = gpd.read_file(gadm_shapes_path)
     ipm_shapes = gpd.read_file(ipm_shapes_path).to_crs("4326")
@@ -388,6 +392,92 @@ def parse_inputs(base_path, log_file_dir_path):
     eia_base_network = eia_base_network.loc[eia_base_network["v_nom_class"] != 'Not Available']
     log_output_file.write(" --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {} \n".format(eia_base_network.shape))
 
+    #################
+    # OSM lines raw #
+    #################
+
+    log_output_file.write("        \n")
+    log_output_file.write("        \n")
+    log_output_file.write(" Data preparation on the OSM lines raw \n")
+
+    lines_osm_raw[["sub_0_coors", "sub_1_coors"]] = lines_osm_raw["geometry"].boundary.explode(index_parts=True).unstack()
+    log_output_file.write(" --> shape of lines_osm_raw after computing boundaries {} \n".format(lines_osm_raw.shape))
+
+    # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
+    # joins with:
+    #  -) the GADM shapes (level 1) to get the US state
+    #  -) the IPM shapes to get the IPM region
+
+    # Bus 0
+    lines_osm_raw_modified = lines_osm_raw.loc[:, ("id", "sub_0_coors")]
+    lines_osm_raw_modified["geometry"] = lines_osm_raw_modified["sub_0_coors"]
+    log_output_file.write(" --> shape of lines_osm_raw before sub_0 spatial join {} \n".format(lines_osm_raw.shape))
+    spatial_join_gadm_osm_raw_sub_0 = lines_osm_raw_modified.sjoin(gadm_shapes, how="left").loc[:, ("id", "ISO_1")].rename(columns={"ISO_1": "state_0"})
+    spatial_join_ipm_osm_raw_sub_0 = lines_osm_raw_modified.sjoin(ipm_shapes, how="left").loc[:, ("id", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
+    spatial_join_osm_raw_sub_0 = pd.merge(spatial_join_gadm_osm_raw_sub_0, spatial_join_ipm_osm_raw_sub_0, how="inner", on="id")
+    log_output_file.write(" --> shape of lines_osm_raw after sub_0 spatial join with gadm {} \n".format(spatial_join_gadm_osm_raw_sub_0.shape))
+    log_output_file.write(" --> shape of lines_osm_raw after sub_0 spatial join with ipm{} \n".format(spatial_join_ipm_osm_raw_sub_0.shape))
+    log_output_file.write(" --> shape of lines_osm_raw after sub_0 spatial join {} \n".format(spatial_join_osm_raw_sub_0.shape))
+
+    # Bus 1
+    lines_osm_raw_modified = lines_osm_raw.loc[:, ("id", "sub_1_coors")]
+    lines_osm_raw_modified["geometry"] = lines_osm_raw_modified["sub_1_coors"]
+    log_output_file.write(" --> shape of lines_osm_raw before sub_1 spatial join {} \n".format(lines_osm_raw_modified.shape))
+    spatial_join_gadm_osm_raw_sub_1 = lines_osm_raw_modified.sjoin(gadm_shapes, how="left").loc[:, ("id", "ISO_1")].rename(columns={"ISO_1": "state_1"})
+    spatial_join_ipm_osm_raw_sub_1 = lines_osm_raw_modified.sjoin(ipm_shapes, how="left").loc[:, ("id", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
+    spatial_join_osm_raw_sub_1 = pd.merge(spatial_join_gadm_osm_raw_sub_1, spatial_join_ipm_osm_raw_sub_1, how="inner", on="id")
+    log_output_file.write(" --> shape of lines_osm_raw after sub_1 spatial join with gadm {} \n".format(spatial_join_gadm_osm_raw_sub_1.shape))
+    log_output_file.write(" --> shape of lines_osm_raw after sub_1 spatial join with ipm{} \n".format(spatial_join_ipm_osm_raw_sub_1.shape))
+    log_output_file.write(" --> shape of lines_osm_raw after sub_1 spatial join {} \n".format(spatial_join_osm_raw_sub_1.shape))
+
+    # --> Inner join the results
+    lines_osm_raw = pd.merge(lines_osm_raw, spatial_join_osm_raw_sub_0, how="inner", on="id")
+    lines_osm_raw = pd.merge(lines_osm_raw, spatial_join_osm_raw_sub_1, how="inner", on="id")
+    log_output_file.write(" --> shape of lines_osm_raw after the inner joins {} \n".format(lines_osm_raw.shape))
+
+    ###################
+    # OSM lines clean #
+    ###################
+
+    log_output_file.write("        \n")
+    log_output_file.write("        \n")
+    log_output_file.write(" Data preparation on the OSM lines clean \n")
+
+    lines_osm_clean[["sub_0_coors", "sub_1_coors"]] = lines_osm_clean["geometry"].boundary.explode(index_parts=True).unstack()
+    log_output_file.write(" --> shape of lines_osm_clean after computing boundaries {} \n".format(lines_osm_clean.shape))
+
+    # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
+    # joins with:
+    #  -) the GADM shapes (level 1) to get the US state
+    #  -) the IPM shapes to get the IPM region
+
+    # Bus 0
+    lines_osm_clean_modified = lines_osm_clean.loc[:, ("line_id", "sub_0_coors")]
+    lines_osm_clean_modified["geometry"] = lines_osm_clean_modified["sub_0_coors"]
+    log_output_file.write(" --> shape of lines_osm_clean before sub_0 spatial join {} \n".format(lines_osm_clean.shape))
+    spatial_join_gadm_osm_clean_sub_0 = lines_osm_clean_modified.sjoin(gadm_shapes, how="left").loc[:, ("line_id", "ISO_1")].rename(columns={"ISO_1": "state_0"})
+    spatial_join_ipm_osm_clean_sub_0 = lines_osm_clean_modified.sjoin(ipm_shapes, how="left").loc[:, ("line_id", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
+    spatial_join_osm_clean_sub_0 = pd.merge(spatial_join_gadm_osm_clean_sub_0, spatial_join_ipm_osm_clean_sub_0, how="inner", on="line_id")
+    log_output_file.write(" --> shape of lines_osm_clean after sub_0 spatial join with gadm {} \n".format(spatial_join_gadm_osm_clean_sub_0.shape))
+    log_output_file.write(" --> shape of lines_osm_clean after sub_0 spatial join with ipm{} \n".format(spatial_join_ipm_osm_clean_sub_0.shape))
+    log_output_file.write(" --> shape of lines_osm_clean after sub_0 spatial join {} \n".format(spatial_join_osm_clean_sub_0.shape))
+
+    # Bus 1
+    lines_osm_clean_modified = lines_osm_clean.loc[:, ("line_id", "sub_1_coors")]
+    lines_osm_clean_modified["geometry"] = lines_osm_clean_modified["sub_1_coors"]
+    log_output_file.write(" --> shape of lines_osm_clean before sub_1 spatial join {} \n".format(lines_osm_clean_modified.shape))
+    spatial_join_gadm_osm_clean_sub_1 = lines_osm_clean_modified.sjoin(gadm_shapes, how="left").loc[:, ("line_id", "ISO_1")].rename(columns={"ISO_1": "state_1"})
+    spatial_join_ipm_osm_clean_sub_1 = lines_osm_clean_modified.sjoin(ipm_shapes, how="left").loc[:, ("line_id", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
+    spatial_join_osm_clean_sub_1 = pd.merge(spatial_join_gadm_osm_clean_sub_1, spatial_join_ipm_osm_clean_sub_1, how="inner", on="line_id")
+    log_output_file.write(" --> shape of lines_osm_clean after sub_1 spatial join with gadm {} \n".format(spatial_join_gadm_osm_clean_sub_1.shape))
+    log_output_file.write(" --> shape of lines_osm_clean after sub_1 spatial join with ipm{} \n".format(spatial_join_ipm_osm_clean_sub_1.shape))
+    log_output_file.write(" --> shape of lines_osm_clean after sub_1 spatial join {} \n".format(spatial_join_osm_clean_sub_1.shape))
+
+    # --> Inner join the results
+    lines_osm_clean = pd.merge(lines_osm_clean, spatial_join_osm_clean_sub_0, how="inner", on="line_id")
+    lines_osm_clean = pd.merge(lines_osm_clean, spatial_join_osm_clean_sub_1, how="inner", on="line_id")
+    log_output_file.write(" --> shape of lines_osm_clean after the inner joins {} \n".format(lines_osm_clean.shape))
+
     #####################
     # PyPSA-Earth base.nc
     #####################
@@ -453,7 +543,7 @@ def parse_inputs(base_path, log_file_dir_path):
 
     base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom_class"].replace(v_nom_class_dict_pypsa_earth)
 
-    return eia_base_network, base_network_pypsa_earth
+    return eia_base_network, base_network_pypsa_earth, lines_osm_raw, lines_osm_clean
 
 
 if __name__ == '__main__':
@@ -464,11 +554,13 @@ if __name__ == '__main__':
     output_path = pathlib.Path(default_path, "analysis", "outputs")
     ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
 
-    network_eia_df, network_pypsa_df = parse_inputs(default_path, log_path)
+    network_eia_df, network_pypsa_df, osm_lines_raw, osm_lines_clean = parse_inputs(default_path, log_path)
 
     # output dataframes after pre-processing
     network_pypsa_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_base.nc"))
     network_eia_df.to_csv(pathlib.Path(output_path, "modified_eia_base.csv"))
+    osm_lines_raw.to_csv(pathlib.Path(output_path, "modified_osm_lines_raw.csv"))
+    osm_lines_clean.to_csv(pathlib.Path(output_path, "modified_osm_lines_clean.csv"))
 
     args = parse_input_arguments()
 
