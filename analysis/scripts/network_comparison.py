@@ -204,6 +204,14 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
             pathlib.Path(plot_base_path, "ipm_region_crossings_counts_for_voltage_{}.png".format(voltage_class)))
 
 
+def modify_pypsa_base_network(pypsa_df, capacity_df):
+    capacity_df["s_max_pu"] = capacity_df["factor_IPM_over_PyPSA"]
+    capacity_df = capacity_df.apply(lambda x: 1.0 if x["s_max_pu"] > 1.0 else x["s_max_pu"], axis=1)
+    capacity_df = capacity_df.loc[:, ("ipm_region_0", "ipm_region_1", "s_max_pu")]
+    pypsa_df.lines = pd.merge(pypsa_df.lines, capacity_df, how="left", on=["ipm_region_0", "ipm_region_1"])
+    return pypsa_df
+
+
 def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_path, plot_base_path):
     transmission_capacities_path = pathlib.Path(base_path, "analysis", "data", "transmission_single_epaipm.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
@@ -236,7 +244,7 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     # compute percentage error
     capacity_df["Error wrt IPM (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["IPM"]*100.0
     capacity_df["Error wrt PyPSA (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["PyPSA"]*100.0
-
+    capacity_df["factor_IPM_over_PyPSA"] = capacity_df["IPM"]/capacity_df["PyPSA"]
     capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
 
     capacity_df.to_csv(pathlib.Path(output_base_path, "ipm_pearth_capacities.csv"))
@@ -245,6 +253,9 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     print("mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
     print("median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
     print("mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
+
+    #pypsa_df = modify_pypsa_base_network(pypsa_df, capacity_df)
+    #pypsa_df.export_to_netcdf(pathlib.Path(output_path, "s_max_pu_modified_pypsa_base.nc"))
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
