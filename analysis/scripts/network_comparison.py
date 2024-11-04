@@ -231,6 +231,7 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
 
     pypsa_df.lines["s_nom_num_parallel"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"]
     pypsa_df.lines["s_nom_num_parallel_pu"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"] * pypsa_df.lines["s_max_pu"]
+    pypsa_df.lines[["ipm_region_0", "ipm_region_1"]] = np.sort(pypsa_df.lines[["ipm_region_0", "ipm_region_1"]])
     ipm_region_pearth_transmission_capacities = pypsa_df.lines.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
                           ("ipm_region_0", "ipm_region_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "capacity (MW)"})
     ipm_region_pearth_transmission_capacities["source"] = "PyPSA"
@@ -390,6 +391,10 @@ def parse_inputs(base_path, log_file_dir_path):
     # --> Inner join the results
     eia_base_network = pd.merge(eia_base_network, spatial_join_eia_sub_0, how="inner", on="OBJECTID_1")
     eia_base_network = pd.merge(eia_base_network, spatial_join_eia_sub_1, how="inner", on="OBJECTID_1")
+    eia_base_network["state_0"] = eia_base_network["state_0"].astype(str)
+    eia_base_network["state_1"] = eia_base_network["state_1"].astype(str)
+    eia_base_network["ipm_region_0"] = eia_base_network["ipm_region_0"].astype(str)
+    eia_base_network["ipm_region_1"] = eia_base_network["ipm_region_1"].astype(str)
     log_output_file.write(" --> shape of eia_base_network after the inner joins {} \n".format(eia_base_network.shape))
 
     # Clean the EIA data from lines with unnecessary voltages and voltage classes
@@ -448,6 +453,10 @@ def parse_inputs(base_path, log_file_dir_path):
     # --> Inner join the results
     lines_osm_raw = pd.merge(lines_osm_raw, spatial_join_osm_raw_sub_0, how="inner", on="id")
     lines_osm_raw = pd.merge(lines_osm_raw, spatial_join_osm_raw_sub_1, how="inner", on="id")
+    lines_osm_raw["state_0"] = lines_osm_raw["state_0"].astype(str)
+    lines_osm_raw["state_1"] = lines_osm_raw["state_1"].astype(str)
+    lines_osm_raw["ipm_region_0"] = lines_osm_raw["ipm_region_0"].astype(str)
+    lines_osm_raw["ipm_region_1"] = lines_osm_raw["ipm_region_1"].astype(str)
     log_output_file.write(" --> shape of lines_osm_raw after the inner joins {} \n".format(lines_osm_raw.shape))
 
     ###################
@@ -491,6 +500,10 @@ def parse_inputs(base_path, log_file_dir_path):
     # --> Inner join the results
     lines_osm_clean = pd.merge(lines_osm_clean, spatial_join_osm_clean_sub_0, how="inner", on="line_id")
     lines_osm_clean = pd.merge(lines_osm_clean, spatial_join_osm_clean_sub_1, how="inner", on="line_id")
+    lines_osm_clean["state_0"] = lines_osm_clean["state_0"].astype(str)
+    lines_osm_clean["state_1"] = lines_osm_clean["state_1"].astype(str)
+    lines_osm_clean["ipm_region_0"] = lines_osm_clean["ipm_region_0"].astype(str)
+    lines_osm_clean["ipm_region_1"] = lines_osm_clean["ipm_region_1"].astype(str)
     log_output_file.write(" --> shape of lines_osm_clean after the inner joins {} \n".format(lines_osm_clean.shape))
 
     #####################
@@ -527,6 +540,10 @@ def parse_inputs(base_path, log_file_dir_path):
 
     base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_pearth_bus_0, how="inner", on="Line")
     base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_pearth_bus_1, how="inner", on="Line")
+    base_network_pypsa_earth.lines["state_0"] = base_network_pypsa_earth.lines["state_0"].astype(str)
+    base_network_pypsa_earth.lines["state_1"] = base_network_pypsa_earth.lines["state_1"].astype(str)
+    base_network_pypsa_earth.lines["ipm_region_0"] = base_network_pypsa_earth.lines["ipm_region_0"].astype(str)
+    base_network_pypsa_earth.lines["ipm_region_1"] = base_network_pypsa_earth.lines["ipm_region_1"].astype(str)
     log_output_file.write(" --> shape of pypsa-earth base network after the spatial joins {} \n".format(base_network_pypsa_earth.lines.shape))
 
     # --> Assign a voltage class to the pypsa-earth base.nc
