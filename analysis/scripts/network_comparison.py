@@ -15,6 +15,7 @@ import pypsa
 import cartopy.crs as ccrs
 import sys
 import pandas as pd
+import numpy as np
 
 
 def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_name):
@@ -91,7 +92,7 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
 
     state_crossings_counts_voltage = state_crossings_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
-    state_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_crossings_counts_by_voltage.csv"))
+    state_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_crossings_counts_by_voltage.csv"), index=False)
 
     fig = px.bar(state_crossings_counts_voltage,
                  x="v_nom_class",
@@ -109,7 +110,7 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
     state_crossings_counts["delta_PyPSA"] = (state_crossings_counts["PyPSA"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
     state_crossings_counts["delta_PyPSA_parallel"] = (state_crossings_counts["PyPSA_parallel"] - state_crossings_counts["EIA"]) / state_crossings_counts["EIA"]*100.0
     state_crossings_counts["coalesce"] = state_crossings_counts[["state_0", "state_1"]].agg('-->'.join, axis=1)
-    state_crossings_counts.to_csv(pathlib.Path(output_base_path, "gadm_state_crossings_counts.csv"))
+    state_crossings_counts.to_csv(pathlib.Path(output_base_path, "gadm_state_crossings_counts.csv"), index=False)
 
     for voltage_class in voltage_classes_list:
         filtered_df = state_crossings_counts.loc[state_crossings_counts["v_nom_class"] == voltage_class]
@@ -126,7 +127,7 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
     state_lines_counts = gadm_network_counts.query("state_0 == state_1")
     state_lines_counts_by_voltage = state_lines_counts.groupby("v_nom_class")[["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
-    state_lines_counts_by_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_lines_counts_by_voltage.csv"))
+    state_lines_counts_by_voltage.to_csv(pathlib.Path(output_base_path, "gadm_state_lines_counts_by_voltage.csv"), index=False)
 
     fig = px.bar(state_lines_counts_by_voltage,
                  x="v_nom_class",
@@ -170,7 +171,7 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
     region_crossings_counts_voltage = region_crossings_counts.groupby("v_nom_class")[
         ["PyPSA", "EIA", "PyPSA_parallel"]].sum().reindex(
         ["Under 100", "100-161", "220-287", "345", "500", "735 And Above"]).reset_index()
-    region_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "ipm_region_crossings_counts_by_voltage.csv"))
+    region_crossings_counts_voltage.to_csv(pathlib.Path(output_base_path, "ipm_region_crossings_counts_by_voltage.csv"), index=False)
 
     fig = px.bar(region_crossings_counts_voltage,
                  x="v_nom_class",
@@ -189,7 +190,7 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
     region_crossings_counts["delta_PyPSA_parallel"] = (region_crossings_counts["PyPSA_parallel"] - region_crossings_counts[
         "EIA"]) / region_crossings_counts["EIA"] * 100.0
     region_crossings_counts["coalesce"] = region_crossings_counts[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
-    region_crossings_counts.to_csv(pathlib.Path(output_base_path, "ipm_region_crossings_counts.csv"))
+    region_crossings_counts.to_csv(pathlib.Path(output_base_path, "ipm_region_crossings_counts.csv"), index=False)
 
     for voltage_class in voltage_classes_list:
         filtered_df = region_crossings_counts.loc[region_crossings_counts["v_nom_class"] == voltage_class]
@@ -213,17 +214,20 @@ def modify_pypsa_base_network(pypsa_df, capacity_df):
 
 
 def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_path, plot_base_path):
+
     transmission_capacities_path = pathlib.Path(base_path, "analysis", "data", "transmission_single_epaipm.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
         "region_from": "ipm_region_0",
         "region_to": "ipm_region_1",
-        #"firm_ttc_mw": "capacity (MW)"
         "nonfirm_ttc_mw": "capacity (MW)"
     })
     transmission_capacities_df["source"] = "IPM"
     transmission_capacities_df = transmission_capacities_df.loc[:, ("ipm_region_0", "ipm_region_1", "capacity (MW)", "source")]
-
-    transmission_capacities_df.to_csv("ipm_test_cap.csv")
+    transmission_capacities_df[["ipm_region_0", "ipm_region_1"]] = np.sort(transmission_capacities_df[["ipm_region_0", "ipm_region_1"]])
+    grouped_df = transmission_capacities_df.groupby(["ipm_region_0", "ipm_region_1"])["capacity (MW)"].max()
+    transmission_capacities_df = pd.merge(transmission_capacities_df, grouped_df, on=["ipm_region_0", "ipm_region_1"])
+    transmission_capacities_df = transmission_capacities_df.loc[:, ("ipm_region_0", "ipm_region_1", "capacity (MW)_y", "source")].rename(columns={"capacity (MW)_y": "capacity (MW)"})
+    transmission_capacities_df = transmission_capacities_df.drop_duplicates(keep="first")
 
     pypsa_df.lines["s_nom_num_parallel"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"]
     pypsa_df.lines["s_nom_num_parallel_pu"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"] * pypsa_df.lines["s_max_pu"]
@@ -247,7 +251,7 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     capacity_df["factor_IPM_over_PyPSA"] = capacity_df["IPM"]/capacity_df["PyPSA"]
     capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
 
-    capacity_df.to_csv(pathlib.Path(output_base_path, "ipm_pearth_capacities.csv"))
+    capacity_df.to_csv(pathlib.Path(output_base_path, "ipm_pearth_capacities.csv"), index=False)
 
     print("median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
     print("mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
@@ -569,9 +573,9 @@ if __name__ == '__main__':
 
     # output dataframes after pre-processing
     network_pypsa_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_base.nc"))
-    network_eia_df.to_csv(pathlib.Path(output_path, "modified_eia_base.csv"))
-    osm_lines_raw.to_csv(pathlib.Path(output_path, "modified_osm_lines_raw.csv"))
-    osm_lines_clean.to_csv(pathlib.Path(output_path, "modified_osm_lines_clean.csv"))
+    network_eia_df.to_csv(pathlib.Path(output_path, "modified_eia_base.csv"), index=False)
+    osm_lines_raw.to_csv(pathlib.Path(output_path, "modified_osm_lines_raw.csv"), index=False)
+    osm_lines_clean.to_csv(pathlib.Path(output_path, "modified_osm_lines_clean.csv"), index=False)
 
     args = parse_input_arguments()
 
