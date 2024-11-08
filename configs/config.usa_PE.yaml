@@ -419,7 +419,7 @@ solving:
     track_iterations: false
     #nhours: 10
   solver:
-    name: cbc
+    name: gurobi
     # threads: 1
     # method: 2 # barrier (=ipm)
     # crossover: 0
