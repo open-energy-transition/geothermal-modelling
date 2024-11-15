@@ -87,7 +87,7 @@ if __name__ ==  '__main__':
     holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
     holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
     holes_mapped_intersect_filter['country'] = 'US'
-    build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=1)
+    build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=4)
     holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
 
     # Missing utilities in ERST shape files
@@ -114,7 +114,7 @@ if __name__ ==  '__main__':
     m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
     m.save("../Plots/demand_with_holes_TWh_USA.html")
 
-    df_erst_gpd.to_file("Demand_mapped.geojson",driver="GeoJSON")
+    df_final.to_file("Demand_mapped.geojson",driver="GeoJSON")
     # holes_centroid = holes_centroid.sjoin(df_gadm_usa)
             
         #     # utilities
