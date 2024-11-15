@@ -7,6 +7,33 @@ import pathlib
 import geopandas as gpd
 import sys
 
+def disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state):
+    holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
+    df_final = pd.DataFrame()
+    tot = 0
+    for state in df_utilities_grouped_state.index:
+        holes_state = holes_centroid.query('State == @state')
+        demand = df_utilities_grouped_state.loc[state]
+
+        if len(holes_state) == 1:
+            holes_centroid.loc[holes_centroid['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = demand
+            df_final = df_final._append(holes_centroid.loc[holes_centroid['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
+            tot += demand
+        elif len(holes_state) == 0:
+            state_utilities = df_erst_gpd.query("STATE == @state")
+            state_utilities['Sales (Megawatthours)'] = state_utilities['Sales (Megawatthours)']/state_utilities['Sales (Megawatthours)'].sum() * demand
+            # df_final = df_final._append(state_utilities, ignore_index=True)
+            df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
+            tot += demand
+        elif len(holes_state) > 1:
+            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum() * demand
+            df_final = df_final._append(holes_state, ignore_index=True)
+            # tot += (holes_state['pop'] / holes_state['pop'].sum() * demand).sum()
+            tot += demand
+
+    return df_final
+
+
 if __name__ ==  '__main__':
 
     # Path 
@@ -73,33 +100,8 @@ if __name__ ==  '__main__':
     holes_centroid.geometry = holes_mapped_intersect_filter.geometry.centroid
     holes_centroid['State'] = holes_centroid.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
 
-    holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
-    df_final = pd.DataFrame()
-    tot = 0
-    for state in df_utilities_grouped_state.index:
-        holes_state = holes_centroid.query('State == @state')
-        demand = df_utilities_grouped_state.loc[state]
-
-        if len(holes_state) == 1:
-            holes_centroid.loc[holes_centroid['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = demand
-            df_final = df_final._append(holes_centroid.loc[holes_centroid['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
-            tot += demand
-        elif len(holes_state) == 0:
-            state_utilities = df_erst_gpd.query("STATE == @state")
-            state_utilities['Sales (Megawatthours)'] = state_utilities['Sales (Megawatthours)']/state_utilities['Sales (Megawatthours)'].sum() * demand
-            # df_final = df_final._append(state_utilities, ignore_index=True)
-            df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
-            tot += demand
-        elif len(holes_state) > 1:
-            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum() * demand
-            df_final = df_final._append(holes_state, ignore_index=True)
-            # tot += (holes_state['pop'] / holes_state['pop'].sum() * demand).sum()
-            print(state)
-            print((holes_state['pop'] / holes_state['pop'].sum() * demand).sum())
-            print(demand)
-            input()
-            tot += demand
-            
+    df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state)
+    
     df_final = df_final._append(df_erst_gpd)
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
@@ -112,6 +114,7 @@ if __name__ ==  '__main__':
     m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
     m.save("../Plots/demand_with_holes_TWh_USA.html")
 
+    df_erst_gpd.to_file("Demand_mapped.geojson",driver="GeoJSON")
     # holes_centroid = holes_centroid.sjoin(df_gadm_usa)
             
         #     # utilities
