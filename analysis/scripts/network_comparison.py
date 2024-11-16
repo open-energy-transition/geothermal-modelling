@@ -213,9 +213,9 @@ def modify_pypsa_base_network(pypsa_df, capacity_df):
     return pypsa_df
 
 
-def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_path, plot_base_path):
+def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_path, plot_base_path, model):
 
-    transmission_capacities_path = pathlib.Path(base_path, "analysis", "data", "transmission_single_epaipm.csv")
+    transmission_capacities_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "transmission_single_epaipm.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
         "region_from": "ipm_region_0",
         "region_to": "ipm_region_1",
@@ -229,10 +229,10 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     transmission_capacities_df = transmission_capacities_df.loc[:, ("ipm_region_0", "ipm_region_1", "capacity (MW)_y", "source")].rename(columns={"capacity (MW)_y": "capacity (MW)"})
     transmission_capacities_df = transmission_capacities_df.drop_duplicates(keep="first")
 
-    pypsa_df.lines["s_nom_num_parallel"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"]
-    pypsa_df.lines["s_nom_num_parallel_pu"] = pypsa_df.lines["s_nom"] * pypsa_df.lines["num_parallel"] * pypsa_df.lines["s_max_pu"]
-    pypsa_df.lines[["ipm_region_0", "ipm_region_1"]] = np.sort(pypsa_df.lines[["ipm_region_0", "ipm_region_1"]])
-    ipm_region_pearth_transmission_capacities = pypsa_df.lines.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
+    pypsa_df["s_nom_num_parallel"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"]
+    pypsa_df["s_nom_num_parallel_pu"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"] * pypsa_df["s_max_pu"]
+    pypsa_df[["ipm_region_0", "ipm_region_1"]] = np.sort(pypsa_df[["ipm_region_0", "ipm_region_1"]])
+    ipm_region_pearth_transmission_capacities = pypsa_df.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
                           ("ipm_region_0", "ipm_region_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "capacity (MW)"})
     ipm_region_pearth_transmission_capacities["source"] = "PyPSA"
 
@@ -252,15 +252,14 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
     capacity_df["factor_IPM_over_PyPSA"] = capacity_df["IPM"]/capacity_df["PyPSA"]
     capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
 
-    capacity_df.to_csv(pathlib.Path(output_base_path, "ipm_pearth_capacities.csv"), index=False)
+    capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_ipm_capacities.csv"), index=False)
 
-    print("median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
-    print("mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
-    print("median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
-    print("mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
-
-    #pypsa_df = modify_pypsa_base_network(pypsa_df, capacity_df)
-    #pypsa_df.export_to_netcdf(pathlib.Path(output_path, "s_max_pu_modified_pypsa_base.nc"))
+    print("====")
+    print(f"{model}: median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
+    print(f"{model}: mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
+    print(f"{model}: median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
+    print(f"{model}: mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
+    print("====")
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
@@ -270,7 +269,7 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
                      ).update_layout(
         xaxis_title="IPM Region", yaxis_title="Error (%)")
     fig.write_image(
-        pathlib.Path(plot_base_path, "transmission_capacities_wrt_IPM.png"))
+        pathlib.Path(plot_base_path, f"{model}_transmission_capacities_wrt_IPM.png"))
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
@@ -280,21 +279,21 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
                      ).update_layout(
         xaxis_title="IPM Region", yaxis_title="Error (%)")
     fig.write_image(
-        pathlib.Path(plot_base_path, "transmission_capacities_wrt_PyPSA.png"))
+        pathlib.Path(plot_base_path, f"{model}_transmission_capacities_wrt_PyPSA.png"))
 
     fig = px.box(capacity_df,
                      y="Error wrt IPM (%)",
                      title="Error Box Plot on Transmission capacities"
                      )
     fig.write_image(
-        pathlib.Path(plot_base_path, "box_transmission_capacities_wrt_IPM.png"))
+        pathlib.Path(plot_base_path, f"{model}_box_transmission_capacities_wrt_IPM.png"))
 
     fig = px.box(capacity_df,
                      y="Error wrt PyPSA (%)",
                      title="Error Box Plot on Transmission capacities"
                      )
     fig.write_image(
-        pathlib.Path(plot_base_path, "box_transmission_capacities_wrt_PyPSA.png"))
+        pathlib.Path(plot_base_path, f"{model}_box_transmission_capacities_wrt_PyPSA.png"))
 
 
 def parse_input_arguments():
@@ -314,10 +313,14 @@ def parse_input_arguments():
     return parser.parse_args()
 
 
-def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_output_file, id_column_name, lines_dataframe_name):
+def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_output_file, id_column_name, lines_dataframe_name, network_used="other"):
+
     # Bus 0
-    lines_dataframe_modified = lines_dataframe.loc[:, (id_column_name, "sub_0_coors")]
-    lines_dataframe_modified["geometry"] = lines_dataframe_modified["sub_0_coors"]
+    if network_used == "pypsa_earth":
+        lines_dataframe_modified = gpd.GeoDataFrame(lines_dataframe, geometry=gpd.GeoSeries.from_wkt(lines_dataframe.bus_0_coors), crs="EPSG:4326").reset_index()
+    else:
+        lines_dataframe_modified = lines_dataframe.loc[:, (id_column_name, "sub_0_coors")]
+        lines_dataframe_modified["geometry"] = lines_dataframe_modified["sub_0_coors"]
     log_output_file.write(" --> shape of {} before sub_0 spatial join {} \n".format(lines_dataframe_name, lines_dataframe.shape))
     spatial_join_gadm_sub_0 = lines_dataframe_modified.sjoin(gadm_dataframe, how="left").loc[:, (id_column_name, "ISO_1")].rename(columns={"ISO_1": "state_0"})
     spatial_join_ipm_sub_0 = lines_dataframe_modified.sjoin(ipm_dataframe, how="left").loc[:, (id_column_name, "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
@@ -327,8 +330,11 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
     log_output_file.write(" --> shape of {} after sub_0 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_0.shape))
 
     # Bus 1
-    lines_dataframe_modified = lines_dataframe.loc[:, (id_column_name, "sub_1_coors")]
-    lines_dataframe_modified["geometry"] = lines_dataframe_modified["sub_1_coors"]
+    if network_used == "pypsa_earth":
+        lines_dataframe_modified = gpd.GeoDataFrame(lines_dataframe, geometry=gpd.GeoSeries.from_wkt(lines_dataframe.bus_1_coors), crs="EPSG:4326").reset_index()
+    else:
+        lines_dataframe_modified = lines_dataframe.loc[:, (id_column_name, "sub_1_coors")]
+        lines_dataframe_modified["geometry"] = lines_dataframe_modified["sub_1_coors"]
     log_output_file.write(" --> shape of {} before sub_1 spatial join {} \n".format(lines_dataframe_name, lines_dataframe_modified.shape))
     spatial_join_gadm_sub_1 = lines_dataframe_modified.sjoin(gadm_dataframe, how="left").loc[:, (id_column_name, "ISO_1")].rename(columns={"ISO_1": "state_1"})
     spatial_join_ipm_sub_1 = lines_dataframe_modified.sjoin(ipm_dataframe, how="left").loc[:, (id_column_name, "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
@@ -348,19 +354,21 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
 
     return lines_dataframe
 
+
 def parse_inputs(base_path, log_file_dir_path):
-    pypsa_earth_path = pathlib.Path(base_path, "workflow", "pypsa-earth")
-    base_network_pypsa_earth_path = pathlib.Path(pypsa_earth_path, "networks", "US_2021", "base.nc")
-    lines_osm_raw_path = pathlib.Path(pypsa_earth_path, "resources", "US_2021",  "osm", "raw", "all_raw_lines.geojson")
-    lines_osm_clean_path = pathlib.Path(pypsa_earth_path, "resources", "US_2021", "osm", "clean", "all_clean_lines.geojson")
-    eia_base_network_path = pathlib.Path(base_path.parent, "US_electric_transmission_lines_original.geojson")
-    gadm_shapes_path = pathlib.Path(base_path, "analysis", "data", "gadm41_USA_1.json")
-    ipm_shapes_path = pathlib.Path(base_path, "analysis", "data", "ipm_v6_regions", "IPM_Regions_201770405.shp")
+    base_network_pypsa_earth_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "networks", "base.nc")
+    base_network_pypsa_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv")
+    lines_osm_raw_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "resources", "osm", "raw", "all_raw_lines.geojson")
+    lines_osm_clean_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "resources", "osm", "clean", "all_clean_lines.geojson")
+    eia_base_network_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "US_electric_transmission_lines_original.geojson")
+    gadm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
+    ipm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "ipm_v6_regions", "IPM_Regions_201770405.shp")
 
     ###########
     # Load data
     ###########
     base_network_pypsa_earth = pypsa.Network(base_network_pypsa_earth_path)
+    base_network_pypsa_usa = pd.read_csv(base_network_pypsa_usa_path)
     lines_osm_raw = gpd.read_file(lines_osm_raw_path)
     lines_osm_clean = gpd.read_file(lines_osm_clean_path)
     eia_base_network = gpd.read_file(eia_base_network_path)
@@ -467,31 +475,7 @@ def parse_inputs(base_path, log_file_dir_path):
     #  -) the IPM shapes to get the IPM region
     log_output_file.write(" --> shape of pypsa-earth base network after reading it in {} \n".format(base_network_pypsa_earth.lines.shape))
 
-    # Bus 0
-    base_network_pypsa_earth_geopandas_bus_0 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_0_coors), crs="EPSG:4326").reset_index()
-    spatial_join_gadm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(gadm_shapes, how="left").loc[:, ("Line", "ISO_1")].rename(columns={"ISO_1": "state_0"})
-    spatial_join_ipm_pearth_bus_0 = base_network_pypsa_earth_geopandas_bus_0.sjoin(ipm_shapes, how="left").loc[:, ("Line", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
-    spatial_join_pearth_bus_0 = pd.merge(spatial_join_gadm_pearth_bus_0, spatial_join_ipm_pearth_bus_0, how="inner", on="Line")
-    log_output_file.write(" --> shape of base.nc after sub_0 spatial join with gadm {} \n".format(spatial_join_gadm_pearth_bus_0.shape))
-    log_output_file.write(" --> shape of base.nc after sub_0 spatial join with ipm{} \n".format(spatial_join_ipm_pearth_bus_0.shape))
-    log_output_file.write(" --> shape of base.nc after sub_0 spatial join {} \n".format(spatial_join_pearth_bus_0.shape))
-
-    # Bus 1
-    base_network_pypsa_earth_geopandas_bus_1 = gpd.GeoDataFrame(base_network_pypsa_earth.lines, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_earth.lines.bus_1_coors), crs="EPSG:4326").reset_index()
-    spatial_join_gadm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(gadm_shapes, how="left").loc[:, ("Line", "ISO_1")].rename(columns={"ISO_1": "state_1"})
-    spatial_join_ipm_pearth_bus_1 = base_network_pypsa_earth_geopandas_bus_1.sjoin(ipm_shapes, how="left").loc[:, ("Line", "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
-    spatial_join_pearth_bus_1 = pd.merge(spatial_join_gadm_pearth_bus_1, spatial_join_ipm_pearth_bus_1, how="inner", on="Line")
-    log_output_file.write(" --> shape of base.nc after sub_1 spatial join with gadm {} \n".format(spatial_join_gadm_pearth_bus_1.shape))
-    log_output_file.write(" --> shape of base.nc after sub_1 spatial join with ipm{} \n".format(spatial_join_ipm_pearth_bus_1.shape))
-    log_output_file.write(" --> shape of base.nc after sub_1 spatial join {} \n".format(spatial_join_pearth_bus_1.shape))
-
-    base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_pearth_bus_0, how="inner", on="Line")
-    base_network_pypsa_earth.lines = pd.merge(base_network_pypsa_earth.lines, spatial_join_pearth_bus_1, how="inner", on="Line")
-    base_network_pypsa_earth.lines["state_0"] = base_network_pypsa_earth.lines["state_0"].astype(str)
-    base_network_pypsa_earth.lines["state_1"] = base_network_pypsa_earth.lines["state_1"].astype(str)
-    base_network_pypsa_earth.lines["ipm_region_0"] = base_network_pypsa_earth.lines["ipm_region_0"].astype(str)
-    base_network_pypsa_earth.lines["ipm_region_1"] = base_network_pypsa_earth.lines["ipm_region_1"].astype(str)
-    log_output_file.write(" --> shape of pypsa-earth base network after the spatial joins {} \n".format(base_network_pypsa_earth.lines.shape))
+    base_network_pypsa_earth.lines = place_line_boundaries(base_network_pypsa_earth.lines, gadm_shapes, ipm_shapes, log_output_file, "Line", "base.nc", "pypsa_earth")
 
     # --> Assign a voltage class to the pypsa-earth base.nc
     base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom"]
@@ -522,7 +506,44 @@ def parse_inputs(base_path, log_file_dir_path):
 
     base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom_class"].replace(v_nom_class_dict_pypsa_earth)
 
-    return eia_base_network, base_network_pypsa_earth, lines_osm_raw, lines_osm_clean
+    ###########################
+    # PyPSA-USA lines_gis.csv #
+    ###########################
+
+    log_output_file.write("        \n")
+    log_output_file.write("        \n")
+    log_output_file.write(" Data preparation on the PyPSA-USA lines_gis \n")
+
+    base_network_pypsa_usa = gpd.GeoDataFrame(base_network_pypsa_usa, geometry=gpd.GeoSeries.from_wkt(base_network_pypsa_usa["WKT_geometry"]), crs="EPSG:4326").reset_index()
+    base_network_pypsa_usa[["sub_0_coors", "sub_1_coors"]] = base_network_pypsa_usa["geometry"].boundary.explode(index_parts=True).unstack()
+    log_output_file.write(" --> shape of pypsa-usa lines_gis after computing boundaries {} \n".format(base_network_pypsa_usa.shape))
+
+    # --> Determine where the start- and end-points of the lines are located. In particular, we perform the spatial
+    # joins with:
+    #  -) the GADM shapes (level 1) to get the US state
+    #  -) the IPM shapes to get the IPM region
+    log_output_file.write(" --> shape of pypsa-usa lines_gis after reading it in {} \n".format(base_network_pypsa_usa.shape))
+
+    base_network_pypsa_usa = place_line_boundaries(base_network_pypsa_usa, gadm_shapes, ipm_shapes, log_output_file, "Line", "base.nc")
+
+    # --> Assign a voltage class to the pypsa-earth base.nc
+    base_network_pypsa_usa["v_nom_class"] = base_network_pypsa_usa["v_nom"]
+
+    v_nom_class_dict_pypsa_usa = {
+        69.: 'Under 100',
+        100.: "100-161",
+        115.: "100-161",
+        138.: "100-161",
+        161.: "100-161",
+        230.: "220-287",
+        345.: "345",
+        500.: "500",
+        765.: "735 And Above"
+    }
+
+    base_network_pypsa_usa["v_nom_class"] = base_network_pypsa_usa["v_nom_class"].replace(v_nom_class_dict_pypsa_usa)
+
+    return eia_base_network, base_network_pypsa_earth, base_network_pypsa_usa, lines_osm_raw, lines_osm_clean
 
 
 if __name__ == '__main__':
@@ -533,13 +554,14 @@ if __name__ == '__main__':
     output_path = pathlib.Path(default_path, "analysis", "outputs")
     ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
 
-    network_eia_df, network_pypsa_df, osm_lines_raw, osm_lines_clean = parse_inputs(default_path, log_path)
+    network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean = parse_inputs(default_path, log_path)
 
     # output dataframes after pre-processing
-    network_pypsa_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_base.nc"))
-    network_eia_df.to_csv(pathlib.Path(output_path, "modified_eia_base_new.csv"), index=False)
-    osm_lines_raw.to_csv(pathlib.Path(output_path, "modified_osm_lines_raw_new.csv"), index=False)
-    osm_lines_clean.to_csv(pathlib.Path(output_path, "modified_osm_lines_clean_new.csv"), index=False)
+    network_pypsa_earth_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_earth_base.nc"))
+    network_pypsa_usa_df.to_csv(pathlib.Path(output_path, "modified_pypsa_usa_base.csv"))
+    network_eia_df.to_csv(pathlib.Path(output_path, "modified_eia_base.csv"), index=False)
+    osm_lines_raw.to_csv(pathlib.Path(output_path, "modified_osm_lines_raw.csv"), index=False)
+    osm_lines_clean.to_csv(pathlib.Path(output_path, "modified_osm_lines_clean.csv"), index=False)
 
     args = parse_input_arguments()
 
@@ -549,19 +571,20 @@ if __name__ == '__main__':
         for selected_voltage_class in eia_voltage_classes:
             fig_name_map = pathlib.Path(plot_path, "network_comparison_pearth_for_voltage_class_{}.png".format(
                 str(selected_voltage_class)))
-            plot_network_comparison(network_pypsa_df, network_eia_df, selected_voltage_class,
+            plot_network_comparison(network_pypsa_earth_df, network_eia_df, selected_voltage_class,
                                     "PyPSA-Earth base network", fig_name_map)
             fig_name_intersection = pathlib.Path(plot_path, "network_comparison_intersection_{}.png".format(
                 str(selected_voltage_class)))
-            plot_network_intersection(network_pypsa_df, network_eia_df, selected_voltage_class,
+            plot_network_intersection(network_pypsa_earth_df, network_eia_df, selected_voltage_class,
                                       fig_name_intersection)
 
     # Comparison for the transmission crossings (PyPSA-Earth vs EIA) using:
     # -) the GADM shapes(level 1) for the US state comparison
     # -) the IPM shapes for the IPM region comparison
     if args.plot_network_crossings:
-        plot_network_crossings(network_pypsa_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
+        plot_network_crossings(network_pypsa_earth_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
 
     # Comparison for the transmission capacities (PyPSA-Earth vs IPM transmission capacities)
     if args.plot_network_capacity:
-        plot_network_capacity(network_pypsa_df, ccs_color_dict, default_path, output_path, plot_path)
+        plot_network_capacity(network_pypsa_earth_df.lines, ccs_color_dict, default_path, output_path, plot_path, "pypsa_earth")
+        plot_network_capacity(network_pypsa_usa_df, ccs_color_dict, default_path, output_path, plot_path, "pypsa_usa")
