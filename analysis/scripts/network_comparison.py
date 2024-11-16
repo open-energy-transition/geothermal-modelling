@@ -267,11 +267,6 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
                      y="Error wrt IPM (%)",
                      color_discrete_map=color_dictionary,
                      title="Transmission capacities"
-
-
-
-
-
                      ).update_layout(
         xaxis_title="IPM Region", yaxis_title="Error (%)")
     fig.write_image(
@@ -311,8 +306,8 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
     capacity_df = capacity_df.drop(["ipm_region_0_centroid", "ipm_region_1_centroid"], axis=1)
     capacity_df_normal = capacity_df.query("factor_IPM_over_PyPSA <= 1.0")
     capacity_df_outlier = capacity_df.query("factor_IPM_over_PyPSA > 1.0")
-    ipm_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:3310")
-    ipm_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:3310")
+    ipm_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:4326")
+    ipm_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:4326")
     ipm_geo_data_normal = ipm_geo_data_normal.explore(column='factor_IPM_over_PyPSA', cmap="jet", style_kwds={"weight": 5.0})
     ipm_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_normal.html"))
     ipm_map_line_outlier = ipm_geo_data_outlier.explore(column='factor_IPM_over_PyPSA', cmap="Reds_r", style_kwds={"weight": 5.0})
