@@ -6,16 +6,17 @@
 # # -*- coding: utf-8 -*-
 
 import argparse
-import pathlib
+import cartopy.crs as ccrs
 import datetime as dt
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pathlib
 import plotly.express as px
 import pypsa
-import cartopy.crs as ccrs
+import shapely as spl
 import sys
-import pandas as pd
-import numpy as np
 
 
 def plot_network_comparison(pypsa_df, eia_df, voltage_class, pypsa_title, fig_name):
@@ -213,7 +214,7 @@ def modify_pypsa_base_network(pypsa_df, capacity_df):
     return pypsa_df
 
 
-def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_path, plot_base_path, model):
+def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output_file, base_path, output_base_path, plot_base_path, model):
 
     transmission_capacities_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "transmission_single_epaipm.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
@@ -254,12 +255,12 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
 
     capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_ipm_capacities.csv"), index=False)
 
-    print("====")
-    print(f"{model}: median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
-    print(f"{model}: mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
-    print(f"{model}: median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
-    print(f"{model}: mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
-    print("====")
+    log_output_file.write("====")
+    log_output_file.write(f"{model}: median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
+    log_output_file.write(f"{model}: mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
+    log_output_file.write(f"{model}: median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
+    log_output_file.write(f"{model}: mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
+    log_output_file.write("====")
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
@@ -294,6 +295,23 @@ def plot_network_capacity(pypsa_df, color_dictionary, base_path, output_base_pat
                      )
     fig.write_image(
         pathlib.Path(plot_base_path, f"{model}_box_transmission_capacities_wrt_PyPSA.png"))
+
+    ipm_shapes_gdf["ipm_region_centroid"] = ipm_shapes_gdf.centroid
+    capacity_df["ipm_region_0_centroid"] = capacity_df["ipm_region_0"].map(
+        dict(ipm_shapes_gdf[['IPM_Region', 'ipm_region_centroid']].values))
+    capacity_df["ipm_region_1_centroid"] = capacity_df["ipm_region_1"].map(
+        dict(ipm_shapes_gdf[['IPM_Region', 'ipm_region_centroid']].values))
+    capacity_df["geometry"] = capacity_df.apply(
+        lambda x: spl.LineString([x.ipm_region_0_centroid, x.ipm_region_1_centroid]), axis=1)
+    capacity_df = capacity_df.drop(["ipm_region_0_centroid", "ipm_region_1_centroid"], axis=1)
+    capacity_df_normal = capacity_df.query("factor_IPM_over_PyPSA <= 1.0")
+    capacity_df_outlier = capacity_df.query("factor_IPM_over_PyPSA > 1.0")
+    ipm_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:3310")
+    ipm_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:3310")
+    ipm_geo_data_normal = ipm_geo_data_normal.explore(column='factor_IPM_over_PyPSA', cmap="jet", style_kwds={"weight": 5.0})
+    ipm_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_normal.html"))
+    ipm_map_line_outlier = ipm_geo_data_outlier.explore(column='factor_IPM_over_PyPSA', cmap="Reds_r", style_kwds={"weight": 5.0})
+    ipm_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_outlier.html"))
 
 
 def parse_input_arguments():
@@ -355,7 +373,7 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
     return lines_dataframe
 
 
-def parse_inputs(base_path, log_file_dir_path):
+def parse_inputs(base_path, log_output_file):
     base_network_pypsa_earth_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "networks", "base.nc")
     base_network_pypsa_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv")
     lines_osm_raw_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "resources", "osm", "raw", "all_raw_lines.geojson")
@@ -374,8 +392,6 @@ def parse_inputs(base_path, log_file_dir_path):
     eia_base_network = gpd.read_file(eia_base_network_path)
     gadm_shapes = gpd.read_file(gadm_shapes_path)
     ipm_shapes = gpd.read_file(ipm_shapes_path).to_crs("4326")
-    today_date = str(dt.datetime.now())
-    log_output_file = open(log_file_dir_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
     ##########
     # EIA data
@@ -543,7 +559,7 @@ def parse_inputs(base_path, log_file_dir_path):
 
     base_network_pypsa_usa["v_nom_class"] = base_network_pypsa_usa["v_nom_class"].replace(v_nom_class_dict_pypsa_usa)
 
-    return eia_base_network, base_network_pypsa_earth, base_network_pypsa_usa, lines_osm_raw, lines_osm_clean
+    return eia_base_network, base_network_pypsa_earth, base_network_pypsa_usa, lines_osm_raw, lines_osm_clean, ipm_shapes
 
 
 if __name__ == '__main__':
@@ -553,8 +569,10 @@ if __name__ == '__main__':
     plot_path = pathlib.Path(default_path, "analysis", "plots")
     output_path = pathlib.Path(default_path, "analysis", "outputs")
     ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
+    today_date = str(dt.datetime.now())
+    log_output_file = open(log_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
-    network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean = parse_inputs(default_path, log_path)
+    network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean, ipm_region_shapes = parse_inputs(default_path, log_output_file)
 
     # output dataframes after pre-processing
     network_pypsa_earth_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_earth_base.nc"))
@@ -586,5 +604,7 @@ if __name__ == '__main__':
 
     # Comparison for the transmission capacities (PyPSA-Earth vs IPM transmission capacities)
     if args.plot_network_capacity:
-        plot_network_capacity(network_pypsa_earth_df.lines, ccs_color_dict, default_path, output_path, plot_path, "pypsa_earth")
-        plot_network_capacity(network_pypsa_usa_df, ccs_color_dict, default_path, output_path, plot_path, "pypsa_usa")
+        plot_network_capacity(network_pypsa_earth_df.lines, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
+        plot_network_capacity(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
+
+    log_output_file.close()
