@@ -256,10 +256,10 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
     capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_ipm_capacities.csv"), index=False)
 
     log_output_file.write("====")
-    log_output_file.write(f"{model}: median error wrt IPM", capacity_df["Error wrt IPM (%)"].median())
-    log_output_file.write(f"{model}: mean error wrt IPM", capacity_df["Error wrt IPM (%)"].mean())
-    log_output_file.write(f"{model}: median error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].median())
-    log_output_file.write(f"{model}: mean error wrt PyPSA", capacity_df["Error wrt PyPSA (%)"].mean())
+    log_output_file.write("{}: median error wrt IPM: {} \n".format(model, capacity_df["Error wrt IPM (%)"].median()))
+    log_output_file.write("{}: mean error wrt IPM: {} \n".format(model, capacity_df["Error wrt IPM (%)"].mean()))
+    log_output_file.write("{}: median error wrt PyPSA: {} \n".format(model, capacity_df["Error wrt PyPSA (%)"].median()))
+    log_output_file.write("{}: mean error wrt PyPSA: {} \n".format(model, capacity_df["Error wrt PyPSA (%)"].mean()))
     log_output_file.write("====")
 
     fig = px.scatter(capacity_df,
@@ -267,6 +267,11 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
                      y="Error wrt IPM (%)",
                      color_discrete_map=color_dictionary,
                      title="Transmission capacities"
+
+
+
+
+
                      ).update_layout(
         xaxis_title="IPM Region", yaxis_title="Error (%)")
     fig.write_image(
