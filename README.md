@@ -30,3 +30,9 @@ and then using the `git submodule` command:
 The new commits of the submodule can be fetched and updated using the command:
 
     git submodule update --remote
+
+## Downloading data
+
+To download reference data specific to analysis and validation, the script download_from_gdrive.py in analysis/scripts folder can be run.
+
+This particular script retrieves reference data such as transmission grid topology data, generator capacities, electricity demands and generation etc. 
