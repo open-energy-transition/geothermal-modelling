@@ -60,16 +60,27 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
     
     return df_final
 
-def rescale_demands(df_final, df_demand_utility):
+def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
     df_demand_statewise = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
     for state in df_demand_statewise.index:
         actual_state_demand = df_demand_statewise.loc[state]
+        missing_demand = df_utilities_grouped_state.loc[state]
         df_filter_final = df_final.query('State == @state')
         assigned_utility_demand = df_filter_final['Sales (Megawatthours)'].sum()
-        unmet_demand = actual_state_demand - assigned_utility_demand
-        if unmet_demand > 0:
-            rescaling_factor = actual_state_demand / assigned_utility_demand
-            df_final.loc[df_filter['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
+        unmet_demand = missing_demand - assigned_utility_demand
+        # print(state)
+        # print(missing_demand)
+        # print(assigned_utility_demand)
+        # print(actual_state_demand)
+        # input()
+        if assigned_utility_demand > 0:
+            rescaling_factor = missing_demand / assigned_utility_demand
+        elif assigned_utility_demand == 0:
+            rescaling_factor = actual_state_demand / missing_demand
+        else:
+            rescaling_factor = 1
+        print(rescaling_factor)
+        df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
 
     return df_final
 
@@ -143,10 +154,11 @@ if __name__ ==  '__main__':
     if version == 'v1':
         df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state)
     elif version == 'v2':
-        df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility)
-        df_final = rescale_demands(df_final, df_demand_utility)
+        df_final = disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility)
     
     df_final = df_final._append(df_erst_gpd)
+    df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
+
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
 
