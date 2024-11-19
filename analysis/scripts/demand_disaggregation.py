@@ -12,12 +12,12 @@ def disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilitie
     df_final = pd.DataFrame()
     tot = 0
     for state in df_utilities_grouped_state.index:
-        holes_state = holes_centroid.query('State == @state')
+        holes_state = holes_mapped_intersect_filter.query('State == @state')
         demand = df_utilities_grouped_state.loc[state]
 
         if len(holes_state) == 1:
-            holes_centroid.loc[holes_centroid['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = demand
-            df_final = df_final._append(holes_centroid.loc[holes_centroid['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
+            holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = demand
+            df_final = df_final._append(holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
             tot += demand
         elif len(holes_state) == 0:
             state_utilities = df_erst_gpd.query("STATE == @state")
@@ -33,15 +33,54 @@ def disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilitie
 
     return df_final
 
+def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility):
+    holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
+    df_final = pd.DataFrame()
+    tot = 0
+    for state in df_utilities_grouped_state.index:
+        holes_state = holes_mapped_intersect_filter.query('State == @state')
+        demand = df_utilities_grouped_state.loc[state]
+        avg_state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].mean()
+
+        if len(holes_state) == 1:
+            holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = avg_state_demand
+            df_final = df_final._append(holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
+            tot += avg_state_demand
+        elif len(holes_state) == 0:
+            state_utilities = df_erst_gpd.query("STATE == @state")
+            state_utilities['Sales (Megawatthours)'] = state_utilities['Sales (Megawatthours)']/state_utilities['Sales (Megawatthours)'].sum() * avg_state_demand
+            # df_final = df_final._append(state_utilities, ignore_index=True)
+            df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
+            tot += avg_state_demand
+        elif len(holes_state) > 1:
+            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand
+            df_final = df_final._append(holes_state, ignore_index=True)
+            # tot += (holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand).sum()
+            tot += avg_state_demand
+    
+    return df_final
+
+def rescale_demands(df_final, df_demand_utility):
+    df_demand_statewise = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
+    for state in df_demand_statewise.index:
+        actual_state_demand = df_demand_statewise.loc[state]
+        df_filter_final = df_final.query('State == @state')
+        assigned_utility_demand = df_filter_final['Sales (Megawatthours)'].sum()
+        unmet_demand = actual_state_demand - assigned_utility_demand
+        if unmet_demand > 0:
+            rescaling_factor = actual_state_demand / assigned_utility_demand
+            df_final.loc[df_filter['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
+
+    return df_final
 
 if __name__ ==  '__main__':
 
     # Path 
     base_path = pathlib.Path(__file__).parent.parent.parent
-    demand_utility_path = pathlib.Path(base_path, "analysis", "data", "demand_data", "table_10_EIA_utility_sales.xlsx")
+    demand_utility_path = pathlib.Path(base_path, "analysis", "gdrive_data","data", "electricity_demand_data", "demand_data","table_10_EIA_utility_sales.xlsx")
     country_gadm_path = pathlib.Path(base_path, "workflow", "pypsa-earth", "resources", "US_2021", "shapes", "country_shapes.geojson")
     erst_path = pathlib.Path(base_path, "analysis", "data", "ERST_demand_GADM.geojson")
-    gadm_usa_path = pathlib.Path(base_path, "analysis", "data", "gadm41_USA_1.json")
+    gadm_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
     pypsa_earth_scripts_path = pathlib.Path(base_path, "workflow", "pypsa-earth", "scripts")
 
     # Load data
@@ -100,7 +139,12 @@ if __name__ ==  '__main__':
     holes_centroid.geometry = holes_mapped_intersect_filter.geometry.centroid
     holes_centroid['State'] = holes_centroid.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
 
-    df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state)
+    version = 'v2'
+    if version == 'v1':
+        df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state)
+    elif version == 'v2':
+        df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility)
+        df_final = rescale_demands(df_final, df_demand_utility)
     
     df_final = df_final._append(df_erst_gpd)
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
@@ -108,17 +152,10 @@ if __name__ ==  '__main__':
 
     # Plot the GeoDataFrames
     m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
-    m.save("../Plots/demand_filled_TWh_USA.html")
+    m.save(f"../Plots/demand_filled_TWh_USA_{version}.html")
 
     df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
     m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
-    m.save("../Plots/demand_with_holes_TWh_USA.html")
+    m.save(f"../Plots/demand_with_holes_TWh_USA_{version}.html")
 
-    df_final.to_file("Demand_mapped.geojson",driver="GeoJSON")
-    # holes_centroid = holes_centroid.sjoin(df_gadm_usa)
-            
-        #     # utilities
-
-        # print(state)
-        # print(holes_state)
-        # input()
+    df_final.to_file(f"Demand_mapped_{version}.geojson",driver="GeoJSON")
