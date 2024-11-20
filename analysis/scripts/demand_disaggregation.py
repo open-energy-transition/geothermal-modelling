@@ -62,24 +62,27 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
 
 def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
     df_demand_statewise = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
-    for state in df_demand_statewise.index:
+    for state in df_utilities_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         missing_demand = df_utilities_grouped_state.loc[state]
         df_filter_final = df_final.query('State == @state')
         assigned_utility_demand = df_filter_final['Sales (Megawatthours)'].sum()
         unmet_demand = missing_demand - assigned_utility_demand
-        # print(state)
-        # print(missing_demand)
-        # print(assigned_utility_demand)
-        # print(actual_state_demand)
-        # input()
-        if assigned_utility_demand > 0:
-            rescaling_factor = missing_demand / assigned_utility_demand
+        print(state)
+        print(missing_demand)
+        print(assigned_utility_demand)
+        print(actual_state_demand)
+        input()
+        # if assigned_utility_demand > 0:
+        #     rescaling_factor = missing_demand / assigned_utility_demand
+        if assigned_utility_demand != 0:
+            rescaling_factor = actual_state_demand / assigned_utility_demand
         elif assigned_utility_demand == 0:
             rescaling_factor = actual_state_demand / missing_demand
         else:
             rescaling_factor = 1
         print(rescaling_factor)
+        print(df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'].sum() * rescaling_factor)
         df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
 
     return df_final
@@ -139,7 +142,7 @@ if __name__ ==  '__main__':
     holes_mapped_intersect_filter['country'] = 'US'
     build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=4)
     holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
-
+    
     # Missing utilities in ERST shape files
     missing_utilities = (list(set(df_demand_utility.Entity.str.upper()) - set(df_erst_gpd.NAME)))
     df_missing_utilities = df_demand_utility.query('Entity.str.upper() in @missing_utilities')
@@ -151,6 +154,9 @@ if __name__ ==  '__main__':
     holes_centroid['State'] = holes_centroid.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
 
     version = 'v2'
+    # v1 - disaggregation of unmet demand to holes based on population
+    # v2 - demand at holes: average demand of the state where the hole is multiplied by the population
+    # v2 - Rescaling demand of all utilities in a state to account for unmet demand in that particular state 
     if version == 'v1':
         df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state)
     elif version == 'v2':
@@ -161,7 +167,7 @@ if __name__ ==  '__main__':
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
-
+    geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
     # Plot the GeoDataFrames
     m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
     m.save(f"../Plots/demand_filled_TWh_USA_{version}.html")
