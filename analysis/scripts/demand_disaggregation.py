@@ -68,11 +68,11 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
         df_filter_final = df_final.query('State == @state')
         assigned_utility_demand = df_filter_final['Sales (Megawatthours)'].sum()
         unmet_demand = missing_demand - assigned_utility_demand
-        print(state)
-        print(missing_demand)
-        print(assigned_utility_demand)
-        print(actual_state_demand)
-        input()
+        # print(state)
+        # print(missing_demand)
+        # print(assigned_utility_demand)
+        # print(actual_state_demand)
+        # input()
         # if assigned_utility_demand > 0:
         #     rescaling_factor = missing_demand / assigned_utility_demand
         if assigned_utility_demand != 0:
@@ -81,8 +81,8 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
             rescaling_factor = actual_state_demand / missing_demand
         else:
             rescaling_factor = 1
-        print(rescaling_factor)
-        print(df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'].sum() * rescaling_factor)
+        # print(rescaling_factor)
+        # print(df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'].sum() * rescaling_factor)
         df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
 
     return df_final
@@ -162,12 +162,12 @@ if __name__ ==  '__main__':
     elif version == 'v2':
         df_final = disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility)
     
-    df_final = df_final._append(df_erst_gpd)
+    df_final = df_final._append(df_erst_gpd.rename(columns={'STATE':'State'}))
     df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
-    geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
+    # geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
     # Plot the GeoDataFrames
     m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
     m.save(f"../Plots/demand_filled_TWh_USA_{version}.html")
