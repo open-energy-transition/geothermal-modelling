@@ -187,7 +187,7 @@ if __name__ ==  '__main__':
 
     fig = px.bar(df_error, barmode='group')
     fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
-    fig.show()
+    fig.write_image(f"../Plots/unmet_demand_error.png")
 
     # Adding population data for the final merged dataframe
     build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
