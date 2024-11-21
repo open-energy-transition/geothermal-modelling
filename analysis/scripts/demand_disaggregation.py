@@ -87,6 +87,12 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
 
     return df_final
 
+def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text):
+    df_calc_state = df_calc.groupby('State')['Sales (Megawatthours)'].sum()
+    df_ref_state = df_ref.groupby('State')['Sales (Megawatthours)'].sum()
+    df_error[text] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
+    return df_error
+ 
 if __name__ ==  '__main__':
 
     # Path 
@@ -119,13 +125,19 @@ if __name__ ==  '__main__':
     df_cdf['percent sales'] = df_cdf['Sales (Megawatthours)'] * 100 / df_cdf['Sales (Megawatthours)'].sum()
     px.bar(df_cdf.reset_index(),y='Sales (Megawatthours)')
 
+    df_error = pd.DataFrame()
+    # Initial error percentages of unmet demand
+    df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_demand_utility, df_error, 'Initial')
+
     # Obtain holes in ERST shape files
     df_erst_gpd_dissolved = df_erst_gpd.dissolve()
     holes = df_country.difference(df_erst_gpd_dissolved)
     holes_exploded = holes.explode()
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(),crs=df_erst_gpd.crs)
     holes_exploded['Area'] = holes_exploded.area
-    holes_exploded_filter = holes_exploded.query('Area > 0.05')
+    # Filtering out holes with very small areas -
+    area_threshold = 0.05
+    holes_exploded_filter = holes_exploded.query('Area > @area_threshold')
     # holes_exploded_filter = holes_exploded.copy()
     holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
 
@@ -163,7 +175,19 @@ if __name__ ==  '__main__':
         df_final = disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility)
     
     df_final = df_final._append(df_erst_gpd.rename(columns={'STATE':'State'}))
-    df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
+
+    # error percentages of unmet demand after assigning average demand to states
+    df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Mid-way')
+
+    if version == 'v2':
+        df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
+
+        # Final error percentages of unmet demand after rescaling
+        df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Final')
+
+    fig = px.bar(df_error, barmode='group')
+    fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
+    fig.show()
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
