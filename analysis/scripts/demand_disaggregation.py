@@ -193,7 +193,7 @@ if __name__ ==  '__main__':
     build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
 
     # Per-capita consumption
-    df_final['per capital'] = df_final['Sales (Megawatthours)'] / df_final['pop']
+    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() / df_final.groupby('State')['pop'].sum()
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
