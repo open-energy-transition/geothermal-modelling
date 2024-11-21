@@ -189,6 +189,12 @@ if __name__ ==  '__main__':
     fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
     fig.show()
 
+    # Adding population data for the final merged dataframe
+    build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
+
+    # Per-capita consumption
+    df_final['per capital'] = df_final['Sales (Megawatthours)'] / df_final['pop']
+
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
     # geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
