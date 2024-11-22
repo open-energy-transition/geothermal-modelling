@@ -41,7 +41,8 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
         holes_state = holes_mapped_intersect_filter.query('State == @state')
         demand = df_utilities_grouped_state.loc[state]
         full_state_pop = df_gadm_usa.query('State == @state')['pop'].values[0]
-        avg_state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].mean()
+        state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].sum()
+        avg_per_capita_demand = state_demand / full_state_pop
 
         # if len(holes_state) == 1:
         #     holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = avg_state_demand
@@ -54,7 +55,7 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
         #     df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
         #     tot += avg_state_demand
         if len(holes_state) > 0:
-            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum()  * avg_state_demand
+            holes_state['Sales (Megawatthours)'] = holes_state['pop'] * avg_per_capita_demand
             df_final = df_final._append(holes_state, ignore_index=True)
             # tot += (holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand).sum()
             tot += avg_state_demand
@@ -212,7 +213,7 @@ if __name__ ==  '__main__':
     fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
     fig.write_image(f"../Plots/unmet_demand_error_{version}.png")
 
-    fig = px.bar(df_error, barmode='group')
+    fig = px.bar(df_per_capita_cons, barmode='group')
     fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
     fig.write_image(f"../Plots/per_capita_stagewise_{version}.png")
 
