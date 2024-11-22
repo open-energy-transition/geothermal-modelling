@@ -33,13 +33,14 @@ def disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilitie
 
     return df_final
 
-def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility):
+def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility, df_gadm_usa):
     holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
     df_final = pd.DataFrame()
     tot = 0
     for state in df_utilities_grouped_state.index:
         holes_state = holes_mapped_intersect_filter.query('State == @state')
         demand = df_utilities_grouped_state.loc[state]
+        full_state_pop = df_gadm_usa.query('State == @state')['pop']
         avg_state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].mean()
 
         # if len(holes_state) == 1:
@@ -53,7 +54,7 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
         #     df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
         #     tot += avg_state_demand
         if len(holes_state) > 0:
-            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum()  * avg_state_demand
+            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / full_state_pop  * avg_state_demand
             df_final = df_final._append(holes_state, ignore_index=True)
             # tot += (holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand).sum()
             tot += avg_state_demand
@@ -155,9 +156,14 @@ if __name__ ==  '__main__':
     holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
     holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
     holes_mapped_intersect_filter['country'] = 'US'
-    build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=4)
     holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
     
+    build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=4)
+    df_gadm_usa['State'] = df_gadm_usa.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
+    df_gadm_usa['country'] = 'US'
+    df_gadm_usa['GADM_ID'] = df_gadm_usa['GID_1']
+    build_shapes.add_population_data(df_gadm_usa,['US'],'standard',nprocesses=4)
+
     # Missing utilities in ERST shape files
     missing_utilities = (list(set(df_demand_utility.Entity.str.upper()) - set(df_erst_gpd.NAME)))
     df_missing_utilities = df_demand_utility.query('Entity.str.upper() in @missing_utilities')
@@ -175,7 +181,7 @@ if __name__ ==  '__main__':
     if version == 'v1':
         df_final = disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state)
     elif version == 'v2':
-        df_final = disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility)
+        df_final = disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility, df_gadm_usa)
     
     df_final = df_final._append(df_erst_gpd.rename(columns={'STATE':'State'}))
 
@@ -193,11 +199,11 @@ if __name__ ==  '__main__':
     fig.write_image(f"../Plots/unmet_demand_error.png")
 
     # Adding population data for the final merged dataframe
-    build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
+    # build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
 
     # Per-capita consumption
     df_per_capita = pd.DataFrame()
-    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_final.groupby('State')['pop'].sum() #Per capita consumption in kWh
+    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_gadm_usa.groupby('State')['pop'].sum() #Per capita consumption in kWh
     df_per_capita = df_per_capita.join(df_eia_per_capita)
     df_per_capita.rename(columns={2021:'EIA'}, inplace=True)
 
