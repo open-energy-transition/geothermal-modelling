@@ -54,7 +54,7 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
         #     df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
         #     tot += avg_state_demand
         if len(holes_state) > 0:
-            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / full_state_pop  * avg_state_demand
+            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum()  * avg_state_demand
             df_final = df_final._append(holes_state, ignore_index=True)
             # tot += (holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand).sum()
             tot += avg_state_demand
@@ -196,7 +196,7 @@ if __name__ ==  '__main__':
 
     fig = px.bar(df_error, barmode='group')
     fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
-    fig.write_image(f"../Plots/unmet_demand_error.png")
+    fig.write_image(f"../Plots/unmet_demand_error_{version}.png")
 
     # Adding population data for the final merged dataframe
     # build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
@@ -209,7 +209,14 @@ if __name__ ==  '__main__':
 
     fig = px.bar(df_per_capita, barmode='group')
     fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
-    fig.write_image(f"../Plots/per_capita_consumption.png")
+    fig.write_image(f"../Plots/per_capita_consumption_{version}.png")
+
+    df_per_capita['error'] = (df_per_capita['Calculated'] - df_per_capita['EIA']) * 100 / df_per_capita['EIA']
+    df_per_capita['error'] = df_per_capita['error'].abs()
+
+    fig = px.bar(df_per_capita, y = 'error')
+    fig.update_layout(yaxis_title='Error %', xaxis_title='State')
+    fig.write_image(f"../Plots/per_capita_error_{version}.png")
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
