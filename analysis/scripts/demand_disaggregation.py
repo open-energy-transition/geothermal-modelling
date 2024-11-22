@@ -42,18 +42,18 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
         demand = df_utilities_grouped_state.loc[state]
         avg_state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].mean()
 
-        if len(holes_state) == 1:
-            holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = avg_state_demand
-            df_final = df_final._append(holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
-            tot += avg_state_demand
-        elif len(holes_state) == 0:
-            state_utilities = df_erst_gpd.query("STATE == @state")
-            state_utilities['Sales (Megawatthours)'] = state_utilities['Sales (Megawatthours)']/state_utilities['Sales (Megawatthours)'].sum() * avg_state_demand
-            # df_final = df_final._append(state_utilities, ignore_index=True)
-            df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
-            tot += avg_state_demand
-        elif len(holes_state) > 1:
-            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand
+        # if len(holes_state) == 1:
+        #     holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0],'Sales (Megawatthours)'] = avg_state_demand
+        #     df_final = df_final._append(holes_mapped_intersect_filter.loc[holes_mapped_intersect_filter['GID_1'] == holes_state['GID_1'].values[0]], ignore_index=True)
+        #     tot += avg_state_demand
+        # elif len(holes_state) == 0:
+        #     state_utilities = df_erst_gpd.query("STATE == @state")
+        #     state_utilities['Sales (Megawatthours)'] = state_utilities['Sales (Megawatthours)']/state_utilities['Sales (Megawatthours)'].sum() * avg_state_demand
+        #     # df_final = df_final._append(state_utilities, ignore_index=True)
+        #     df_erst_gpd.loc[state_utilities.index, 'Sales (Megawatthours)'] += state_utilities['Sales (Megawatthours)']
+        #     tot += avg_state_demand
+        if len(holes_state) > 0:
+            holes_state['Sales (Megawatthours)'] = holes_state['pop'] / holes_state['pop'].sum()  * avg_state_demand
             df_final = df_final._append(holes_state, ignore_index=True)
             # tot += (holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand).sum()
             tot += avg_state_demand
@@ -102,12 +102,15 @@ if __name__ ==  '__main__':
     erst_path = pathlib.Path(base_path, "analysis", "data", "ERST_demand_GADM.geojson")
     gadm_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
     pypsa_earth_scripts_path = pathlib.Path(base_path, "workflow", "pypsa-earth", "scripts")
+    eia_per_capita_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "electricity_demand_data", "use_es_capita.xlsx")
 
     # Load data
     df_demand_utility = pd.read_excel(demand_utility_path,skiprows=2)
     df_erst_gpd = gpd.read_file(erst_path)
     df_country = gpd.read_file(country_gadm_path)
     df_gadm_usa = gpd.read_file(gadm_usa_path)
+    df_eia_per_capita = pd.read_excel(eia_per_capita_path, sheet_name='Total per capita', skiprows=2, index_col='State')
+    df_eia_per_capita = df_eia_per_capita[2021]
 
     # Add system paths
     sys.path.insert(0,str(pypsa_earth_scripts_path))
@@ -193,7 +196,13 @@ if __name__ ==  '__main__':
     build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
 
     # Per-capita consumption
-    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() / df_final.groupby('State')['pop'].sum()
+    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() / df_final.groupby('State')['pop'].sum() / 1000 #Per capita consumption in kWh
+    df_per_capita = df_per_capita.join(df_eia_per_capita)
+    df_per_capita.rename(columns={2021:'EIA'})
+
+    fig = px.bar(df_per_capita, barmode='group')
+    fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
+    fig.write_image(f"../Plots/per_capita_consumption.png")
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
