@@ -196,6 +196,7 @@ if __name__ ==  '__main__':
     build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
 
     # Per-capita consumption
+    df_per_capita = pd.DataFrame()
     df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() / df_final.groupby('State')['pop'].sum() / 1000 #Per capita consumption in kWh
     df_per_capita = df_per_capita.join(df_eia_per_capita)
     df_per_capita.rename(columns={2021:'EIA'})
