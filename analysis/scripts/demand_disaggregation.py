@@ -197,9 +197,9 @@ if __name__ ==  '__main__':
 
     # Per-capita consumption
     df_per_capita = pd.DataFrame()
-    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() / df_final.groupby('State')['pop'].sum() / 1000 #Per capita consumption in kWh
+    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_final.groupby('State')['pop'].sum() #Per capita consumption in kWh
     df_per_capita = df_per_capita.join(df_eia_per_capita)
-    df_per_capita.rename(columns={2021:'EIA'})
+    df_per_capita.rename(columns={2021:'EIA'}, inplace=True)
 
     fig = px.bar(df_per_capita, barmode='group')
     fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
