@@ -40,7 +40,7 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
     for state in df_utilities_grouped_state.index:
         holes_state = holes_mapped_intersect_filter.query('State == @state')
         demand = df_utilities_grouped_state.loc[state]
-        full_state_pop = df_gadm_usa.query('State == @state')['pop']
+        full_state_pop = df_gadm_usa.query('State == @state')['pop'].values[0]
         avg_state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].mean()
 
         # if len(holes_state) == 1:
