@@ -93,6 +93,13 @@ def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text):
     df_ref_state = df_ref.groupby('State')['Sales (Megawatthours)'].sum()
     df_error[text] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
     return df_error
+
+
+def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
+    df_calc_per_capita = df_calc.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_gadm.groupby('State')['pop'].sum()
+    # df_ref_state = df_ref.groupby('State')['Sales (Megawatthours)'].sum()
+    df_per_capita_cons[text] = df_calc_per_capita
+    return df_per_capita_cons
  
 if __name__ ==  '__main__':
 
@@ -129,9 +136,6 @@ if __name__ ==  '__main__':
     df_cdf['percent sales'] = df_cdf['Sales (Megawatthours)'] * 100 / df_cdf['Sales (Megawatthours)'].sum()
     px.bar(df_cdf.reset_index(),y='Sales (Megawatthours)')
 
-    df_error = pd.DataFrame()
-    # Initial error percentages of unmet demand
-    df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_demand_utility, df_error, 'Initial')
 
     # Obtain holes in ERST shape files
     df_erst_gpd_dissolved = df_erst_gpd.dissolve()
@@ -164,6 +168,13 @@ if __name__ ==  '__main__':
     df_gadm_usa['GADM_ID'] = df_gadm_usa['GID_1']
     build_shapes.add_population_data(df_gadm_usa,['US'],'standard',nprocesses=4)
 
+    # Initial error percentages of unmet demand
+
+    df_error = pd.DataFrame()
+    df_per_capita_cons = pd.DataFrame()
+    df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_demand_utility, df_error, 'Initial')
+    df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_gadm_usa, df_per_capita_cons, 'Initial')
+
     # Missing utilities in ERST shape files
     missing_utilities = (list(set(df_demand_utility.Entity.str.upper()) - set(df_erst_gpd.NAME)))
     df_missing_utilities = df_demand_utility.query('Entity.str.upper() in @missing_utilities')
@@ -187,16 +198,23 @@ if __name__ ==  '__main__':
 
     # error percentages of unmet demand after assigning average demand to states
     df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Mid-way')
+    df_per_capita_cons = calc_per_capita_kWh_state(df_final, df_gadm_usa, df_per_capita_cons, 'Mid-way')
+
 
     if version == 'v2':
         df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
 
         # Final error percentages of unmet demand after rescaling
         df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Final')
+        df_per_capita_cons = calc_per_capita_kWh_state(df_final, df_gadm_usa, df_per_capita_cons, 'Final')
 
     fig = px.bar(df_error, barmode='group')
     fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
     fig.write_image(f"../Plots/unmet_demand_error_{version}.png")
+
+    fig = px.bar(df_error, barmode='group')
+    fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
+    fig.write_image(f"../Plots/per_capita_stagewise_{version}.png")
 
     # Adding population data for the final merged dataframe
     # build_shapes.add_population_data(df_final,['US'],'standard',nprocesses=4)
