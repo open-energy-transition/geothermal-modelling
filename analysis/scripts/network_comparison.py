@@ -214,7 +214,7 @@ def modify_pypsa_base_network(pypsa_df, capacity_df):
     return pypsa_df
 
 
-def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output_file, base_path, output_base_path, plot_base_path, model):
+def plot_network_capacity_ipm(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output_file, base_path, output_base_path, plot_base_path, model):
 
     transmission_capacities_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "transmission_single_epaipm.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
@@ -261,7 +261,6 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
     log_output_file.write("{}: median error wrt PyPSA: {} \n".format(model, np.round(capacity_df["Error wrt PyPSA (%)"].median(), 2)))
     log_output_file.write("{}: mean error wrt PyPSA: {} \n".format(model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)))
     log_output_file.write("====")
-
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
@@ -316,6 +315,65 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
     ipm_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_outlier.html"))
 
 
+def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, base_path, output_base_path, plot_base_path, model):
+
+    transmission_capacities_path = pathlib.Path(base_path.parent, "pypsa-usa", "workflow", "repo_data", "ReEDS_Constraints", "transmission", "transmission_capacity_init_AC_ba_NARIS2024.csv")
+    transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
+        "r": "reeds_0",
+        "rr": "reeds_1",
+        "MW_f0": "export capacity (MW)",
+        "MW_r0": "import capacity (MW)"
+    })
+    transmission_capacities_df["source"] = "reeds"
+    transmission_capacities_df = transmission_capacities_df.loc[:, ("reeds_0", "reeds_1", "export capacity (MW)", "import capacity (MW)", "source")]
+    transmission_capacities_df[["reeds_0", "reeds_1"]] = np.sort(transmission_capacities_df[["reeds_0", "reeds_1"]])
+    transmission_capacities_df = transmission_capacities_df.drop_duplicates(keep="first")
+
+    pypsa_df["s_nom_num_parallel"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"]
+    pypsa_df["s_nom_num_parallel_pu"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"] * pypsa_df["s_max_pu"]
+    pypsa_df[["reeds_0", "reeds_1"]] = np.sort(pypsa_df[["reeds_0", "reeds_1"]])
+    reeds_pypsa_transmission_capacities = pypsa_df.query("reeds_0 != reeds_1").groupby(["reeds_0", "reeds_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
+                          ("reeds_0", "reeds_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "export capacity (MW)"})
+    reeds_pypsa_transmission_capacities["import capacity (MW)"] = 0.0
+    reeds_pypsa_transmission_capacities["source"] = "PyPSA"
+
+    capacity_df = pd.concat(
+        [reeds_pypsa_transmission_capacities, transmission_capacities_df])
+
+    capacity_df = capacity_df.set_index(
+        ["source", "reeds_0", "reeds_1"]
+    ).unstack("source").droplevel(axis=1, level=0)
+
+    # remove values where IPM is zero or None
+    # capacity_df = capacity_df.query("reeds != 0.0 & ~IPM.isna() & ~PyPSA.isna()").reset_index()
+    #
+    # # compute percentage error
+    # capacity_df["Error wrt reeds (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["IPM"]*100.0
+    # capacity_df["Error wrt PyPSA (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["PyPSA"]*100.0
+    # capacity_df["factor_IPM_over_PyPSA"] = capacity_df["IPM"]/capacity_df["PyPSA"]
+    # capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
+    #
+    # capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_ipm_capacities.csv"), index=False)
+    #
+    # ipm_shapes_gdf = ipm_shapes_gdf.to_crs("3857")
+    # ipm_shapes_gdf["ipm_region_centroid"] = ipm_shapes_gdf.centroid
+    # capacity_df["ipm_region_0_centroid"] = capacity_df["ipm_region_0"].map(
+    #     dict(ipm_shapes_gdf[['IPM_Region', 'ipm_region_centroid']].values))
+    # capacity_df["ipm_region_1_centroid"] = capacity_df["ipm_region_1"].map(
+    #     dict(ipm_shapes_gdf[['IPM_Region', 'ipm_region_centroid']].values))
+    # capacity_df["geometry"] = capacity_df.apply(
+    #     lambda x: spl.LineString([x.ipm_region_0_centroid, x.ipm_region_1_centroid]), axis=1)
+    # capacity_df = capacity_df.drop(["ipm_region_0_centroid", "ipm_region_1_centroid"], axis=1)
+    # capacity_df_normal = capacity_df.query("factor_IPM_over_PyPSA <= 1.0")
+    # capacity_df_outlier = capacity_df.query("factor_IPM_over_PyPSA > 1.0")
+    # ipm_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:3857")
+    # ipm_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:3857")
+    # ipm_geo_data_normal = ipm_geo_data_normal.explore(column='factor_IPM_over_PyPSA', cmap="jet", style_kwds={"weight": 5.0})
+    # ipm_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_normal.html"))
+    # ipm_map_line_outlier = ipm_geo_data_outlier.explore(column='factor_IPM_over_PyPSA', cmap="Reds_r", style_kwds={"weight": 5.0})
+    # ipm_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_outlier.html"))
+
+
 def parse_input_arguments():
     """
     Example:
@@ -329,11 +387,12 @@ def parse_input_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--plot_network_topology", help="Boolean: plot the network topology", action="store_true")
     parser.add_argument("--plot_network_crossings", help="Boolean: plot the network crossings", action="store_true")
-    parser.add_argument("--plot_network_capacity", help="Boolean: plot the network capacity", action="store_true")
+    parser.add_argument("--plot_network_capacity_ipm", help="Boolean: plot the network capacity for the PyPSA vs IPM case", action="store_true")
+    parser.add_argument("--plot_network_capacity_reeds", help="Boolean: plot the network capacity for the PyPSA vs reeds case", action="store_true")
     return parser.parse_args()
 
 
-def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_output_file, id_column_name, lines_dataframe_name, network_used="other"):
+def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, reeds_dataframe, log_output_file, id_column_name, lines_dataframe_name, network_used="other"):
 
     # Spatially join Bus 0 with the GADM and IPM shapes.
     if network_used == "pypsa_earth":
@@ -344,7 +403,9 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
     log_output_file.write(" --> shape of {} before sub_0 spatial join {} \n".format(lines_dataframe_name, lines_dataframe.shape))
     spatial_join_gadm_sub_0 = lines_dataframe_modified.sjoin(gadm_dataframe, how="left").loc[:, (id_column_name, "ISO_1")].rename(columns={"ISO_1": "state_0"})
     spatial_join_ipm_sub_0 = lines_dataframe_modified.sjoin(ipm_dataframe, how="left").loc[:, (id_column_name, "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_0"})
-    spatial_join_sub_0 = pd.merge(spatial_join_gadm_sub_0, spatial_join_ipm_sub_0, how="inner", on=id_column_name)
+    spatial_join_reeds_sub_0 = lines_dataframe_modified.sjoin(reeds_dataframe, how="left").loc[:, (id_column_name, "rb")].rename(columns={"rb": "reeds_0"})
+    spatial_join_gadm_ipm_sub_0 = pd.merge(spatial_join_gadm_sub_0, spatial_join_ipm_sub_0, how="inner", on=id_column_name)
+    spatial_join_sub_0 = pd.merge(spatial_join_gadm_ipm_sub_0, spatial_join_reeds_sub_0, how="inner", on=id_column_name)
     log_output_file.write(" --> shape of {} after sub_0 spatial join with gadm {} \n".format(lines_dataframe_name, spatial_join_gadm_sub_0.shape))
     log_output_file.write(" --> shape of {} after sub_0 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_0.shape))
     log_output_file.write(" --> shape of {} after sub_0 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_0.shape))
@@ -358,7 +419,9 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
     log_output_file.write(" --> shape of {} before sub_1 spatial join {} \n".format(lines_dataframe_name, lines_dataframe_modified.shape))
     spatial_join_gadm_sub_1 = lines_dataframe_modified.sjoin(gadm_dataframe, how="left").loc[:, (id_column_name, "ISO_1")].rename(columns={"ISO_1": "state_1"})
     spatial_join_ipm_sub_1 = lines_dataframe_modified.sjoin(ipm_dataframe, how="left").loc[:, (id_column_name, "IPM_Region")].rename(columns={"IPM_Region": "ipm_region_1"})
-    spatial_join_sub_1 = pd.merge(spatial_join_gadm_sub_1, spatial_join_ipm_sub_1, how="inner", on=id_column_name)
+    spatial_join_reeds_sub_1 = lines_dataframe_modified.sjoin(reeds_dataframe, how="left").loc[:, (id_column_name, "rb")].rename(columns={"rb": "reeds_1"})
+    spatial_join_gadm_ipm_sub_1 = pd.merge(spatial_join_gadm_sub_1, spatial_join_ipm_sub_1, how="inner", on=id_column_name)
+    spatial_join_sub_1 = pd.merge(spatial_join_gadm_ipm_sub_1, spatial_join_reeds_sub_1, how="inner", on=id_column_name)
     log_output_file.write(" --> shape of {} after sub_1 spatial join with gadm {} \n".format(lines_dataframe_name, spatial_join_gadm_sub_1.shape))
     log_output_file.write(" --> shape of {} after sub_1 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_1.shape))
     log_output_file.write(" --> shape of {} after sub_1 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_1.shape))
@@ -370,6 +433,8 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
     lines_dataframe["state_1"] = lines_dataframe["state_1"].astype(str)
     lines_dataframe["ipm_region_0"] = lines_dataframe["ipm_region_0"].astype(str)
     lines_dataframe["ipm_region_1"] = lines_dataframe["ipm_region_1"].astype(str)
+    lines_dataframe["reeds_0"] = lines_dataframe["reeds_0"].astype(str)
+    lines_dataframe["reeds_1"] = lines_dataframe["reeds_1"].astype(str)
     log_output_file.write(" --> shape of {} after the inner joins {} \n".format(lines_dataframe_name, lines_dataframe.shape))
 
     return lines_dataframe
@@ -383,6 +448,7 @@ def parse_inputs(base_path, log_output_file):
     eia_base_network_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "US_electric_transmission_lines_original.geojson")
     gadm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
     ipm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "ipm_v6_regions", "IPM_Regions_201770405.shp")
+    reeds_shapes_path = pathlib.Path(base_path.parent, "pypsa-usa", "workflow", "repo_data", "Reeds_Shapes", "rb_and_ba_areas.shp")
 
     #############
     # Load data #
@@ -396,6 +462,7 @@ def parse_inputs(base_path, log_output_file):
     eia_base_network = gpd.read_file(eia_base_network_path)
     gadm_shapes = gpd.read_file(gadm_shapes_path)
     ipm_shapes = gpd.read_file(ipm_shapes_path).to_crs("4326")
+    reeds_shapes = gpd.read_file(reeds_shapes_path).to_crs("4326")
 
     ############
     # EIA data #
@@ -428,7 +495,7 @@ def parse_inputs(base_path, log_output_file):
     #  -) the GADM shapes (level 1) to get the US state
     #  -) the IPM shapes to get the IPM region
 
-    eia_base_network = place_line_boundaries(eia_base_network, gadm_shapes, ipm_shapes, log_output_file, "OBJECTID_1", "eia_base_network")
+    eia_base_network = place_line_boundaries(eia_base_network, gadm_shapes, ipm_shapes, reeds_shapes, log_output_file, "OBJECTID_1", "eia_base_network")
 
     # Clean the EIA data from lines with unnecessary voltages and voltage classes
     eia_base_network = eia_base_network.rename(columns={"VOLTAGE": "v_nom", "VOLT_CLASS": "v_nom_class"})
@@ -461,7 +528,7 @@ def parse_inputs(base_path, log_output_file):
     #  -) the GADM shapes (level 1) to get the US state
     #  -) the IPM shapes to get the IPM region
 
-    lines_osm_raw = place_line_boundaries(lines_osm_raw, gadm_shapes, ipm_shapes, log_output_file, "id", "lines_osm_raw")
+    lines_osm_raw = place_line_boundaries(lines_osm_raw, gadm_shapes, ipm_shapes, reeds_shapes, log_output_file, "id", "lines_osm_raw")
 
     ###################
     # OSM lines clean #
@@ -479,7 +546,7 @@ def parse_inputs(base_path, log_output_file):
     #  -) the GADM shapes (level 1) to get the US state
     #  -) the IPM shapes to get the IPM region
 
-    lines_osm_clean = place_line_boundaries(lines_osm_clean, gadm_shapes, ipm_shapes, log_output_file, "line_id", "lines_osm_clean")
+    lines_osm_clean = place_line_boundaries(lines_osm_clean, gadm_shapes, ipm_shapes, reeds_shapes, log_output_file, "line_id", "lines_osm_clean")
 
     #######################
     # PyPSA-Earth base.nc #
@@ -495,7 +562,7 @@ def parse_inputs(base_path, log_output_file):
     #  -) the IPM shapes to get the IPM region
     log_output_file.write(" --> shape of pypsa-earth base network after reading it in {} \n".format(base_network_pypsa_earth.lines.shape))
 
-    base_network_pypsa_earth.lines = place_line_boundaries(base_network_pypsa_earth.lines, gadm_shapes, ipm_shapes, log_output_file, "Line", "base.nc", "pypsa_earth")
+    base_network_pypsa_earth.lines = place_line_boundaries(base_network_pypsa_earth.lines, gadm_shapes, ipm_shapes, reeds_shapes, log_output_file, "Line", "base.nc", "pypsa_earth")
 
     # --> Assign a voltage class to the pypsa-earth base.nc
     base_network_pypsa_earth.lines["v_nom_class"] = base_network_pypsa_earth.lines["v_nom"]
@@ -544,7 +611,7 @@ def parse_inputs(base_path, log_output_file):
     #  -) the IPM shapes to get the IPM region
     log_output_file.write(" --> shape of pypsa-usa lines_gis after reading it in {} \n".format(base_network_pypsa_usa.shape))
 
-    base_network_pypsa_usa = place_line_boundaries(base_network_pypsa_usa, gadm_shapes, ipm_shapes, log_output_file, "Line", "base.nc")
+    base_network_pypsa_usa = place_line_boundaries(base_network_pypsa_usa, gadm_shapes, ipm_shapes, reeds_shapes, log_output_file, "Line", "base.nc")
 
     # --> Assign a voltage class to the pypsa-usa lines_gis.csv
     base_network_pypsa_usa["v_nom_class"] = base_network_pypsa_usa["v_nom"]
@@ -563,7 +630,7 @@ def parse_inputs(base_path, log_output_file):
 
     base_network_pypsa_usa["v_nom_class"] = base_network_pypsa_usa["v_nom_class"].replace(v_nom_class_dict_pypsa_usa)
 
-    return eia_base_network, base_network_pypsa_earth, base_network_pypsa_usa, lines_osm_raw, lines_osm_clean, ipm_shapes
+    return eia_base_network, base_network_pypsa_earth, base_network_pypsa_usa, lines_osm_raw, lines_osm_clean, ipm_shapes, reeds_shapes
 
 
 if __name__ == '__main__':
@@ -578,7 +645,7 @@ if __name__ == '__main__':
     log_output_file = open(log_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
     # parse the input files
-    network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean, ipm_region_shapes = parse_inputs(default_path, log_output_file)
+    network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean, ipm_region_shapes, reeds_network_shapes = parse_inputs(default_path, log_output_file)
 
     # output dataframes after pre-processing
     network_pypsa_earth_df.export_to_netcdf(pathlib.Path(output_path, "modified_pypsa_earth_base.nc"))
@@ -609,8 +676,12 @@ if __name__ == '__main__':
         plot_network_crossings(network_pypsa_earth_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
 
     # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs IPM transmission capacities)
-    if args.plot_network_capacity:
-        plot_network_capacity(network_pypsa_earth_df.lines, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
-        plot_network_capacity(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
+    if args.plot_network_capacity_ipm:
+        plot_network_capacity_ipm(network_pypsa_earth_df.lines, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
+        plot_network_capacity_ipm(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
+
+    # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs reeds transmission capacities)
+    if args.plot_network_capacity_ipm:
+        plot_network_capacity_reeds(network_pypsa_earth_df.lines, reeds_network_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
 
     log_output_file.close()
