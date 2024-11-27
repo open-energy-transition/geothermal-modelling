@@ -233,12 +233,12 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
     pypsa_df["s_nom_num_parallel"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"]
     pypsa_df["s_nom_num_parallel_pu"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"] * pypsa_df["s_max_pu"]
     pypsa_df[["ipm_region_0", "ipm_region_1"]] = np.sort(pypsa_df[["ipm_region_0", "ipm_region_1"]])
-    ipm_region_pearth_transmission_capacities = pypsa_df.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
+    ipm_region_pypsa_transmission_capacities = pypsa_df.query("ipm_region_0 != ipm_region_1").groupby(["ipm_region_0", "ipm_region_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
                           ("ipm_region_0", "ipm_region_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "capacity (MW)"})
-    ipm_region_pearth_transmission_capacities["source"] = "PyPSA"
+    ipm_region_pypsa_transmission_capacities["source"] = "PyPSA"
 
     capacity_df = pd.concat(
-        [ipm_region_pearth_transmission_capacities, transmission_capacities_df])
+        [ipm_region_pypsa_transmission_capacities, transmission_capacities_df])
 
     capacity_df = capacity_df.set_index(
         ["source", "ipm_region_0", "ipm_region_1"]
@@ -261,6 +261,7 @@ def plot_network_capacity(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output
     log_output_file.write("{}: median error wrt PyPSA: {} \n".format(model, np.round(capacity_df["Error wrt PyPSA (%)"].median(), 2)))
     log_output_file.write("{}: mean error wrt PyPSA: {} \n".format(model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)))
     log_output_file.write("====")
+
 
     fig = px.scatter(capacity_df,
                      x="coalesce",
@@ -334,7 +335,7 @@ def parse_input_arguments():
 
 def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_output_file, id_column_name, lines_dataframe_name, network_used="other"):
 
-    # Bus 0
+    # Spatially join Bus 0 with the GADM and IPM shapes.
     if network_used == "pypsa_earth":
         lines_dataframe_modified = gpd.GeoDataFrame(lines_dataframe, geometry=gpd.GeoSeries.from_wkt(lines_dataframe.bus_0_coors), crs="EPSG:4326").reset_index()
     else:
@@ -348,7 +349,7 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, log_ou
     log_output_file.write(" --> shape of {} after sub_0 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_0.shape))
     log_output_file.write(" --> shape of {} after sub_0 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_0.shape))
 
-    # Bus 1
+    # Spatially join Bus 1 with the GADM and IPM shapes.
     if network_used == "pypsa_earth":
         lines_dataframe_modified = gpd.GeoDataFrame(lines_dataframe, geometry=gpd.GeoSeries.from_wkt(lines_dataframe.bus_1_coors), crs="EPSG:4326").reset_index()
     else:
@@ -383,9 +384,9 @@ def parse_inputs(base_path, log_output_file):
     gadm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
     ipm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "ipm_v6_regions", "IPM_Regions_201770405.shp")
 
-    ###########
-    # Load data
-    ###########
+    #############
+    # Load data #
+    #############
     base_network_pypsa_earth = pypsa.Network(base_network_pypsa_earth_path)
     base_network_pypsa_usa = pd.read_csv(base_network_pypsa_usa_path)
     base_network_pypsa_usa["Line"] = base_network_pypsa_usa["Line"].astype(str)
@@ -396,9 +397,9 @@ def parse_inputs(base_path, log_output_file):
     gadm_shapes = gpd.read_file(gadm_shapes_path)
     ipm_shapes = gpd.read_file(ipm_shapes_path).to_crs("4326")
 
-    ##########
-    # EIA data
-    ##########
+    ############
+    # EIA data #
+    ############
     log_output_file.write("        \n")
     log_output_file.write("        \n")
     log_output_file.write(" Data preparation on the EIA base network \n")
@@ -480,9 +481,9 @@ def parse_inputs(base_path, log_output_file):
 
     lines_osm_clean = place_line_boundaries(lines_osm_clean, gadm_shapes, ipm_shapes, log_output_file, "line_id", "lines_osm_clean")
 
-    #####################
-    # PyPSA-Earth base.nc
-    #####################
+    #######################
+    # PyPSA-Earth base.nc #
+    #######################
 
     log_output_file.write("        \n")
     log_output_file.write("        \n")
@@ -545,7 +546,7 @@ def parse_inputs(base_path, log_output_file):
 
     base_network_pypsa_usa = place_line_boundaries(base_network_pypsa_usa, gadm_shapes, ipm_shapes, log_output_file, "Line", "base.nc")
 
-    # --> Assign a voltage class to the pypsa-earth base.nc
+    # --> Assign a voltage class to the pypsa-usa lines_gis.csv
     base_network_pypsa_usa["v_nom_class"] = base_network_pypsa_usa["v_nom"]
 
     v_nom_class_dict_pypsa_usa = {
@@ -567,6 +568,7 @@ def parse_inputs(base_path, log_output_file):
 
 if __name__ == '__main__':
 
+    # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs")
     plot_path = pathlib.Path(default_path, "analysis", "plots")
@@ -575,6 +577,7 @@ if __name__ == '__main__':
     today_date = str(dt.datetime.now())
     log_output_file = open(log_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
 
+    # parse the input files
     network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean, ipm_region_shapes = parse_inputs(default_path, log_output_file)
 
     # output dataframes after pre-processing
@@ -605,7 +608,7 @@ if __name__ == '__main__':
     if args.plot_network_crossings:
         plot_network_crossings(network_pypsa_earth_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
 
-    # Comparison for the transmission capacities (PyPSA-Earth vs IPM transmission capacities)
+    # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs IPM transmission capacities)
     if args.plot_network_capacity:
         plot_network_capacity(network_pypsa_earth_df.lines, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
         plot_network_capacity(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
