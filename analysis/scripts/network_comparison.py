@@ -317,9 +317,12 @@ def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, bas
     })
     transmission_capacities_df["source"] = "reeds"
     transmission_capacities_df = transmission_capacities_df.loc[:, ("reeds_0", "reeds_1", "Capacity (MW)", "source")]
+    transmission_capacities_df[["reeds_0", "reeds_1"]] = np.sort(transmission_capacities_df[["reeds_0", "reeds_1"]])
+    transmission_capacities_df = transmission_capacities_df.drop_duplicates(keep="first")
 
     pypsa_df["s_nom_num_parallel"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"]
     pypsa_df["s_nom_num_parallel_pu"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"] * pypsa_df["s_max_pu"]
+    pypsa_df[["reeds_0", "reeds_1"]] = np.sort(pypsa_df[["reeds_0", "reeds_1"]])
     reeds_pypsa_transmission_capacities = pypsa_df.query("reeds_0 != reeds_1").groupby(["reeds_0", "reeds_1"])["s_nom_num_parallel"].sum().reset_index().loc[:, ("reeds_0", "reeds_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "Capacity (MW)"})
     reeds_pypsa_transmission_capacities["source"] = "PyPSA"
 
