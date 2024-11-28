@@ -206,14 +206,6 @@ def plot_network_crossings(pypsa_df, eia_df, color_dictionary, voltage_classes_l
             pathlib.Path(plot_base_path, "ipm_region_crossings_counts_for_voltage_{}.png".format(voltage_class)))
 
 
-def modify_pypsa_base_network(pypsa_df, capacity_df):
-    capacity_df["s_max_pu"] = capacity_df["factor_IPM_over_PyPSA"]
-    capacity_df = capacity_df.apply(lambda x: 1.0 if x["s_max_pu"] > 1.0 else x["s_max_pu"], axis=1)
-    capacity_df = capacity_df.loc[:, ("ipm_region_0", "ipm_region_1", "s_max_pu")]
-    pypsa_df.lines = pd.merge(pypsa_df.lines, capacity_df, how="left", on=["ipm_region_0", "ipm_region_1"])
-    return pypsa_df
-
-
 def plot_network_capacity_ipm(pypsa_df, ipm_shapes_gdf, color_dictionary, log_output_file, base_path, output_base_path, plot_base_path, model):
 
     transmission_capacities_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "transmission_single_epaipm.csv")
@@ -321,57 +313,51 @@ def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, bas
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
         "r": "reeds_0",
         "rr": "reeds_1",
-        "MW_f0": "export capacity (MW)",
-        "MW_r0": "import capacity (MW)"
+        "MW_f0": "Capacity (MW)",
     })
     transmission_capacities_df["source"] = "reeds"
-    transmission_capacities_df = transmission_capacities_df.loc[:, ("reeds_0", "reeds_1", "export capacity (MW)", "import capacity (MW)", "source")]
-    transmission_capacities_df[["reeds_0", "reeds_1"]] = np.sort(transmission_capacities_df[["reeds_0", "reeds_1"]])
-    transmission_capacities_df = transmission_capacities_df.drop_duplicates(keep="first")
+    transmission_capacities_df = transmission_capacities_df.loc[:, ("reeds_0", "reeds_1", "Capacity (MW)", "source")]
 
     pypsa_df["s_nom_num_parallel"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"]
     pypsa_df["s_nom_num_parallel_pu"] = pypsa_df["s_nom"] * pypsa_df["num_parallel"] * pypsa_df["s_max_pu"]
-    pypsa_df[["reeds_0", "reeds_1"]] = np.sort(pypsa_df[["reeds_0", "reeds_1"]])
-    reeds_pypsa_transmission_capacities = pypsa_df.query("reeds_0 != reeds_1").groupby(["reeds_0", "reeds_1"])["s_nom_num_parallel"].sum().reset_index().loc[:,
-                          ("reeds_0", "reeds_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "export capacity (MW)"})
-    reeds_pypsa_transmission_capacities["import capacity (MW)"] = 0.0
+    reeds_pypsa_transmission_capacities = pypsa_df.query("reeds_0 != reeds_1").groupby(["reeds_0", "reeds_1"])["s_nom_num_parallel"].sum().reset_index().loc[:, ("reeds_0", "reeds_1", "s_nom_num_parallel")].rename(columns={"s_nom_num_parallel": "Capacity (MW)"})
     reeds_pypsa_transmission_capacities["source"] = "PyPSA"
 
     capacity_df = pd.concat(
-        [reeds_pypsa_transmission_capacities, transmission_capacities_df])
-
+        [reeds_pypsa_transmission_capacities, transmission_capacities_df]).reset_index()
+    capacity_df = capacity_df.loc[:, ("reeds_0", "reeds_1", "Capacity (MW)", "source")]
+    capacity_df = capacity_df.query("reeds_0 != 'nan' & reeds_1 != 'nan'")
     capacity_df = capacity_df.set_index(
         ["source", "reeds_0", "reeds_1"]
-    ).unstack("source").droplevel(axis=1, level=0)
+    ).unstack("source").droplevel(axis=1, level=0).reset_index()
 
     # remove values where IPM is zero or None
-    # capacity_df = capacity_df.query("reeds != 0.0 & ~IPM.isna() & ~PyPSA.isna()").reset_index()
-    #
-    # # compute percentage error
-    # capacity_df["Error wrt reeds (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["IPM"]*100.0
-    # capacity_df["Error wrt PyPSA (%)"] = (capacity_df["PyPSA"]-capacity_df["IPM"])/capacity_df["PyPSA"]*100.0
-    # capacity_df["factor_IPM_over_PyPSA"] = capacity_df["IPM"]/capacity_df["PyPSA"]
-    # capacity_df["coalesce"] = capacity_df[["ipm_region_0", "ipm_region_1"]].agg('-->'.join, axis=1)
-    #
-    # capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_ipm_capacities.csv"), index=False)
-    #
-    # ipm_shapes_gdf = ipm_shapes_gdf.to_crs("3857")
-    # ipm_shapes_gdf["ipm_region_centroid"] = ipm_shapes_gdf.centroid
-    # capacity_df["ipm_region_0_centroid"] = capacity_df["ipm_region_0"].map(
-    #     dict(ipm_shapes_gdf[['IPM_Region', 'ipm_region_centroid']].values))
-    # capacity_df["ipm_region_1_centroid"] = capacity_df["ipm_region_1"].map(
-    #     dict(ipm_shapes_gdf[['IPM_Region', 'ipm_region_centroid']].values))
-    # capacity_df["geometry"] = capacity_df.apply(
-    #     lambda x: spl.LineString([x.ipm_region_0_centroid, x.ipm_region_1_centroid]), axis=1)
-    # capacity_df = capacity_df.drop(["ipm_region_0_centroid", "ipm_region_1_centroid"], axis=1)
-    # capacity_df_normal = capacity_df.query("factor_IPM_over_PyPSA <= 1.0")
-    # capacity_df_outlier = capacity_df.query("factor_IPM_over_PyPSA > 1.0")
-    # ipm_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:3857")
-    # ipm_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:3857")
-    # ipm_geo_data_normal = ipm_geo_data_normal.explore(column='factor_IPM_over_PyPSA', cmap="jet", style_kwds={"weight": 5.0})
-    # ipm_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_normal.html"))
-    # ipm_map_line_outlier = ipm_geo_data_outlier.explore(column='factor_IPM_over_PyPSA', cmap="Reds_r", style_kwds={"weight": 5.0})
-    # ipm_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_interactive_map_line_outlier.html"))
+    capacity_df = capacity_df.query("reeds != 0.0 & PyPSA != 0.0 & ~reeds.isna() & ~PyPSA.isna()").reset_index()
+
+    # compute percentage error
+    capacity_df["Error wrt reeds (%)"] = (capacity_df["PyPSA"]-capacity_df["reeds"])/capacity_df["reeds"]*100.0
+    capacity_df["Error wrt PyPSA (%)"] = (capacity_df["PyPSA"]-capacity_df["reeds"])/capacity_df["PyPSA"]*100.0
+    capacity_df["factor_reeds_over_PyPSA"] = capacity_df["reeds"]/capacity_df["PyPSA"]
+
+    capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_reeds_capacities.csv"), index=False)
+
+    reeds_shapes_gdf = reeds_shapes_gdf.to_crs("3857")
+    reeds_shapes_gdf["reeds_centroid"] = reeds_shapes_gdf.centroid
+    capacity_df["reeds_0_centroid"] = capacity_df["reeds_0"].map(
+        dict(reeds_shapes_gdf[['rb', 'reeds_centroid']].values))
+    capacity_df["reeds_1_centroid"] = capacity_df["reeds_1"].map(
+        dict(reeds_shapes_gdf[['rb', 'reeds_centroid']].values))
+    capacity_df["geometry"] = capacity_df.apply(
+        lambda x: spl.LineString([x.reeds_0_centroid, x.reeds_1_centroid]), axis=1)
+    capacity_df = capacity_df.drop(["reeds_0_centroid", "reeds_1_centroid"], axis=1)
+    capacity_df_normal = capacity_df.query("factor_reeds_over_PyPSA <= 1.0")
+    capacity_df_outlier = capacity_df.query("factor_reeds_over_PyPSA > 1.0")
+    reeds_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:3857")
+    reeds_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:3857")
+    reeds_geo_data_normal = reeds_geo_data_normal.explore(column='factor_reeds_over_PyPSA', cmap="jet", style_kwds={"weight": 5.0})
+    reeds_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_normal.html"))
+    reeds_map_line_outlier = reeds_geo_data_outlier.explore(column='factor_reeds_over_PyPSA', cmap="Reds_r", style_kwds={"weight": 5.0})
+    reeds_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_outlier.html"))
 
 
 def parse_input_arguments():
@@ -681,7 +667,7 @@ if __name__ == '__main__':
         plot_network_capacity_ipm(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
 
     # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs reeds transmission capacities)
-    if args.plot_network_capacity_ipm:
-        plot_network_capacity_reeds(network_pypsa_earth_df.lines, reeds_network_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
+    if args.plot_network_capacity_reeds:
+        plot_network_capacity_reeds(network_pypsa_earth_df.lines, reeds_network_shapes, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
 
     log_output_file.close()
