@@ -245,10 +245,13 @@ if __name__ ==  '__main__':
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
     # geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
     # Plot the GeoDataFrames
+    geo_df_final = geo_df_final.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
     m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
     m.save(f"../Plots/demand_filled_TWh_USA_{version}.html")
 
     df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
+    df_erst_gpd = df_erst_gpd.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
+
     m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
     m.save(f"../Plots/demand_with_holes_TWh_USA_{version}.html")
 
