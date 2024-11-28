@@ -309,7 +309,7 @@ def plot_network_capacity_ipm(pypsa_df, ipm_shapes_gdf, color_dictionary, log_ou
 
 def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, base_path, output_base_path, plot_base_path, model):
 
-    transmission_capacities_path = pathlib.Path(base_path.parent, "pypsa-usa", "workflow", "repo_data", "ReEDS_Constraints", "transmission", "transmission_capacity_init_AC_ba_NARIS2024.csv")
+    transmission_capacities_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "transmission", "transmission_capacity_init_AC_ba_NARIS2024.csv")
     transmission_capacities_df = pd.read_csv(transmission_capacities_path).rename(columns={
         "r": "reeds_0",
         "rr": "reeds_1",
@@ -340,6 +340,13 @@ def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, bas
     capacity_df["factor_reeds_over_PyPSA"] = capacity_df["reeds"]/capacity_df["PyPSA"]
 
     capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_reeds_capacities.csv"), index=False)
+
+    log_output_file.write("====")
+    log_output_file.write("{}: median error wrt reeds: {} \n".format(model, np.round(capacity_df["Error wrt reeds (%)"].median(), 2)))
+    log_output_file.write("{}: mean error wrt reeds: {} \n".format(model, np.round(capacity_df["Error wrt reeds (%)"].mean(), 2)))
+    log_output_file.write("{}: median error wrt PyPSA: {} \n".format(model, np.round(capacity_df["Error wrt PyPSA (%)"].median(), 2)))
+    log_output_file.write("{}: mean error wrt PyPSA: {} \n".format(model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)))
+    log_output_file.write("====")
 
     reeds_shapes_gdf = reeds_shapes_gdf.to_crs("3857")
     reeds_shapes_gdf["reeds_centroid"] = reeds_shapes_gdf.centroid
@@ -434,7 +441,8 @@ def parse_inputs(base_path, log_output_file):
     eia_base_network_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "US_electric_transmission_lines_original.geojson")
     gadm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
     ipm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "ipm_v6_regions", "IPM_Regions_201770405.shp")
-    reeds_shapes_path = pathlib.Path(base_path.parent, "pypsa-usa", "workflow", "repo_data", "Reeds_Shapes", "rb_and_ba_areas.shp")
+    reeds_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "Reeds_Shapes", "rb_and_ba_areas.shp")
+
 
     #############
     # Load data #
