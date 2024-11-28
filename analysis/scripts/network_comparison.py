@@ -382,6 +382,7 @@ def parse_input_arguments():
     parser.add_argument("--plot_network_crossings", help="Boolean: plot the network crossings", action="store_true")
     parser.add_argument("--plot_network_capacity_ipm", help="Boolean: plot the network capacity for the PyPSA vs IPM case", action="store_true")
     parser.add_argument("--plot_network_capacity_reeds", help="Boolean: plot the network capacity for the PyPSA vs reeds case", action="store_true")
+    parser.add_argument("--plot_all", help="Boolean: perform full analysis", action="store_true")
     return parser.parse_args()
 
 
@@ -652,7 +653,7 @@ if __name__ == '__main__':
 
     eia_voltage_classes = list(network_eia_df["v_nom_class"].unique())
 
-    if args.plot_network_topology:
+    if args.plot_network_topology or args.plot_all:
         for selected_voltage_class in eia_voltage_classes:
             fig_name_map = pathlib.Path(plot_path, "network_comparison_pearth_for_voltage_class_{}.png".format(
                 str(selected_voltage_class)))
@@ -666,16 +667,16 @@ if __name__ == '__main__':
     # Comparison for the transmission crossings (PyPSA-Earth vs EIA) using:
     # -) the GADM shapes(level 1) for the US state comparison
     # -) the IPM shapes for the IPM region comparison
-    if args.plot_network_crossings:
+    if args.plot_network_crossings or args.plot_all:
         plot_network_crossings(network_pypsa_earth_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
 
     # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs IPM transmission capacities)
-    if args.plot_network_capacity_ipm:
+    if args.plot_network_capacity_ipm or args.plot_all:
         plot_network_capacity_ipm(network_pypsa_earth_df.lines, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
         plot_network_capacity_ipm(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
 
     # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs reeds transmission capacities)
-    if args.plot_network_capacity_reeds:
+    if args.plot_network_capacity_reeds or args.plot_all:
         plot_network_capacity_reeds(network_pypsa_earth_df.lines, reeds_network_shapes, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
 
     log_output_file.close()
