@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import pathlib
 import geopandas as gpd
 import sys
+from shapely.validation import make_valid
 
 def disaggregation_v1(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state):
     holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
@@ -58,7 +59,7 @@ def disaggregation_v2(holes_mapped_intersect_filter, holes_centroid, df_utilitie
             holes_state['Sales (Megawatthours)'] = holes_state['pop'] * avg_per_capita_demand
             df_final = df_final._append(holes_state, ignore_index=True)
             # tot += (holes_state['pop'] / holes_state['pop'].sum() * avg_state_demand).sum()
-            tot += avg_state_demand
+            # tot += avg_state_demand
     
     return df_final
 
@@ -108,7 +109,7 @@ if __name__ ==  '__main__':
     base_path = pathlib.Path(__file__).parent.parent.parent
     demand_utility_path = pathlib.Path(base_path, "analysis", "gdrive_data","data", "electricity_demand_data", "demand_data","table_10_EIA_utility_sales.xlsx")
     country_gadm_path = pathlib.Path(base_path, "workflow", "pypsa-earth", "resources", "US_2021", "shapes", "country_shapes.geojson")
-    erst_path = pathlib.Path(base_path, "analysis", "data", "ERST_demand_GADM.geojson")
+    erst_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson")
     gadm_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
     pypsa_earth_scripts_path = pathlib.Path(base_path, "workflow", "pypsa-earth", "scripts")
     eia_per_capita_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "electricity_demand_data", "use_es_capita.xlsx")
@@ -120,6 +121,9 @@ if __name__ ==  '__main__':
     df_gadm_usa = gpd.read_file(gadm_usa_path)
     df_eia_per_capita = pd.read_excel(eia_per_capita_path, sheet_name='Total per capita', skiprows=2, index_col='State')
     df_eia_per_capita = df_eia_per_capita[2021]
+
+    # Make geometry valid
+    df_erst_gpd['geometry'] = df_erst_gpd['geometry'].apply(make_valid)
 
     # Add system paths
     sys.path.insert(0,str(pypsa_earth_scripts_path))
