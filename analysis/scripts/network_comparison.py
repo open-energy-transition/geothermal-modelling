@@ -371,8 +371,10 @@ def parse_input_arguments():
     """
     Example:
     -) to perform the network topology comparison, execute python network_comparison.py --plot_network_topology
-    -) to perform the network topology comparison, execute python network_comparison.py --plot_network_crossings
-    -) to perform both actions, execute python network_comparison.py --plot_network_topology --plot_network_crossings
+    -) to perform the network crossings comparison, execute python network_comparison.py --plot_network_crossings
+    -) to perform the network capacity comparison with IPM data, execute python network_comparison.py --plot_network_capacity_ipm
+    -) to perform the network capacity comparison with ReEDS data, execute python network_comparison.py --plot_network_capacity_reeds
+    -) to perform all actions, execute python network_comparison.py --plot_all
 
     Returns
     Args
@@ -387,6 +389,21 @@ def parse_input_arguments():
 
 
 def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, reeds_dataframe, log_output_file, id_column_name, lines_dataframe_name, network_used="other"):
+    """
+    The function spatially joins the boundaries of transmission line with the:
+    -) GADM (level 1) shape files
+    -) IPM regions shape files
+    -) ReEDS zones shape files
+
+    Returns
+    The function returns a modified lines_dataframe with additional six extra columns:
+    -) state_0: US state where the bus_0 of the transmission line is located
+    -) ipm_region_0: IPM region where the bus_0 of the transmission line is located
+    -) reeds_0: ReEDS region where the bus_0 of the transmission line is located
+    -) state_1: US state where the bus_1 of the transmission line is located
+    -) ipm_region_1: IPM region where the bus_1 of the transmission line is located
+    -) reeds_1: ReEDS region where the bus_1 of the transmission line is located
+    """
 
     # Spatially join Bus 0 with the GADM and IPM shapes.
     if network_used == "pypsa_earth":
@@ -435,6 +452,9 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, reeds_
 
 
 def parse_inputs(base_path, log_output_file):
+    """
+    The function parses the necessary inputs for the analysis
+    """
     base_network_pypsa_earth_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "networks", "base.nc")
     base_network_pypsa_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv")
     lines_osm_raw_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "resources", "osm", "raw", "all_raw_lines.geojson")
