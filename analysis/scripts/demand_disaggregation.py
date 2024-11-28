@@ -214,7 +214,7 @@ if __name__ ==  '__main__':
         df_per_capita_cons = calc_per_capita_kWh_state(df_final, df_gadm_usa, df_per_capita_cons, 'Final')
 
     fig = px.bar(df_error, barmode='group')
-    fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State')
+    fig.update_layout(yaxis_title='Unmet demand error %', xaxis_title='State', yaxis_range=[-20,100])
     fig.write_image(f"../Plots/unmet_demand_error_{version}.png")
 
     fig = px.bar(df_per_capita_cons, barmode='group')
