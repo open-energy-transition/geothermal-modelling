@@ -344,7 +344,7 @@ def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, bas
     capacity_df["Error wrt PyPSA (%)"] = (capacity_df["PyPSA"]-capacity_df["reeds"])/capacity_df["PyPSA"]*100.0
     capacity_df["factor_reeds_over_PyPSA"] = capacity_df["reeds"]/capacity_df["PyPSA"]
 
-    capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_reeds_capacities_max_import_export.csv"), index=False)
+    capacity_df.to_csv(pathlib.Path(output_base_path, f"{model}_reeds_capacities.csv"), index=False)
 
     log_output_file.write("====")
     log_output_file.write("{}: median error wrt reeds: {} \n".format(model, np.round(capacity_df["Error wrt reeds (%)"].median(), 2)))
@@ -367,9 +367,9 @@ def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, bas
     reeds_geo_data_normal = gpd.GeoDataFrame(capacity_df_normal, geometry=capacity_df_normal.geometry, crs="EPSG:3857")
     reeds_geo_data_outlier = gpd.GeoDataFrame(capacity_df_outlier, geometry=capacity_df_outlier.geometry, crs="EPSG:3857")
     reeds_geo_data_normal = reeds_geo_data_normal.explore(column='factor_reeds_over_PyPSA', cmap="jet", style_kwds={"weight": 5.0})
-    reeds_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_normal_max_import_export.html"))
+    reeds_geo_data_normal.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_normal.html"))
     reeds_map_line_outlier = reeds_geo_data_outlier.explore(column='factor_reeds_over_PyPSA', cmap="Reds_r", style_kwds={"weight": 5.0})
-    reeds_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_outlier_max_import_export.html"))
+    reeds_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_outlier.html"))
 
 
 def parse_input_arguments():
