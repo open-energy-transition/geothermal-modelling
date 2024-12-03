@@ -6,6 +6,10 @@
 # 3) adding meteo-corrections following
 # ------------------------------------------
 
+# TODO:
+# 1) add a correction to the wind speed (an updated cutout is needed with v_10m)
+# 2) add a blending effect for cooling
+
 
 import atlite
 import os
