@@ -71,21 +71,12 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
         df_filter_final = df_final.query('State == @state')
         assigned_utility_demand = df_filter_final['Sales (Megawatthours)'].sum()
         unmet_demand = missing_demand - assigned_utility_demand
-        # print(state)
-        # print(missing_demand)
-        # print(assigned_utility_demand)
-        # print(actual_state_demand)
-        # input()
-        # if assigned_utility_demand > 0:
-        #     rescaling_factor = missing_demand / assigned_utility_demand
         if assigned_utility_demand != 0:
             rescaling_factor = actual_state_demand / assigned_utility_demand
         elif assigned_utility_demand == 0:
             rescaling_factor = actual_state_demand / missing_demand
         else:
             rescaling_factor = 1
-        # print(rescaling_factor)
-        # print(df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'].sum() * rescaling_factor)
         df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
 
     return df_final
@@ -96,10 +87,8 @@ def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text):
     df_error[text] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
     return df_error
 
-
 def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
     df_calc_per_capita = df_calc.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_gadm.groupby('State')['pop'].sum()
-    # df_ref_state = df_ref.groupby('State')['Sales (Megawatthours)'].sum()
     df_per_capita_cons[text] = df_calc_per_capita
     return df_per_capita_cons
  
@@ -140,7 +129,6 @@ if __name__ ==  '__main__':
     df_cdf = df_cdf.groupby('area_bin').sum()
     df_cdf['percent sales'] = df_cdf['Sales (Megawatthours)'] * 100 / df_cdf['Sales (Megawatthours)'].sum()
     px.bar(df_cdf.reset_index(),y='Sales (Megawatthours)')
-
 
     # Obtain holes in ERST shape files
     df_erst_gpd_dissolved = df_erst_gpd.dissolve()
