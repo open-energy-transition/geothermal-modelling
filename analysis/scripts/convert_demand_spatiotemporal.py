@@ -36,6 +36,11 @@ if __name__ ==  '__main__':
     gdf_ba_shape  = gdf_ba_shape.to_crs(3857)
     df_utility_demand = gpd.sjoin_nearest(df_utility_demand, gdf_ba_shape_filtered, how='inner')
     
+    # temporal scaling factor
+    df_utility_demand['temp_scale'] = df_utility_demand.apply(lambda x: df_ba_demand[f"E_{x['EIAcode']}_D"].sum() / 1e3 / x['Sales (Megawatthours)'], axis=1)
+    # # PyPSA AC bus data
+    # pypsa_gpd = gpd.GeoDataFrame(df_reqd, geometry=gpd.points_from_xy(df_reqd.x,df_reqd.y))
+
     # for i in np.arange(0,len(gdf_ba_shape)):
     #     ba_row = gdf_ba_shape.iloc[i]
     #     ba = ba_row['EIAcode']
