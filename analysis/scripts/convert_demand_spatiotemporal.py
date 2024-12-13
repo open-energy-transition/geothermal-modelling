@@ -34,12 +34,15 @@ if __name__ ==  '__main__':
     df_utility_centroid = df_utility_demand.copy()
     df_utility_centroid.geometry = df_utility_centroid.geometry.centroid
 
+    get_colors = lambda n: ["#%06x" % random.randint(0, 0xFFFFFF) for _ in range(n)]
+
     # Removing those shapes which do not have a representation in the demand timeseries data
     demand_columns = df_ba_demand.columns
     demand_columns = [x.split("_")[1] for x in demand_columns if x.endswith("_D")]
     drop_shape_rows = list(set(gdf_ba_shape['EIAcode'].tolist()) - set(demand_columns))
     gdf_ba_shape_filtered = gdf_ba_shape[~gdf_ba_shape['EIAcode'].isin(drop_shape_rows)]
     gdf_ba_shape_filtered.geometry = gdf_ba_shape_filtered.geometry.centroid
+    gdf_ba_shape_filtered['color_ba'] = get_colors(len(gdf_ba_shape_filtered))
 
     df_utility_centroid = gpd.sjoin_nearest(df_utility_centroid, gdf_ba_shape_filtered, how='left')
     df_utility_centroid.rename(columns={'index_right':'index_right_2'},inplace=True)
@@ -51,7 +54,6 @@ if __name__ ==  '__main__':
     df_reqd = df_n.buses.query('carrier == "AC"')
     pypsa_gpd = gpd.GeoDataFrame(df_reqd, geometry=gpd.points_from_xy(df_reqd.x,df_reqd.y), crs=4326)
     pypsa_gpd = pypsa_gpd.to_crs(3857)
-    get_colors = lambda n: ["#%06x" % random.randint(0, 0xFFFFFF) for _ in range(n)]
     pypsa_gpd['color'] = get_colors(len(pypsa_gpd))
 
     df_utility_centroid = gpd.sjoin_nearest(df_utility_centroid, pypsa_gpd, how='left')
