@@ -14,10 +14,10 @@ countries: ["US"]
 # Can be replaced by country ["NG", "BJ"], continent ["Africa"] or user-specific region, see more at https://pypsa-earth.readthedocs.io/en/latest/configuration.html#top-level-configuration
 
 enable:
-  retrieve_databundle: false  #  Recommended 'true', for the first run. Otherwise data might be missing.
-  retrieve_cost_data: false  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
-  download_osm_data: false  # If 'true', OpenStreetMap data will be downloaded for the above given countries
-  build_natura_raster: false  # If True, then an exclusion raster will be build
+  retrieve_databundle: true  #  Recommended 'true', for the first run. Otherwise data might be missing.
+  retrieve_cost_data: true  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
+  download_osm_data: true  # If 'true', OpenStreetMap data will be downloaded for the above given countries
+  build_natura_raster: true  # If True, then an exclusion raster will be build
   build_cutout: false
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/api-how-to
@@ -418,8 +418,8 @@ solving:
     track_iterations: false
     #nhours: 10
   solver:
-    name: cbc
-    # threads: 1
+    name: gurobi
+    threads: 8
     # method: 2 # barrier (=ipm)
     # crossover: 0
     # BarConvTol: 1.e-5
