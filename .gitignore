@@ -3,3 +3,7 @@ analysis/outputs/*
 analysis/plots/*
 analysis/notebooks/*
 analysis/logs/*
+.DS_Store
+.idea
+.snakemake/
+gurobi.log

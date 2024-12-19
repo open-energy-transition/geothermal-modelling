@@ -372,27 +372,6 @@ def plot_network_capacity_reeds(pypsa_df, reeds_shapes_gdf, log_output_file, bas
     reeds_map_line_outlier.save(pathlib.Path(plot_base_path, f"{model}_reeds_interactive_map_line_outlier.html"))
 
 
-def parse_input_arguments():
-    """
-    Example:
-    -) to perform the network topology comparison, execute python network_comparison.py --plot_network_topology
-    -) to perform the network crossings comparison, execute python network_comparison.py --plot_network_crossings
-    -) to perform the network capacity comparison with IPM data, execute python network_comparison.py --plot_network_capacity_ipm
-    -) to perform the network capacity comparison with ReEDS data, execute python network_comparison.py --plot_network_capacity_reeds
-    -) to perform all actions, execute python network_comparison.py --plot_all
-
-    Returns
-    Args
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--plot_network_topology", help="Boolean: plot the network topology", action="store_true")
-    parser.add_argument("--plot_network_crossings", help="Boolean: plot the network crossings", action="store_true")
-    parser.add_argument("--plot_network_capacity_ipm", help="Boolean: plot the network capacity for the PyPSA vs IPM case", action="store_true")
-    parser.add_argument("--plot_network_capacity_reeds", help="Boolean: plot the network capacity for the PyPSA vs reeds case", action="store_true")
-    parser.add_argument("--plot_all", help="Boolean: perform full analysis", action="store_true")
-    return parser.parse_args()
-
-
 def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, reeds_dataframe, log_output_file, id_column_name, lines_dataframe_name, network_used="other"):
     """
     The function spatially joins the boundaries of transmission line with the:
@@ -460,14 +439,14 @@ def parse_inputs(base_path, log_output_file):
     """
     The function parses the necessary inputs for the analysis
     """
-    base_network_pypsa_earth_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "networks", "base.nc")
-    base_network_pypsa_usa_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv")
-    lines_osm_raw_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "resources", "osm", "raw", "all_raw_lines.geojson")
-    lines_osm_clean_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_earth", "US_2021", "resources", "osm", "clean", "all_clean_lines.geojson")
-    eia_base_network_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "transmission_grid_data", "US_electric_transmission_lines_original.geojson")
-    gadm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json")
-    ipm_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "shape_files", "ipm_v6_regions", "IPM_Regions_201770405.shp")
-    reeds_shapes_path = pathlib.Path(base_path, "analysis", "gdrive_data", "data", "pypsa_usa", "Reeds_Shapes", "rb_and_ba_areas.shp")
+    base_network_pypsa_earth_path = pathlib.Path(base_path, snakemake.input.base_network_pypsa_earth_path)
+    base_network_pypsa_usa_path = pathlib.Path(base_path, snakemake.input.base_network_pypsa_usa_path)
+    lines_osm_raw_path = pathlib.Path(base_path, snakemake.input.lines_osm_raw_path)
+    lines_osm_clean_path = pathlib.Path(base_path, snakemake.input.lines_osm_clean_path)
+    eia_base_network_path = pathlib.Path(base_path, snakemake.input.eia_base_network_path)
+    gadm_shapes_path = pathlib.Path(base_path, snakemake.input.gadm_shapes_path)
+    ipm_shapes_path = pathlib.Path(base_path, snakemake.input.ipm_shapes_path)
+    reeds_shapes_path = pathlib.Path(base_path, snakemake.input.reeds_shapes_path)
 
 
     #############
@@ -662,7 +641,9 @@ if __name__ == '__main__':
     output_path = pathlib.Path(default_path, "analysis", "outputs")
     ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
     today_date = str(dt.datetime.now())
-    log_output_file = open(log_path / f"output_network_comparison_{today_date[:10]}.txt", "w")
+    log_output_file_path = pathlib.Path(log_path, f"output_network_comparison_{today_date[:10]}.txt")
+    log_output_file_path.touch(exist_ok=True)
+    log_output_file = open(log_output_file_path, "w")
 
     # parse the input files
     network_eia_df, network_pypsa_earth_df, network_pypsa_usa_df, osm_lines_raw, osm_lines_clean, ipm_region_shapes, reeds_network_shapes = parse_inputs(default_path, log_output_file)
@@ -674,11 +655,9 @@ if __name__ == '__main__':
     osm_lines_raw.to_csv(pathlib.Path(output_path, "modified_osm_lines_raw.csv"), index=False)
     osm_lines_clean.to_csv(pathlib.Path(output_path, "modified_osm_lines_clean.csv"), index=False)
 
-    args = parse_input_arguments()
-
     eia_voltage_classes = list(network_eia_df["v_nom_class"].unique())
 
-    if args.plot_network_topology or args.plot_all:
+    if snakemake.params.plot_network_topology:
         for selected_voltage_class in eia_voltage_classes:
             fig_name_map = pathlib.Path(plot_path, "network_comparison_pearth_for_voltage_class_{}.png".format(
                 str(selected_voltage_class)))
@@ -692,16 +671,16 @@ if __name__ == '__main__':
     # Comparison for the transmission crossings (PyPSA-Earth vs EIA) using:
     # -) the GADM shapes(level 1) for the US state comparison
     # -) the IPM shapes for the IPM region comparison
-    if args.plot_network_crossings or args.plot_all:
+    if snakemake.params.plot_network_crossings:
         plot_network_crossings(network_pypsa_earth_df, network_eia_df, ccs_color_dict, eia_voltage_classes, output_path, plot_path)
 
     # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs IPM transmission capacities)
-    if args.plot_network_capacity_ipm or args.plot_all:
+    if snakemake.params.plot_network_capacity_ipm:
         plot_network_capacity_ipm(network_pypsa_earth_df.lines, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
         plot_network_capacity_ipm(network_pypsa_usa_df, ipm_region_shapes, ccs_color_dict, log_output_file, default_path, output_path, plot_path, "pypsa_usa")
 
     # Comparison for the transmission capacities (PyPSA-Earth/PyPSA-USA vs reeds transmission capacities)
-    if args.plot_network_capacity_reeds or args.plot_all:
+    if snakemake.params.plot_network_capacity_reeds:
         plot_network_capacity_reeds(network_pypsa_earth_df.lines, reeds_network_shapes, log_output_file, default_path, output_path, plot_path, "pypsa_earth")
 
     log_output_file.close()
