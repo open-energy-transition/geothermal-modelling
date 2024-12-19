@@ -7,11 +7,12 @@
 
 import gdown
 import pathlib
+from snakemake.script import snakemake
 
-
-url = "https://drive.google.com/drive/folders/1LwSoZDtnyUx5ki9SmBvdlGW3QwWjs4rA?usp=drive_link"
+url = snakemake.params['gdrive_url']
+# url = "https://drive.google.com/drive/folders/1LwSoZDtnyUx5ki9SmBvdlGW3QwWjs4rA?usp=drive_link"
 default_path = pathlib.Path(__file__).parent.parent.parent
-download_path = str(pathlib.Path(default_path, "analysis", "gdrive_data"))
+download_path = str(pathlib.Path(default_path, snakemake.params['output_path']))
 
 try:
     gdown.download_folder(url, output=download_path, quiet=False, resume=True, use_cookies=True)
