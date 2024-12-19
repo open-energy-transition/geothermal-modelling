@@ -1,1 +1,5 @@
 analysis/gdrive_data/*
+analysis/outputs/*
+analysis/plots/*
+analysis/notebooks/*
+analysis/logs/*
