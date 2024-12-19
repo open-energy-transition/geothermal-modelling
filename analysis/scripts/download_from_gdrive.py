@@ -7,8 +7,6 @@
 
 import gdown
 import pathlib
-from snakemake.script import Snakemake
-
 
 url = snakemake.params['gdrive_url']
 default_path = pathlib.Path(__file__).parent.parent.parent
