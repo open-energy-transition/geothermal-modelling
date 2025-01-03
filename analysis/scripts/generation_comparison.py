@@ -23,12 +23,10 @@ def parse_inputs(base_path):
     eia_state_generation_reference_path = pathlib.Path(base_path, snakemake.input.eia_state_generation_path)
     gadm_shapes_path = pathlib.Path(base_path, snakemake.input.gadm_shapes_path)
 
-    # Extra the time resolution from the PyPSA-Earth network file name
+    # extract the time resolution from the PyPSA-Earth network file name
     extracted_time_resolution = extract_time_res(network_pypsa_earth_path)
 
-    #############
-    # Load data #
-    #############
+    # load the data
     network_pypsa_earth = pypsa.Network(network_pypsa_earth_path)
     eia_country_generation_reference = pd.read_csv(eia_country_generation_reference_path, index_col="Unnamed: 0")
     eia_state_generation_reference = pd.read_excel(eia_state_generation_reference_path, sheet_name="Data")
@@ -38,7 +36,7 @@ def parse_inputs(base_path):
 
 def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, time_resolution, log_file, plot_base_path, gadm_shapes_path):
     """
-    The function plots the comparison between the EIA reference generation data state-by-state and the PyPSA-Earth network
+    The function plots the state-by-state comparison between the EIA reference generation data and the PyPSA-Earth network
     """
 
     log_file.write("        \n")
@@ -49,7 +47,7 @@ def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, ti
     if year_to_use not in year_list:
         raise Exception("{} is not allowed. Please use choose a year from the list: {}".format(year_to_use, year_list))
 
-        # EIA select relevant year and relevant rows
+    # select the relevant year and relevant rows
     keywords_list = ["WYTCP", "NUETP", "HYTCP", "GEEGP"]
     eia_generation_reference_filtered = eia_reference[eia_reference["MSN"].isin(keywords_list)][["State", "MSN", year_to_use]]
     eia_generation_reference_filtered = eia_generation_reference_filtered.rename(columns={'MSN': 'carrier'})
@@ -61,7 +59,7 @@ def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, ti
     eia_generation_reference_filtered.set_index(['carrier', 'State'] ,inplace=True)
     eia_generation_reference_filtered[year_to_use] /= 1e3 #conversion from million kWh i.e., GWh to TWh
 
-    # Calculating the annual generation from each of the generators in MWh
+    # calculate the annual generation from each of the generators in MWh
     log_file.write(" --> Compute the state-by-state annual electricity generation \n")
     pypsa_network.generators = pypsa_network.generators.assign(gen_MWh=pypsa_network.generators_t.p.sum() * time_resolution)
 
@@ -73,14 +71,14 @@ def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, ti
     pypsa_network.generators.bus = pypsa_network.generators.bus.str.replace(" csp", "")
     pypsa_network.generators.bus = pypsa_network.generators.bus.map(usa_state_dict)
 
-    # Selecting relevant data from PyPSA results
+    # select the relevant data from PyPSA results
     log_file.write(" --> Selecting relevant data from PyPSA results \n")
     pypsa_generation_filtered = pypsa_network.generators.reset_index()[['carrier', 'bus', 'gen_MWh']]
     pypsa_generation_filtered = pypsa_generation_filtered.rename(columns={'bus': 'State'})
     pypsa_generation_filtered.set_index(['carrier', 'State'], inplace=True)
     pypsa_generation_filtered['gen_MWh'] /= 1e6
 
-    # Joining EIA and PyPSA generations to compare them
+    # Join the EIA and PyPSA generations to compare them
     log_file.write(" --> Joining EIA and PyPSA generations to compare them \n")
     comparison_generation = pypsa_generation_filtered.copy()
     comparison_generation = comparison_generation.join(eia_generation_reference_filtered)
@@ -94,20 +92,20 @@ def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, ti
         fig.update_layout(title=f"Carrier = {car}",yaxis_title='Generation (TWh)')
         fig.write_html(pathlib.Path(plot_base_path, f"{car}_generation_comparison.html"))
 
-    # Compute error %s of the generation
+    # compute error %s of the generation
     comparison_generation['error %'] = comparison_generation.apply(lambda x: (x[eia_name]-x[pypsa_name])*100/x[eia_name], axis=1)
 
 
 def plot_country_comparison(pypsa_network, eia_reference, year_to_use, time_resolution, log_file, plot_base_path):
     """
-    The function plots the comparison between the EIA reference generation data countrywide and the PyPSA-Earth network
+    The function plots the countrywide comparison between the EIA reference generation data and the PyPSA-Earth network
     """
 
     log_file.write("        \n")
     log_file.write("        \n")
     log_file.write("Compare the countrywide electricity generation \n")
 
-    # ---> Prepare the PyPSA results
+    # prepare the PyPSA results
     pypsa_network.storage_units = pypsa_network.storage_units.assign(p=pypsa_network.storage_units_t.p.sum() * time_resolution)
     pypsa_network.generators = pypsa_network.generators.assign(p=pypsa_network.generators_t.p.sum() * time_resolution)
     df_pypsa_generation = pd.concat(
@@ -121,7 +119,7 @@ def plot_country_comparison(pypsa_network, eia_reference, year_to_use, time_reso
 
     log_output_file.write("Electricity generation: {} \n".format(df_pypsa_generation))
 
-    # ---> Prepare the EIA reference data
+    # prepare the EIA reference data
     pypsa_cols = ["Coal", "Natural Gas", "Other Gas", "Nuclear", "Hydro", "Estimated Total Solar", "PHS", "Petroleum",
                   "Wind", "Other Waste Biomass", "Geothermal"]
     rename_cols = {"estimated total solar": "solar", "other waste biomass": "biomass", "natural gas": "CCGT",
@@ -133,10 +131,10 @@ def plot_country_comparison(pypsa_network, eia_reference, year_to_use, time_reso
     df_eia_generation_year.name = eia_name
     df_eia_generation_year = df_eia_generation_year.drop("other gas")
 
-    # ---> Prepare comparison dataframe
+    # prepare comparison dataframe
     df_compare_generation = pd.concat([df_pypsa_generation, df_eia_generation_year], axis=1)
 
-    # ---> Plot
+    # plot
     df_compare_generation.plot(kind="bar")
     plt.xlabel("Carriers")
     plt.ylabel("Electricity Generation (TWh)")
@@ -168,7 +166,7 @@ if __name__ == '__main__':
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
 
-    # Initial configurations
+    # initial configurations
     eia_name = "EIA"
     pypsa_name = "PyPSA"
     year_for_comparison = snakemake.params.year_for_comparison
