@@ -165,14 +165,14 @@ if __name__ == '__main__':
 
     fig = px.bar(df_per_capita, barmode='group')
     fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
-    fig.write_image(f"{plot_path}/per_capita_consumption_{version}.png")
+    fig.write_image(f"{plot_path}/per_capita_consumption.png")
 
     df_per_capita['error'] = (df_per_capita['Calculated'] - df_per_capita['EIA']) * 100 / df_per_capita['EIA']
     df_per_capita['error'] = df_per_capita['error'].abs()
 
     fig = px.bar(df_per_capita, y = 'error')
     fig.update_layout(yaxis_title='Error %', xaxis_title='State')
-    fig.write_image(f"{plot_path}/per_capita_error_{version}.png")
+    fig.write_image(f"{plot_path}/per_capita_error.png")
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
@@ -180,12 +180,12 @@ if __name__ == '__main__':
     # Plot the GeoDataFrames
     geo_df_final = geo_df_final.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
     m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
-    m.save(f"{plot_path}/demand_filled_TWh_USA_{version}.html")
+    m.save(f"{plot_path}/demand_filled_TWh_USA.html")
 
     df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
     df_erst_gpd = df_erst_gpd.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
 
     m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
-    m.save(f"{plot_path}/demand_with_holes_TWh_USA_{version}.html")
+    m.save(f"{plot_path}/demand_with_holes_TWh_USA.html")
 
-    # df_final.to_file(f"Demand_mapped_{version}.geojson",driver="GeoJSON")
+    # df_final.to_file(f"Demand_mapped.geojson",driver="GeoJSON")
