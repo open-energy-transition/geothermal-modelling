@@ -179,3 +179,4 @@ if __name__ == '__main__':
     if snakemake.params.plot_state_by_state_comparison:
         plot_state_by_state_comparison(network_pypsa_earth_df, eia_state_generation_df, year_for_comparison, time_res, log_output_file, plot_path, gadm_path)
 
+    log_output_file.close()
