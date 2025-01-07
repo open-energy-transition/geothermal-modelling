@@ -3,7 +3,6 @@
 # #
 # # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# # -*- coding: utf-8 -*-
 
 import cartopy.crs as ccrs
 import datetime as dt
@@ -417,10 +416,10 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, reeds_
     spatial_join_gadm_ipm_sub_0 = pd.merge(spatial_join_gadm_sub_0, spatial_join_ipm_sub_0, how="inner", on=id_column_name)
     spatial_join_sub_0 = pd.merge(spatial_join_gadm_ipm_sub_0, spatial_join_reeds_sub_0, how="inner", on=id_column_name)
     log_output_file.write(" --> shape of {} after sub_0 spatial join with gadm {} \n".format(lines_dataframe_name, spatial_join_gadm_sub_0.shape))
-    log_output_file.write(" --> shape of {} after sub_0 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_0.shape))
+    log_output_file.write(" --> shape of {} after sub_0 spatial join with ipm {} \n".format(lines_dataframe_name, spatial_join_ipm_sub_0.shape))
     log_output_file.write(" --> shape of {} after sub_0 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_0.shape))
     logger.info(" --> shape of {} after sub_0 spatial join with gadm {} \n".format(lines_dataframe_name, spatial_join_gadm_sub_0.shape))
-    logger.info(" --> shape of {} after sub_0 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_0.shape))
+    logger.info(" --> shape of {} after sub_0 spatial join with ipm {} \n".format(lines_dataframe_name, spatial_join_ipm_sub_0.shape))
     logger.info(" --> shape of {} after sub_0 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_0.shape))
 
     # Spatially join Bus 1 with the GADM and IPM shapes.
@@ -437,10 +436,10 @@ def place_line_boundaries(lines_dataframe, gadm_dataframe, ipm_dataframe, reeds_
     spatial_join_gadm_ipm_sub_1 = pd.merge(spatial_join_gadm_sub_1, spatial_join_ipm_sub_1, how="inner", on=id_column_name)
     spatial_join_sub_1 = pd.merge(spatial_join_gadm_ipm_sub_1, spatial_join_reeds_sub_1, how="inner", on=id_column_name)
     log_output_file.write(" --> shape of {} after sub_1 spatial join with gadm {} \n".format(lines_dataframe_name, spatial_join_gadm_sub_1.shape))
-    log_output_file.write(" --> shape of {} after sub_1 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_1.shape))
+    log_output_file.write(" --> shape of {} after sub_1 spatial join with ipm {} \n".format(lines_dataframe_name, spatial_join_ipm_sub_1.shape))
     log_output_file.write(" --> shape of {} after sub_1 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_1.shape))
     logger.info(" --> shape of {} after sub_1 spatial join with gadm {} \n".format(lines_dataframe_name, spatial_join_gadm_sub_1.shape))
-    logger.info(" --> shape of {} after sub_1 spatial join with ipm{} \n".format(lines_dataframe_name, spatial_join_ipm_sub_1.shape))
+    logger.info(" --> shape of {} after sub_1 spatial join with ipm {} \n".format(lines_dataframe_name, spatial_join_ipm_sub_1.shape))
     logger.info(" --> shape of {} after sub_1 spatial join {} \n".format(lines_dataframe_name, spatial_join_sub_1.shape))
 
     # --> Inner join the results
