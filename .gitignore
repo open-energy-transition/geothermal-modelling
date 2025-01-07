@@ -7,3 +7,4 @@ analysis/logs/*
 .idea
 .snakemake/
 gurobi.log
+logs/
