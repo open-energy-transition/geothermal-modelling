@@ -35,6 +35,25 @@ def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
     df_per_capita_cons[text] = df_calc_per_capita
     return df_per_capita_cons
 
+def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
+    df_demand_statewise = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
+    for state in df_utilities_grouped_state.index:
+        actual_state_demand = df_demand_statewise.loc[state]
+        missing_demand = df_utilities_grouped_state.loc[state]
+        df_filter_final = df_final.query('State == @state')
+        assigned_utility_demand = df_filter_final['Sales (Megawatthours)'].sum()
+        unmet_demand = missing_demand - assigned_utility_demand
+        if assigned_utility_demand != 0:
+            rescaling_factor = actual_state_demand / assigned_utility_demand
+        elif assigned_utility_demand == 0:
+            rescaling_factor = actual_state_demand / missing_demand
+        else:
+            rescaling_factor = 1
+        df_final.loc[df_final['State'] == state,'Sales (Megawatthours)'] *= rescaling_factor
+
+    return df_final
+
+
 if __name__ == '__main__':
 
     # set relevant paths
