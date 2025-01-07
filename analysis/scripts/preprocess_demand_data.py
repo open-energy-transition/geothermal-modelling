@@ -1,4 +1,3 @@
-
 import pathlib
 import datetime as dt
 import geopandas as gpd
@@ -6,6 +5,8 @@ import pandas as pd
 import os
 from shapely.validation import make_valid
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 
 def compute_demand_disaggregation(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility, df_gadm_usa):
     holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
