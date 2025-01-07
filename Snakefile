@@ -42,7 +42,7 @@ rule network_comparison:
 
 rule generation_comparison:
     params:
-        year_for_comparison=2020,
+        year_for_comparison=2020, #Should this be 2021?
         plot_country_comparison=True, # Boolean: plot the countrywide generation comparison
         plot_state_by_state_comparison=True, # Boolean: plot the state-by-state generation comparison
     input:
@@ -52,4 +52,23 @@ rule generation_comparison:
         pypsa_earth_network_path=pathlib.Path("workflow", "pypsa-earth", "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-25H.nc")
     script:
         "analysis/scripts/generation_comparison.py"
+
+rule preprocess_demand_data:
+    params:
+        demand_year = 2021,
+        holes_area_threshold = 0.05, # to ignore holes smaller than this area
+        nprocesses = 1
+    input:
+        demand_utility_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data","table_10_EIA_utility_sales.xlsx"),
+        country_gadm_path = pathlib.Path("workflow", "pypsa-earth", "resources", "US_2021", "shapes", "country_shapes.geojson"),
+        erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson"),
+        gadm_usa_path = pathlib.Path("analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"),
+        eia_per_capita_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "use_es_capita.xlsx")
+    script:
+        "analysis/scripts/preprocess_demand_data.py"
+
+#rule demand_modelling:
+ #   script:
+
+
 
