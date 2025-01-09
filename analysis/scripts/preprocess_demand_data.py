@@ -7,6 +7,7 @@ from shapely.validation import make_valid
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import random 
 
 def compute_demand_disaggregation(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility, df_gadm_usa):
     holes_mapped_intersect_filter['Sales (Megawatthours)'] = 0
@@ -54,13 +55,21 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
 
     return df_final
 
+def save_map(df_erst):
+    if "VAL_DATE" in df_erst.columns:
+        df_erst = df_erst.drop("VAL_DATE",axis=1)
+    if "SOURCEDATE" in df_erst.columns:
+        df_erst = df_erst.drop("SOURCEDATE",axis=1)
+    m = df_erst.explore()
+    m.save(os.path.join(plot_path,"ERST_initial.html"))
+
 
 if __name__ == '__main__':
 
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs")
-    plot_path = pathlib.Path(default_path, "analysis", "plots")
+    plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
     os.makedirs(log_path, exist_ok=True)
     os.makedirs(plot_path, exist_ok=True)
     today_date = str(dt.datetime.now())
@@ -92,8 +101,21 @@ if __name__ == '__main__':
     sys.path.insert(0,str(pypsa_earth_scripts_path))
     import build_shapes
 
+    get_colors = lambda n: ["#%06x" % random.randint(0, 0xFFFFFF) for _ in range(n)]
+
     # Make geometry valid
     df_erst_gpd['geometry'] = df_erst_gpd['geometry'].apply(make_valid)
+
+    # Plot initial ERST shapefile 
+    save_map(df_erst_gpd)
+    log_output_file.write("Generated initial ERST file \n")
+    
+    # Plot the holes in the ERST shapefile
+    # Plot initial assigned demands to ERST shapes
+    # Plot corrected demands to ERST shapes
+    # 
+
+
 
     # Obtain holes in ERST shape files
     df_erst_gpd_dissolved = df_erst_gpd.dissolve()
