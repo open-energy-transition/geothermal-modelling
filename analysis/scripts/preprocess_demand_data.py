@@ -55,13 +55,13 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
 
     return df_final
 
-def save_map(df_erst):
+def save_map(df_erst, filename):
     if "VAL_DATE" in df_erst.columns:
         df_erst = df_erst.drop("VAL_DATE",axis=1)
     if "SOURCEDATE" in df_erst.columns:
         df_erst = df_erst.drop("SOURCEDATE",axis=1)
     m = df_erst.explore()
-    m.save(os.path.join(plot_path,"ERST_initial.html"))
+    m.save(os.path.join(plot_path,filename))
 
 
 if __name__ == '__main__':
@@ -107,21 +107,18 @@ if __name__ == '__main__':
     df_erst_gpd['geometry'] = df_erst_gpd['geometry'].apply(make_valid)
 
     # Plot initial ERST shapefile 
-    save_map(df_erst_gpd)
+    save_map(df_erst_gpd, "ERST_initial.html")
     log_output_file.write("Generated initial ERST file \n")
     
-    # Plot the holes in the ERST shapefile
-    # Plot initial assigned demands to ERST shapes
-    # Plot corrected demands to ERST shapes
-    # 
-
-
-
     # Obtain holes in ERST shape files
     df_erst_gpd_dissolved = df_erst_gpd.dissolve()
     holes = df_country.difference(df_erst_gpd_dissolved)
     holes_exploded = holes.explode()
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(),crs=df_erst_gpd.crs)
+
+    save_map(holes_exploded, "Holes.html")
+    log_output_file.write("Generated holes exploded map \n")
+    print("Generated map")
     holes_exploded = holes_exploded.to_crs(6372)
     holes_exploded['Area'] = holes_exploded.area
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
