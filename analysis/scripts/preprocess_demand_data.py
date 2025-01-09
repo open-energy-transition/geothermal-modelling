@@ -118,12 +118,16 @@ if __name__ == '__main__':
 
     save_map(holes_exploded, "Holes.html")
     log_output_file.write("Generated holes exploded map \n")
-    print("Generated map")
+
     holes_exploded = holes_exploded.to_crs(6372)
-    holes_exploded['Area'] = holes_exploded.area
+    holes_exploded['Area'] = holes_exploded.area / 1e6
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query('Area > @holes_area_threshold')
+    save_map(holes_exploded_filter, "Holes_considered.html")
+    log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
+
     holes_exploded_filter = holes_exploded_filter.to_crs(4326)
+
     holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
 
     # Compute intersecting areas of holes and states
@@ -135,8 +139,7 @@ if __name__ == '__main__':
     holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
     holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
     holes_mapped_intersect_filter['country'] = 'US'
-    holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
-    
+    holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
 
     build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=nprocesses)
     df_gadm_usa['State'] = df_gadm_usa.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
@@ -174,7 +177,6 @@ if __name__ == '__main__':
     # Final error percentages of unmet demand after rescaling
     df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Final')
     df_per_capita_cons = calc_per_capita_kWh_state(df_final, df_gadm_usa, df_per_capita_cons, 'Final')
-
 
     # Per-capita consumption
     df_per_capita = pd.DataFrame()

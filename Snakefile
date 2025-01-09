@@ -70,7 +70,7 @@ rule generation_comparison:
 rule preprocess_demand_data:
     params:
         demand_year = 2021,
-        holes_area_threshold = 0.05, # to ignore holes smaller than this area
+        holes_area_threshold = 100, # to ignore holes smaller than this area in sq.km
         nprocesses = 1
     input:
         demand_utility_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data","table_10_EIA_utility_sales.xlsx"),
