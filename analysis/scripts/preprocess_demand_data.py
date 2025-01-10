@@ -209,11 +209,12 @@ if __name__ == '__main__':
     # Initial error percentages of unmet demand
     df_error = pd.DataFrame()
     df_per_capita_cons = pd.DataFrame()
-    df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_demand_utility, df_error, 'Initial')
-    df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_gadm_usa, df_per_capita_cons, 'Initial')
+    df_erst_gpd = df_erst_gpd.reset_index().rename(columns={'STATE':'State'})
+    df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd, df_demand_utility, df_error, 'Initial')
+    df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd, df_gadm_usa, df_per_capita_cons, 'Initial')
 
     # Missing utilities in ERST shape files
-    missing_utilities = (list(set(df_demand_utility.reset_index().NAME) - set(df_erst_gpd.reset_index().NAME)))
+    missing_utilities = (list(set(df_demand_utility.reset_index().NAME) - set(df_erst_gpd.NAME)))
     df_missing_utilities = df_demand_utility.query('NAME in @missing_utilities')
     df_utilities_grouped_state = df_missing_utilities.groupby('STATE')['Sales (Megawatthours)'].sum()
 
@@ -224,7 +225,7 @@ if __name__ == '__main__':
 
     df_final = compute_demand_disaggregation(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility, df_gadm_usa)
 
-    df_final = df_final._append(df_erst_gpd.rename(columns={'STATE':'State'}))
+    df_final = df_final._append(df_erst_gpd)
 
     # error percentages of unmet demand after assigning average demand to states
     df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Mid-way')
