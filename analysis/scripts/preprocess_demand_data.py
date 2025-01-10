@@ -55,12 +55,49 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
 
     return df_final
 
-def save_map(df_erst, filename):
-    if "VAL_DATE" in df_erst.columns:
-        df_erst = df_erst.drop("VAL_DATE",axis=1)
-    if "SOURCEDATE" in df_erst.columns:
-        df_erst = df_erst.drop("SOURCEDATE",axis=1)
-    m = df_erst.explore()
+# df_erst_gpd: geopandas dataframe -> ERST shape file
+# df_gadm_usa: geopandas dataframe -> GADM shape file
+# df_demand_utility: pandas dataframe -> Demand data from EIA
+def overlay_demands(df_erst_gpd, df_gadm_usa, df_demand_utility):
+
+    # ERST overlay with GADM shapes for intersection
+    df_erst_overlay = gpd.overlay(df_erst_gpd, df_gadm_usa, how='intersection')
+    df_erst_overlay['STATE'] = df_erst_overlay.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
+    df_erst_overlay.set_index(['NAME','STATE'], inplace=True)
+
+    # Demand mapping to ERST shape file
+    df_demand_utility['Entity'] = df_demand_utility['Entity'].apply(str.upper)
+    df_demand_utility.rename(columns={'Entity':'NAME','State':'STATE'}, inplace=True)
+    df_demand_utility.set_index(['NAME','STATE'], inplace=True)
+
+    df_erst_overlay = df_erst_overlay.join(df_demand_utility)
+    
+    # Make geometry valid
+    df_erst_overlay['geometry'] = df_erst_overlay['geometry'].apply(make_valid)
+
+    return df_erst_overlay
+
+# total_demand: float -> Total Demand (Sales) as per the EIA data
+# mapped_demand: float -> The demand mapped to ERST file at that particular stage 
+def compute_missing_percentage(total_demand, mapped_demand):
+    return np.round(((total_demand - mapped_demand) * 100 / total_demand), 2)
+
+# df_map : geopandas -> geopandas file that is to be plotted on the map
+# filename : str -> Name to be given to the saved plot (HTML file)
+# color : boolean -> If True, each row of geometry is coloured based on the color assigned to it the gpd dataframe
+# cmap : boolean -> If True, each row of geometry is coloured based on the magnitude of the value in the cmap_col specified
+# cmap_col : str -> Column on which a color map is used to plot the geometry
+def save_map(df_map, filename, color, cmap, cmap_col=''):
+    if "VAL_DATE" in df_map.columns:
+        df_map = df_map.drop("VAL_DATE",axis=1)
+    if "SOURCEDATE" in df_map.columns:
+        df_map = df_map.drop("SOURCEDATE",axis=1)
+    if not color and not cmap:
+        m = df_map.explore()
+    elif color and not cmap:
+        m = df_map.explore(color=df_map['color'].tolist())
+    elif not color and cmap:
+        m = df_map.explore(column=cmap_col, cmap='jet')
     m.save(os.path.join(plot_path,filename))
 
 
@@ -95,6 +132,8 @@ if __name__ == '__main__':
     df_eia_per_capita = df_eia_per_capita[demand_year]
     log_output_file.write("Reading input files completed \n")
     log_output_file.write("-------------------------------------------------\n")
+    total_demand = df_demand_utility['Sales (Megawatthours)'].sum() / 1e6
+    log_output_file.write(f"Total sales (TWh) as in EIA sales data: {total_demand} \n")
 
     # Add system paths
     pypsa_earth_scripts_path = pathlib.Path("workflow", "pypsa-earth", "scripts")
@@ -107,39 +146,57 @@ if __name__ == '__main__':
     df_erst_gpd['geometry'] = df_erst_gpd['geometry'].apply(make_valid)
 
     # Plot initial ERST shapefile 
-    save_map(df_erst_gpd, "ERST_initial.html")
-    log_output_file.write("Generated initial ERST file \n")
+    save_map(df_erst_gpd, filename="ERST_initial.html", color=False, cmap=False)
+    log_output_file.write("Generated initial ERST shapes file \n")
     
-    # Obtain holes in ERST shape files
+    # Map demands to ERST shapefile
+    df_erst_gpd = overlay_demands(df_erst_gpd, df_gadm_usa, df_demand_utility)
+    demand_mapped = df_erst_gpd['Sales (Megawatthours)'].sum() / 1e6
+    log_output_file.write(f"Total sales (TWh) as in ERST mapped data: {demand_mapped} \n")
+    missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
+    log_output_file.write(f"Missing sales (TWh) : {missing_demand_percentage} \n")
+
+    # df_erst_gpd_centroid = df_erst_gpd.copy()
+    # df_erst_gpd_centroid.geometry = df_erst_gpd_centroid.geometry
+    save_map(df_erst_gpd, filename="ERST_overlay.html", color=False, cmap=True, cmap_col='Sales (Megawatthours)')
+    log_output_file.write("Generated ERST shapes file with mapped demands \n")
+
+    ## Obtain holes in ERST shape files
+
+    # Merge all geometry into one geometry
     df_erst_gpd_dissolved = df_erst_gpd.dissolve()
+    # Find the difference in geometry between country and the merged ERST geometry
     holes = df_country.difference(df_erst_gpd_dissolved)
+
+    # Convert holes geomtry : multipolygons into polygons to create a separate row for each hole
     holes_exploded = holes.explode()
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(),crs=df_erst_gpd.crs)
-
-    save_map(holes_exploded, "Holes.html")
+    save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)
     log_output_file.write("Generated holes exploded map \n")
-
     holes_exploded = holes_exploded.to_crs(6372)
     holes_exploded['Area'] = holes_exploded.area / 1e6
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query('Area > @holes_area_threshold')
-    save_map(holes_exploded_filter, "Holes_considered.html")
+    save_map(holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False)
     log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
-
     holes_exploded_filter = holes_exploded_filter.to_crs(4326)
 
+    df_gadm_usa['color'] = get_colors(len(df_gadm_usa))
     holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
+    save_map(holes_mapped, filename="Holes_mapped_GADM.html", color=True, cmap=False)
+    log_output_file.write("Generated holes mapped to GADM \n")
 
-    # Compute intersecting areas of holes and states
-    # To filter out sjoin mapping to states where a tiny area of the hole is present in the GADM shape
-    holes_mapped_intersect = holes_mapped.copy()
-    holes_mapped_intersect['geometry'] = holes_mapped.apply(lambda x: x.geometry.intersection(df_gadm_usa.loc[df_gadm_usa['GID_1'] == x['GID_1']].iloc[0].geometry), axis=1)
-    holes_mapped_intersect['area'] = holes_mapped_intersect.to_crs(6372).area
-    holes_mapped_intersect_filter = holes_mapped_intersect.loc[holes_mapped_intersect['area'] > 1e-3]
-    holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
-    holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
-    holes_mapped_intersect_filter['country'] = 'US'
-    holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
+    # # Compute intersecting areas of holes and states
+    # # To filter out sjoin mapping to states where a tiny area of the hole is present in the GADM shape
+    # holes_mapped_intersect = holes_mapped.copy()
+    # holes_mapped_intersect['geometry'] = holes_mapped.apply(lambda x: x.geometry.intersection(df_gadm_usa.loc[df_gadm_usa['GID_1'] == x['GID_1']].iloc[0].geometry), axis=1)
+    # holes_mapped_intersect['area'] = holes_mapped_intersect.to_crs(6372).area
+    # holes_mapped_intersect_filter = holes_mapped_intersect.loc[holes_mapped_intersect['area'] > 200]
+    # holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
+    # holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
+    # holes_mapped_intersect_filter['country'] = 'US'
+    # holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
+    # save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
 
     build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=nprocesses)
     df_gadm_usa['State'] = df_gadm_usa.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
@@ -155,8 +212,9 @@ if __name__ == '__main__':
     df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_gadm_usa, df_per_capita_cons, 'Initial')
 
     # Missing utilities in ERST shape files
-    missing_utilities = (list(set(df_demand_utility.Entity.str.upper()) - set(df_erst_gpd.NAME)))
-    df_missing_utilities = df_demand_utility.query('Entity.str.upper() in @missing_utilities')
+    print(df_demand_utility)
+    missing_utilities = (list(set(df_demand_utility.reset_index().NAME) - set(df_erst_gpd.NAME)))
+    df_missing_utilities = df_demand_utility.query('NAME in @missing_utilities')
     df_utilities_grouped_state = df_missing_utilities.groupby('State')['Sales (Megawatthours)'].sum()
 
     # Compute centroid of the holes

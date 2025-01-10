@@ -75,7 +75,8 @@ rule preprocess_demand_data:
     input:
         demand_utility_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data","table_10_EIA_utility_sales.xlsx"),
         country_gadm_path = pathlib.Path("workflow", "pypsa-earth", "resources", "US_2021", "shapes", "country_shapes.geojson"),
-        erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson"),
+        #erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson"),
+        erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "Electric_Retail_Service_Territories.geojson"),
         gadm_usa_path = pathlib.Path("analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"),
         eia_per_capita_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "use_es_capita.xlsx")
     script:
