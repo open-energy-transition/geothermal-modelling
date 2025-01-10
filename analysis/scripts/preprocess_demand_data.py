@@ -17,7 +17,7 @@ def compute_demand_disaggregation(holes_mapped_intersect_filter, holes_centroid,
         holes_state = holes_mapped_intersect_filter.query('State == @state')
         demand = df_utilities_grouped_state.loc[state]
         full_state_pop = df_gadm_usa.query('State == @state')['pop'].values[0]
-        state_demand = df_demand_utility.query('State == @state')['Sales (Megawatthours)'].sum()
+        state_demand = df_demand_utility.query('STATE == @state')['Sales (Megawatthours)'].sum()
         avg_per_capita_demand = state_demand / full_state_pop
 
         if len(holes_state) > 0:
