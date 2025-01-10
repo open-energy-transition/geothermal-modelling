@@ -197,14 +197,12 @@ if __name__ == '__main__':
     holes_mapped_intersect_filter['country'] = 'US'
     holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
     save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
-    # holes_mapped_intersect_filter = holes_mapped.copy()
 
     build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=nprocesses)
     df_gadm_usa['State'] = df_gadm_usa.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
     df_gadm_usa['country'] = 'US'
     df_gadm_usa['GADM_ID'] = df_gadm_usa['GID_1']
     build_shapes.add_population_data(df_gadm_usa,['US'],'standard',nprocesses=nprocesses)
-
 
     # Initial error percentages of unmet demand
     df_error = pd.DataFrame()
@@ -237,6 +235,15 @@ if __name__ == '__main__':
     # Final error percentages of unmet demand after rescaling
     df_error = calc_percentage_unmet_demand_by_state(df_final, df_demand_utility, df_error, 'Final')
     df_per_capita_cons = calc_per_capita_kWh_state(df_final, df_gadm_usa, df_per_capita_cons, 'Final')
+    
+    fig = px.bar(df_error, barmode='group')
+    fig.update_layout(yaxis_title='Error %', xaxis_title='State')
+    fig.write_image(f"{plot_path}/unmet_demand_error_stages.png")
+
+    
+    fig = px.bar(df_per_capita_cons, barmode='group')
+    fig.update_layout(yaxis_title='Per capita consumption (kWh)', xaxis_title='State')
+    fig.write_image(f"{plot_path}/per_capita_consumption_stages.png")
 
     # Per-capita consumption
     df_per_capita = pd.DataFrame()
@@ -258,29 +265,19 @@ if __name__ == '__main__':
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
 
-    # geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
+    geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
     # Plot the GeoDataFrames
     save_map(geo_df_final, filename="demand_filled_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
     log_output_file.write("Plotted demand_filled_TWh_USA \n ")
 
-    # geo_df_final = geo_df_final.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
-    # m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
-    # m.save(f"{plot_path}/demand_filled_TWh_USA.html")
-
-    df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
-    save_map(df_erst_gpd, filename="demand_with_holes_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
-    log_output_file.write("Plotted demand_with_holes_TWh_USA\n ")
+    # df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
+    # save_map(df_erst_gpd, filename="demand_with_holes_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
+    # log_output_file.write("Plotted demand_with_holes_TWh_USA\n ")
 
     # Final error in demand mapping
-    demand_mapped = df_erst_gpd['Sales (TWh)'].sum()
+    demand_mapped = geo_df_final['Sales (TWh)'].sum()
     log_output_file.write(f"Total sales (TWh) as in ERST mapped data: {demand_mapped} \n")
     missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
     log_output_file.write(f"Missing sales (%) : {missing_demand_percentage} \n")
-
-
-    # df_erst_gpd = df_erst_gpd.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
-
-    # m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
-    # m.save(f"{plot_path}/demand_with_holes_TWh_USA.html")
 
     # # df_final.to_file(f"Demand_mapped.geojson",driver="GeoJSON")
