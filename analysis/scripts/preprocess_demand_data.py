@@ -27,18 +27,18 @@ def compute_demand_disaggregation(holes_mapped_intersect_filter, holes_centroid,
     return df_final
 
 def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text):
-    df_calc_state = df_calc.groupby('State')['Sales (Megawatthours)'].sum()
-    df_ref_state = df_ref.groupby('State')['Sales (Megawatthours)'].sum()
+    df_calc_state = df_calc.groupby('STATE')['Sales (Megawatthours)'].sum()
+    df_ref_state = df_ref.groupby('STATE')['Sales (Megawatthours)'].sum()
     df_error[text] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
     return df_error
 
 def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
-    df_calc_per_capita = df_calc.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_gadm.groupby('State')['pop'].sum()
+    df_calc_per_capita = df_calc.groupby('STATE')['Sales (Megawatthours)'].sum() * 1000 / df_gadm.groupby('State')['pop'].sum()
     df_per_capita_cons[text] = df_calc_per_capita
     return df_per_capita_cons
 
 def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
-    df_demand_statewise = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
+    df_demand_statewise = df_demand_utility.groupby('STATE')['Sales (Megawatthours)'].sum()
     for state in df_utilities_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         missing_demand = df_utilities_grouped_state.loc[state]
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     # Initial error percentages of unmet demand
     df_error = pd.DataFrame()
     df_per_capita_cons = pd.DataFrame()
-    df_erst_gpd = df_erst_gpd.reset_index().rename(columns={'STATE':'State'})
+    df_erst_gpd = df_erst_gpd.reset_index()
     df_demand_utility = df_demand_utility.reset_index()
     df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd, df_demand_utility, df_error, 'Initial')
     df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd, df_gadm_usa, df_per_capita_cons, 'Initial')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
     holes_centroid.geometry = holes_mapped_intersect_filter.geometry.centroid
-    holes_centroid['State'] = holes_centroid.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
+    holes_centroid['STATE'] = holes_centroid.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)
 
     df_final = compute_demand_disaggregation(holes_mapped_intersect_filter, holes_centroid, df_utilities_grouped_state, df_demand_utility, df_gadm_usa)
 
@@ -240,7 +240,7 @@ if __name__ == '__main__':
 
     # Per-capita consumption
     df_per_capita = pd.DataFrame()
-    df_per_capita['Calculated'] = df_final.groupby('State')['Sales (Megawatthours)'].sum() * 1000 / df_gadm_usa.groupby('State')['pop'].sum() #Per capita consumption in kWh
+    df_per_capita['Calculated'] = df_final.groupby('STATE')['Sales (Megawatthours)'].sum() * 1000 / df_gadm_usa.groupby('State')['pop'].sum() #Per capita consumption in kWh
     df_per_capita = df_per_capita.join(df_eia_per_capita)
     df_per_capita.rename(columns={2021:'EIA'}, inplace=True)
 
