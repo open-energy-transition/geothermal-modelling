@@ -259,6 +259,7 @@ if __name__ == '__main__':
     # geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
     # Plot the GeoDataFrames
     save_map(geo_df_final, filename="demand_filled_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
+    log_output_file.write("Plotted demand_filled_TWh_USA \n ")
 
     # geo_df_final = geo_df_final.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
     # m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
@@ -266,6 +267,14 @@ if __name__ == '__main__':
 
     df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
     save_map(df_erst_gpd, filename="demand_with_holes_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
+    log_output_file.write("Plotted demand_with_holes_TWh_USA\n ")
+
+    # Final error in demand mapping
+    demand_mapped = df_erst_gpd['Sales (TWh)'].sum()
+    log_output_file.write(f"Total sales (TWh) as in ERST mapped data: {demand_mapped} \n")
+    missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
+    log_output_file.write(f"Missing sales (%) : {missing_demand_percentage} \n")
+
 
     # df_erst_gpd = df_erst_gpd.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
 
