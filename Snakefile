@@ -45,9 +45,10 @@ rule installed_capacity_comparison:
     params:
         year_for_comparison=2020, #Should this be 2021?
         plot_country_comparison=True, # Boolean: plot the countrywide generation comparison
-        plot_state_by_state_comparison=False, # Boolean: plot the state-by-state generation comparison
+        plot_state_by_state_comparison=True, # Boolean: plot the state-by-state generation comparison
     input:
         eia_installed_capacity_path=pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "capacities_eia.xlsx"),
+        eia_state_temporal_installed_capacity_path=pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "existcapacity_annual.xlsx"),
         gadm_shapes_path=pathlib.Path("analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"),
         pypsa_earth_network_path=pathlib.Path("workflow", "pypsa-earth", "results", "US_2021", "networks", "elec_s_10_ec_lcopt_Co2L-25H.nc")
     script:

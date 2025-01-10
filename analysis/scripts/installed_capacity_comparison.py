@@ -18,16 +18,18 @@ def parse_inputs(base_path):
     """
     network_pypsa_earth_path = pathlib.Path(base_path, snakemake.input.pypsa_earth_network_path)
     eia_installed_capacity_reference_path = pathlib.Path(base_path, snakemake.input.eia_installed_capacity_path)
+    eia_state_temporal_installed_capacity_path = pathlib.Path(base_path, snakemake.input.eia_state_temporal_installed_capacity_path)
     gadm_shapes_path = pathlib.Path(base_path, snakemake.input.gadm_shapes_path)
 
     # load the data
     network_pypsa_earth = pypsa.Network(network_pypsa_earth_path)
     eia_installed_capacity_reference = pd.read_excel(eia_installed_capacity_reference_path, skiprows=1, index_col="Energy Source")
+    eia_state_temporal_installed_capacity_reference = pd.read_excel(eia_state_temporal_installed_capacity_path, skiprows=1)
 
-    return network_pypsa_earth, eia_installed_capacity_reference, gadm_shapes_path
+    return network_pypsa_earth, eia_installed_capacity_reference, eia_state_temporal_installed_capacity_reference, gadm_shapes_path
 
 
-def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
+def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
     """
     The function plots the state-by-state comparison between the EIA reference installed capacity data and the PyPSA-Earth network
     """
@@ -36,8 +38,23 @@ def plot_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, lo
     log_file.write("        \n")
     log_file.write("Compare the state-by-state installed capacity \n")
 
+    eia_installed_capacity_by_state_year = eia_reference.loc[eia_reference["Year"] == year_to_use]
+    eia_installed_capacity_by_state_year = eia_installed_capacity_by_state_year[
+        ["Year", "State Code", "Fuel Source", "Nameplate Capacity (Megawatts)", "Producer Type"]]
+    rename_cols = {"Year": "year", "State Code": "state", "Fuel Source": "carrier",
+                   "Nameplate Capacity (Megawatts)": "installed_capacity"}
+    eia_installed_capacity_by_state_year = eia_installed_capacity_by_state_year.rename(columns=rename_cols)
+    eia_installed_capacity_by_state_year = eia_installed_capacity_by_state_year.replace({"carrier": {
+        "Hydroelectric": "hydro", "Solar Thermal and Photovoltaic": "solar",
+        "Natural Gas": "gas", "Petroleum": "oil", "Wind": "wind", "Nuclear": "nuclear", "Geothermal": "geothermal",
+        "Pumped Storage": "PHS", "Wood and Wood Derived Fuels": "biomass"}})
+    eia_installed_capacity_by_state_year = eia_installed_capacity_by_state_year.loc[
+        eia_installed_capacity_by_state_year["Producer Type"] == 'Total Electric Power Industry']
+    eia_installed_capacity_by_state_year = eia_installed_capacity_by_state_year.loc[
+        eia_installed_capacity_by_state_year['state'] != 'US']
 
-def plot_country_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path):
+
+def plot_capacity_country_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path):
     """
     The function plots the countrywide comparison between the EIA reference generation data and the PyPSA-Earth network
     """
@@ -101,12 +118,12 @@ if __name__ == '__main__':
     pypsa_name = "PyPSA"
     year_for_comparison = snakemake.params.year_for_comparison
 
-    network_pypsa_earth_df, eia_installed_capacity_df, gadm_path = parse_inputs(default_path)
+    network_pypsa_earth_df, eia_installed_capacity_df, eia_state_temporal_installed_capacity_df, gadm_path = parse_inputs(default_path)
 
     if snakemake.params.plot_country_comparison:
-        plot_country_comparison(network_pypsa_earth_df, eia_installed_capacity_df, year_for_comparison, log_output_file, plot_path)
+        plot_capacity_country_comparison(network_pypsa_earth_df, eia_installed_capacity_df, year_for_comparison, log_output_file, plot_path)
 
     if snakemake.params.plot_state_by_state_comparison:
-        plot_state_by_state_comparison(network_pypsa_earth_df, eia_installed_capacity_df, year_for_comparison, log_output_file, plot_path, gadm_path)
+        plot_capacity_state_by_state_comparison(network_pypsa_earth_df, eia_state_temporal_installed_capacity_df, year_for_comparison, log_output_file, plot_path, gadm_path)
 
     log_output_file.close()
