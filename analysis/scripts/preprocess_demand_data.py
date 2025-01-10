@@ -210,11 +210,12 @@ if __name__ == '__main__':
     df_error = pd.DataFrame()
     df_per_capita_cons = pd.DataFrame()
     df_erst_gpd = df_erst_gpd.reset_index().rename(columns={'STATE':'State'})
+    df_demand_utility = df_demand_utility.reset_index()
     df_error = calc_percentage_unmet_demand_by_state(df_erst_gpd, df_demand_utility, df_error, 'Initial')
     df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd, df_gadm_usa, df_per_capita_cons, 'Initial')
 
     # Missing utilities in ERST shape files
-    missing_utilities = (list(set(df_demand_utility.reset_index().NAME) - set(df_erst_gpd.NAME)))
+    missing_utilities = (list(set(df_demand_utility.NAME) - set(df_erst_gpd.NAME)))
     df_missing_utilities = df_demand_utility.query('NAME in @missing_utilities')
     df_utilities_grouped_state = df_missing_utilities.groupby('STATE')['Sales (Megawatthours)'].sum()
 
