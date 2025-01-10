@@ -154,7 +154,7 @@ if __name__ == '__main__':
     demand_mapped = df_erst_gpd['Sales (Megawatthours)'].sum() / 1e6
     log_output_file.write(f"Total sales (TWh) as in ERST mapped data: {demand_mapped} \n")
     missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
-    log_output_file.write(f"Missing sales (TWh) : {missing_demand_percentage} \n")
+    log_output_file.write(f"Missing sales (%) : {missing_demand_percentage} \n")
 
     # df_erst_gpd_centroid = df_erst_gpd.copy()
     # df_erst_gpd_centroid.geometry = df_erst_gpd_centroid.geometry
@@ -197,6 +197,7 @@ if __name__ == '__main__':
     # holes_mapped_intersect_filter['country'] = 'US'
     # holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
     # save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
+    holes_mapped_intersect_filter = holes_mapped.copy()
 
     build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=nprocesses)
     df_gadm_usa['State'] = df_gadm_usa.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
@@ -212,10 +213,9 @@ if __name__ == '__main__':
     df_per_capita_cons = calc_per_capita_kWh_state(df_erst_gpd.rename(columns={'STATE':'State'}), df_gadm_usa, df_per_capita_cons, 'Initial')
 
     # Missing utilities in ERST shape files
-    print(df_demand_utility)
-    missing_utilities = (list(set(df_demand_utility.reset_index().NAME) - set(df_erst_gpd.NAME)))
+    missing_utilities = (list(set(df_demand_utility.reset_index().NAME) - set(df_erst_gpd.reset_index().NAME)))
     df_missing_utilities = df_demand_utility.query('NAME in @missing_utilities')
-    df_utilities_grouped_state = df_missing_utilities.groupby('State')['Sales (Megawatthours)'].sum()
+    df_utilities_grouped_state = df_missing_utilities.groupby('STATE')['Sales (Megawatthours)'].sum()
 
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
@@ -255,16 +255,21 @@ if __name__ == '__main__':
 
     geo_df_final = gpd.GeoDataFrame(df_final, geometry='geometry')
     geo_df_final['Sales (TWh)'] = geo_df_final['Sales (Megawatthours)'] / 1e6
+
     # geo_df_final['per capita'] = geo_df_final['Sales (Megawatthours)'] / geo_df_final['population']
     # Plot the GeoDataFrames
-    geo_df_final = geo_df_final.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
-    m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
-    m.save(f"{plot_path}/demand_filled_TWh_USA.html")
+    save_map(geo_df_final, filename="demand_filled_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
+
+    # geo_df_final = geo_df_final.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
+    # m = geo_df_final.explore(column='Sales (TWh)',cmap='jet')
+    # m.save(f"{plot_path}/demand_filled_TWh_USA.html")
 
     df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
-    df_erst_gpd = df_erst_gpd.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
+    save_map(df_erst_gpd, filename="demand_with_holes_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
 
-    m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
-    m.save(f"{plot_path}/demand_with_holes_TWh_USA.html")
+    # df_erst_gpd = df_erst_gpd.drop(columns=['SOURCEDATE','VAL_DATE'],axis=1)
 
-    # df_final.to_file(f"Demand_mapped.geojson",driver="GeoJSON")
+    # m = df_erst_gpd.explore(column='Sales (TWh)',cmap='jet')
+    # m.save(f"{plot_path}/demand_with_holes_TWh_USA.html")
+
+    # # df_final.to_file(f"Demand_mapped.geojson",driver="GeoJSON")
