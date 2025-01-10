@@ -188,16 +188,16 @@ if __name__ == '__main__':
 
     # # Compute intersecting areas of holes and states
     # # To filter out sjoin mapping to states where a tiny area of the hole is present in the GADM shape
-    # holes_mapped_intersect = holes_mapped.copy()
+    holes_mapped_intersect_filter = holes_mapped.copy()
     # holes_mapped_intersect['geometry'] = holes_mapped.apply(lambda x: x.geometry.intersection(df_gadm_usa.loc[df_gadm_usa['GID_1'] == x['GID_1']].iloc[0].geometry), axis=1)
     # holes_mapped_intersect['area'] = holes_mapped_intersect.to_crs(6372).area
     # holes_mapped_intersect_filter = holes_mapped_intersect.loc[holes_mapped_intersect['area'] > 200]
-    # holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
-    # holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
-    # holes_mapped_intersect_filter['country'] = 'US'
-    # holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
-    # save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
-    holes_mapped_intersect_filter = holes_mapped.copy()
+    holes_mapped_intersect_filter['GADM_ID'] = (np.arange(0,len(holes_mapped_intersect_filter),1))
+    holes_mapped_intersect_filter['GADM_ID'] = holes_mapped_intersect_filter['GADM_ID'].astype('str')
+    holes_mapped_intersect_filter['country'] = 'US'
+    holes_mapped_intersect_filter['State'] = holes_mapped_intersect_filter.apply(lambda x: x['HASC_1'].split('.')[1],axis=1)    
+    save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
+    # holes_mapped_intersect_filter = holes_mapped.copy()
 
     build_shapes.add_population_data(holes_mapped_intersect_filter,['US'],'standard',nprocesses=nprocesses)
     df_gadm_usa['State'] = df_gadm_usa.apply(lambda x: x['ISO_1'].split('-')[1], axis=1)
