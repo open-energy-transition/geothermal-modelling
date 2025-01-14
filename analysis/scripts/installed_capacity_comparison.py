@@ -13,14 +13,17 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
 from matplotlib.patches import Patch
-from _helpers_usa import get_state_node
+from _helpers_usa import get_state_node, config
 
 
-def parse_inputs(base_path):
+def parse_inputs(base_path, alternative_clustering):
     """
     The function parses the necessary inputs for the analysis
     """
-    network_pypsa_earth_path = pathlib.Path(base_path, snakemake.input.pypsa_earth_network_path)
+    if alternative_clustering:
+        network_pypsa_earth_path = pathlib.Path(base_path, snakemake.input.pypsa_earth_network_path)
+    else:
+        network_pypsa_earth_path = pathlib.Path(base_path, snakemake.input.pypsa_earth_network_nonac_path)
     eia_installed_capacity_reference_path = pathlib.Path(base_path, snakemake.input.eia_installed_capacity_path)
     eia_state_temporal_installed_capacity_path = pathlib.Path(base_path, snakemake.input.eia_state_temporal_installed_capacity_path)
     gadm_shapes_path = pathlib.Path(base_path, snakemake.input.gadm_shapes_path)
@@ -29,7 +32,7 @@ def parse_inputs(base_path):
     network_pypsa_earth = pypsa.Network(network_pypsa_earth_path)
     eia_installed_capacity_reference = pd.read_excel(eia_installed_capacity_reference_path, skiprows=1, index_col="Energy Source")
     eia_state_temporal_installed_capacity_reference = pd.read_excel(eia_state_temporal_installed_capacity_path, skiprows=1)
-
+        
     return network_pypsa_earth, eia_installed_capacity_reference, eia_state_temporal_installed_capacity_reference, gadm_shapes_path
 
 
@@ -86,6 +89,13 @@ def plot_capacity_spatial_representation(pypsa_network, plot_type, state_to_drop
 
         plt.savefig(pathlib.Path(plot_base_path,  f"installed_capacity_spatial_representation.png"), dpi=800)
 
+def rename_carrier(x):
+    if x == 'ccgt':
+        return 'CCGT'
+    elif x == 'phs':
+        return 'PHS'
+    else:
+        return x
 
 def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
     """
@@ -110,7 +120,20 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, year_t
         eia_installed_capacity_by_state_year["Producer Type"] == 'Total Electric Power Industry']
     eia_installed_capacity_by_state_year = eia_installed_capacity_by_state_year.loc[
         eia_installed_capacity_by_state_year['state'] != 'US']
+ 
+    series_to_use = eia_installed_capacity_by_state_year.groupby(["carrier", "state"]).installed_capacity.sum()
+    df = pd.DataFrame({"carrier_state": series_to_use.index, "installed_capacity": series_to_use.values})
+    df[["carrier", "state"]] = df["carrier_state"].apply(lambda x: pd.Series(x))
+    eia_installed_capacity_by_state_year = df[["carrier", "state", "installed_capacity"]].copy()
+    eia_installed_capacity_by_state_year.carrier = eia_installed_capacity_by_state_year.carrier.str.lower()
 
+    eia_installed_capacity_by_state_year['carrier'] = eia_installed_capacity_by_state_year['carrier'].apply(lambda x: rename_carrier(x))
+
+    # Installed capacity groupby and summed by carrier and bus
+    series_gen_to_use = pypsa_network.generators.groupby(["carrier", "bus"]).p_nom.sum()
+    series_sto_to_use = pypsa_network.storage_units.groupby(["carrier","bus"]).p_nom.sum()
+    series_to_use = series_gen_to_use._append(series_sto_to_use)
+    df = pd.DataFrame({"carrier_gid": series_to_use.index, "installed_capacity": series_to_use.values})
 
 def plot_capacity_country_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path):
     """
@@ -172,13 +195,16 @@ if __name__ == '__main__':
     log_output_file_path = pathlib.Path(log_path, f"output_generation_comparison_{today_date[:10]}.txt")
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
+    config_path = pathlib.Path(default_path, "configs","config.usa_PE.yaml")
 
     # initial configurations
     eia_name = "EIA"
     pypsa_name = "PyPSA"
     year_for_comparison = snakemake.params.year_for_comparison
+    config_dict = config(config_path)
+    alternative_clustering = config_dict["cluster_options"]["alternative_clustering"]
 
-    network_pypsa_earth_df, eia_installed_capacity_df, eia_state_temporal_installed_capacity_df, gadm_path = parse_inputs(default_path)
+    network_pypsa_earth_df, eia_installed_capacity_df, eia_state_temporal_installed_capacity_df, gadm_path = parse_inputs(default_path, alternative_clustering)
 
     if snakemake.params.plot_country_comparison:
         plot_capacity_country_comparison(network_pypsa_earth_df, eia_installed_capacity_df, year_for_comparison, log_output_file, plot_path)

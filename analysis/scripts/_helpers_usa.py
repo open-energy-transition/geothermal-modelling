@@ -9,7 +9,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import re
-
+import yaml
+import pathlib
 
 def get_gadm_mapping(gadm_shapes_path):
     gadm_gdp_usa = gpd.read_file(gadm_shapes_path)
@@ -40,3 +41,9 @@ def extract_time_res(network_path):
             return 8760 / number
     else:
         return None
+
+def config(config_path):
+    path_config = pathlib.Path(config_path)
+    with open(path_config) as file:
+        config_dict = yaml.safe_load(file)
+    return config_dict
