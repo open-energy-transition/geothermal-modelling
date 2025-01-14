@@ -159,8 +159,10 @@ if __name__ == '__main__':
 
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
-    log_path = pathlib.Path(default_path, "analysis", "logs")
-    plot_path = pathlib.Path(default_path, "analysis", "plots")
+    log_path = pathlib.Path(default_path, "analysis", "logs", "generation_comparison")
+    plot_path = pathlib.Path(default_path, "analysis", "plots", "generation_comparison")
+    pathlib.Path(log_path).mkdir(exist_ok=True)
+    pathlib.Path(plot_path).mkdir(exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(log_path, f"output_generation_comparison_{today_date[:10]}.txt")
     log_output_file_path.touch(exist_ok=True)

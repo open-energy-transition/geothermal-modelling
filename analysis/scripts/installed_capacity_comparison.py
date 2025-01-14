@@ -10,6 +10,10 @@ import datetime as dt
 import pandas as pd
 import pypsa
 import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import numpy as np
+from matplotlib.patches import Patch
+from _helpers_usa import get_state_node
 
 
 def parse_inputs(base_path):
@@ -27,6 +31,66 @@ def parse_inputs(base_path):
     eia_state_temporal_installed_capacity_reference = pd.read_excel(eia_state_temporal_installed_capacity_path, skiprows=1)
 
     return network_pypsa_earth, eia_installed_capacity_reference, eia_state_temporal_installed_capacity_reference, gadm_shapes_path
+
+
+def add_legend_patches(ax, colors, labels, legend_kw):
+    patches = [Patch(color=color, label=label) for color, label in zip(colors, labels)]
+    ax.legend(handles=patches, **legend_kw)
+
+
+def plot_capacity_spatial_representation(pypsa_network, plot_type, state_to_drop, plot_base_path, gadm_base_path):
+
+    iso_code_to_omit = []
+    for state in state_to_drop:
+        iso_code_to_omit.append(get_state_node(gadm_base_path, state))
+
+    carriers = pypsa_network.carriers.index.tolist()[:-2]
+    buses = pypsa_network.buses.query('carrier == "AC" and ~(index.str.replace("_AC", "") in @iso_code_to_omit)')
+    bus_index = buses.index.tolist()
+    fig = plt.figure(figsize=(15,12))
+    ax = plt.axes(projection=ccrs.EqualEarth())
+    pypsa_network.lines.loc[pypsa_network.lines.bus0.isin(iso_code_to_omit), "s_nom"] = 0
+
+    if plot_type == "capacity":
+        cap = pypsa_network.generators.query("carrier != 'load' and bus in @b", local_dict={"b": bus_index}).groupby(["bus", "carrier"]).p_nom.sum()
+        cap = cap[~(cap.index.get_level_values('bus').isin(iso_code_to_omit))]
+
+        # Filter carriers with positive capacity, and avoid KeyError by checking presence in index
+        carriers_with_capacity = []
+        for carrier in carriers:
+            if carrier in cap.index.get_level_values('carrier'):
+                total_capacity = cap.xs(carrier, level='carrier').sum()
+                if total_capacity > 0:
+                    carriers_with_capacity.append(carrier)
+
+        pypsa_network.plot(
+            ax=ax,
+            bus_sizes=cap / 2e4,
+            line_widths=pypsa_network.lines.s_nom / 1e4,
+            line_colors='rosybrown',
+            margin=0.25,
+            bus_alpha=0.8,
+            color_geomap=True,
+            link_alpha=0
+        )
+
+        values = pypsa_network.generators.query("carrier != 'load' and bus in @b", local_dict={"b": bus_index}).groupby("bus").p_nom.sum()
+        sizes = np.sort(round(values / 1e3).unique() * 1e3 / 2e4)
+        labels = np.sort(round(values / 1e3).unique())
+        title = "Capacity (GW)"
+        x_val = 1.25
+
+        # Add the legend with filtered carriers
+        add_legend_patches(
+            ax,
+            colors=[pypsa_network.carriers.loc[carrier].color for carrier in carriers_with_capacity],
+            labels=carriers_with_capacity,
+            legend_kw=dict(frameon=False, bbox_to_anchor=(0, 1), title="Carriers")
+        )
+
+        plt.xlabel("Carriers")
+        plt.ylabel("Installed Capacity (GW)")
+        plt.savefig(pathlib.Path(plot_base_path,  f"installed_capacity_spatial_representation.png"), dpi=800)
 
 
 def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
@@ -106,8 +170,10 @@ if __name__ == '__main__':
 
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
-    log_path = pathlib.Path(default_path, "analysis", "logs")
-    plot_path = pathlib.Path(default_path, "analysis", "plots")
+    log_path = pathlib.Path(default_path, "analysis", "logs", "installed_capacity")
+    plot_path = pathlib.Path(default_path, "analysis", "plots", "installed_capacity")
+    pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(log_path, f"output_generation_comparison_{today_date[:10]}.txt")
     log_output_file_path.touch(exist_ok=True)
@@ -125,5 +191,8 @@ if __name__ == '__main__':
 
     if snakemake.params.plot_state_by_state_comparison:
         plot_capacity_state_by_state_comparison(network_pypsa_earth_df, eia_state_temporal_installed_capacity_df, year_for_comparison, log_output_file, plot_path, gadm_path)
+
+    if snakemake.params.plot_spatial_representation:
+        plot_capacity_spatial_representation(network_pypsa_earth_df, "capacity", snakemake.params.state_to_omit, plot_path, gadm_path)
 
     log_output_file.close()

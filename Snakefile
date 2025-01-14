@@ -46,6 +46,8 @@ rule installed_capacity_comparison:
         year_for_comparison=2020, #Should this be 2021?
         plot_country_comparison=True, # Boolean: plot the countrywide generation comparison
         plot_state_by_state_comparison=True, # Boolean: plot the state-by-state generation comparison
+        plot_spatial_representation=True,  # Boolean: plot the map with the installed capacity per node
+        state_to_omit=["AK", "HI"]
     input:
         eia_installed_capacity_path=pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "capacities_eia.xlsx"),
         eia_state_temporal_installed_capacity_path=pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "existcapacity_annual.xlsx"),

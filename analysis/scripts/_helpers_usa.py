@@ -1,3 +1,10 @@
+# coding=utf-8# -*- coding: utf-8 -*-
+# # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
+# #
+# # SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# # -*- coding: utf-8 -*-
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -11,6 +18,11 @@ def get_gadm_mapping(gadm_shapes_path):
     gadm_gdp_usa_state["state"] = gadm_gdp_usa["ISO_1"].str[-2:]
     usa_state_dict = dict(gadm_gdp_usa_state.values)
     return usa_state_dict
+
+
+def get_state_node(gadm_shapes_path, state):
+    usa_state_dict = {v: k for k, v in get_gadm_mapping(gadm_shapes_path).items()}
+    return usa_state_dict[state]
 
 
 def extract_time_res(network_path):
