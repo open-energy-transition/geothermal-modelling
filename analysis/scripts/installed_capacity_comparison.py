@@ -42,14 +42,15 @@ def plot_capacity_spatial_representation(pypsa_network, plot_type, state_to_drop
 
     iso_code_to_omit = []
     for state in state_to_drop:
-        iso_code_to_omit.append(get_state_node(gadm_base_path, state))
+        iso_code_to_omit.append(get_state_node(gadm_base_path, state) + "_AC")
 
     carriers = pypsa_network.carriers.index.tolist()[:-2]
-    buses = pypsa_network.buses.query('carrier == "AC" and ~(index.str.replace("_AC", "") in @iso_code_to_omit)')
+    buses = pypsa_network.buses.query('carrier == "AC" and ~(index in @iso_code_to_omit)')
     bus_index = buses.index.tolist()
-    fig = plt.figure(figsize=(15,12))
+    fig = plt.figure(figsize=(15, 12))
     ax = plt.axes(projection=ccrs.EqualEarth())
     pypsa_network.lines.loc[pypsa_network.lines.bus0.isin(iso_code_to_omit), "s_nom"] = 0
+    pypsa_network.lines.loc[pypsa_network.lines.bus1.isin(iso_code_to_omit), "s_nom"] = 0
 
     if plot_type == "capacity":
         cap = pypsa_network.generators.query("carrier != 'load' and bus in @b", local_dict={"b": bus_index}).groupby(["bus", "carrier"]).p_nom.sum()
