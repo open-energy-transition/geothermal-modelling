@@ -686,9 +686,9 @@ if __name__ == '__main__':
     log_path = pathlib.Path(default_path, "analysis", "logs", "network_comparison")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "network_comparison")
     output_path = pathlib.Path(default_path, "analysis", "outputs", "network_comparison")
-    pathlib.Path(log_path).mkdir(exist_ok=True)
-    pathlib.Path(plot_path).mkdir(exist_ok=True)
-    pathlib.Path(output_path).mkdir(exist_ok=True)
+    pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
     ccs_color_dict = {"EIA": "#FF8C00", "PyPSA": "#0000FF", "PyPSA_parallel": "#228B22", "delta_PyPSA": "#0000FF", "delta_PyPSA_parallel": "#228B22", "Error (%)": "#FF7F50"}
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(log_path, f"output_network_comparison_{today_date[:10]}.txt")
