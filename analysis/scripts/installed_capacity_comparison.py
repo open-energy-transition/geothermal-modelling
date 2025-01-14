@@ -72,14 +72,9 @@ def plot_capacity_spatial_representation(pypsa_network, plot_type, state_to_drop
             margin=0.25,
             bus_alpha=0.8,
             color_geomap=True,
-            link_alpha=0
+            link_alpha=0,
+            title="Spatial representation of the installed capacity (GW)"
         )
-
-        values = pypsa_network.generators.query("carrier != 'load' and bus in @b", local_dict={"b": bus_index}).groupby("bus").p_nom.sum()
-        sizes = np.sort(round(values / 1e3).unique() * 1e3 / 2e4)
-        labels = np.sort(round(values / 1e3).unique())
-        title = "Capacity (GW)"
-        x_val = 1.25
 
         # Add the legend with filtered carriers
         add_legend_patches(
@@ -89,8 +84,6 @@ def plot_capacity_spatial_representation(pypsa_network, plot_type, state_to_drop
             legend_kw=dict(frameon=False, bbox_to_anchor=(0, 1), title="Carriers")
         )
 
-        plt.xlabel("Carriers")
-        plt.ylabel("Installed Capacity (GW)")
         plt.savefig(pathlib.Path(plot_base_path,  f"installed_capacity_spatial_representation.png"), dpi=800)
 
 
