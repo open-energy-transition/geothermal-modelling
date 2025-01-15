@@ -12,6 +12,7 @@ import re
 import yaml
 import pathlib
 
+
 def get_gadm_mapping(gadm_shapes_path):
     gadm_gdp_usa = gpd.read_file(gadm_shapes_path)
     gadm_gdp_usa_state = pd.DataFrame()
@@ -27,17 +28,16 @@ def get_state_node(gadm_shapes_path, state):
 
 
 def extract_time_res(network_path):
-
     # Search for the pattern in the filename
-    match = re.search(r'(\d+)(H|SEG)', str(network_path.name))
+    match = re.search(r"(\d+)(H|SEG)", str(network_path.name))
 
     if match:
         number = np.float64(match.group(1))
         unit = match.group(2)
 
-        if unit == 'H':
+        if unit == "H":
             return number
-        elif unit == 'SEG':
+        elif unit == "SEG":
             return 8760 / number
     else:
         return None
@@ -51,9 +51,9 @@ def config(config_path):
 
 
 def rename_carrier(x):
-    if x == 'ccgt':
-        return 'CCGT'
-    elif x == 'phs':
-        return 'PHS'
+    if x == "ccgt":
+        return "CCGT"
+    elif x == "phs":
+        return "PHS"
     else:
         return x

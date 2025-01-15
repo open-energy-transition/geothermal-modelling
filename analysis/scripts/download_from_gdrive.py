@@ -8,12 +8,14 @@
 import gdown
 import pathlib
 
-url = snakemake.params['gdrive_url']
+url = snakemake.params["gdrive_url"]
 default_path = pathlib.Path(__file__).parent.parent.parent
-download_path = str(pathlib.Path(default_path, snakemake.params['output_path']))
+download_path = str(pathlib.Path(default_path, snakemake.params["output_path"]))
 
 try:
-    gdown.download_folder(url, output=download_path, quiet=False, resume=True, use_cookies=True)
+    gdown.download_folder(
+        url, output=download_path, quiet=False, resume=True, use_cookies=True
+    )
 except Exception as e:
     print("Error", e)
     pass
