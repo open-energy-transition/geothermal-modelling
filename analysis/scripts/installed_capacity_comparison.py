@@ -131,6 +131,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     eia_installed_capacity_by_state_year.carrier = eia_installed_capacity_by_state_year.carrier.str.lower()
 
     eia_installed_capacity_by_state_year['carrier'] = eia_installed_capacity_by_state_year['carrier'].apply(lambda x: rename_carrier(x))
+    log_file.write("Compiled the EIA installed capacity data state-wise \n")
 
     # Installed capacity groupby and summed by carrier and bus
     series_gen_to_use = pypsa_network.generators.groupby(["carrier", "bus"]).p_nom.sum()
@@ -155,6 +156,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     pypsa_gas_df = pypsa_agg_df[pypsa_agg_df["carrier"].isin(['CCGT','OCGT'])].groupby('state').agg({'GID_1_ACDC':'first','installed_capacity':'sum','GID_1':'first'})
     pypsa_gas_df['carrier'] = 'gas'
     pypsa_agg_df = pd.concat([pypsa_agg_df,pypsa_gas_df.reset_index()],axis=0)
+    log_file.write("Compiled the PyPSA installed capacity data state-wise \n")
 
     df_full_merge = pd.DataFrame(eia_installed_capacity_by_state_year.set_index(['state','carrier'])['installed_capacity'])
     df_full_merge = df_full_merge.join(pypsa_agg_df.set_index(['state','carrier'])['installed_capacity'],lsuffix='_eia',rsuffix='_pypsa')
@@ -162,6 +164,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     df_full_merge = df_full_merge.reset_index().set_index('state')
     reqd_cols = ['nuclear','coal','gas','wind','solar','geothermal','oil','biomass','hydro','PHS']
     df_full_merge = df_full_merge.query("carrier in @col", local_dict={'col':reqd_cols})
+    log_file.write("Merged the EIA and PyPSA installed capacity data state-wise \n")
 
     # Grouped bar plots to compare the installed capacities statewise
 
@@ -171,6 +174,8 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     fig2 = px.bar(df_full_merge,y='installed_capacity_eia',color='carrier',barmode='stack',text_auto='.1f')
     fig2.update_layout(yaxis_range=[0,160],yaxis_title='Installed capacity EIA (GW)')
     fig2.write_image(f"{plot_base_path}/installed_capacity_eia_statewise.png",scale=1.5) 
+    log_file.write("Generated statewise installed capacity bar plots (colored by carrier) \n")
+
 
     df_full_merge = df_full_merge.reset_index().set_index('carrier')
     fig1 = px.bar(df_full_merge,y='installed_capacity_pypsa',color='state',barmode='stack',text_auto='.1f')
@@ -179,6 +184,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     fig2 = px.bar(df_full_merge,y='installed_capacity_eia',color='state',barmode='stack',text_auto='.1f')
     fig2.update_layout(yaxis_range=[0,600],yaxis_title='Installed capacity EIA (GW)')
     fig2.write_image(f"{plot_base_path}/installed_capacity_eia_carrierwise.png",scale=1.5) 
+    log_file.write("Generated carrier wise installed capacity bar plots (colored by state) \n")
 
     df_ppl = eia_raw_reference.copy()
     df_ppl.loc[df_ppl['Technology'] == 'Pumped Storage',"Fueltype"] = "PHS"
@@ -186,6 +192,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     df_ppl['carrier'] = df_ppl['carrier'].replace({"onwind":"wind","CCGT":"gas","OCGT":"gas"})
     df_ppl_group = df_ppl.groupby(['carrier','state'])['Capacity'].sum()
     df_ppl_group /= 1000
+    log_file.write("Compiled a raw EIA statewise custom powerplant data \n")
 
     df_compare = pd.DataFrame(df_full_merge.reset_index().set_index(["carrier","state"])).join(df_ppl_group)
     df_compare = df_compare.reset_index()
@@ -221,6 +228,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     )
     fig.update_layout(yaxis_range=[-160,160],yaxis_title="Error % statewise",title="EIA vs raw custom powerplants")
     fig.write_image(f"{plot_base_path}/error_percent_statewise_eia.png",scale=1.5) 
+    log_file.write("Generated boxplots depicting statewise percentage errors in installed capacity \n")
 
     fig = px.box(df_compare,x='carrier',y='diff_pypsa',custom_data='state',title='EIA vs PyPSA')
     fig.update_traces(
@@ -243,7 +251,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     )
     fig.update_layout(yaxis_range=[-10,10], yaxis_title='Difference (GW)')
     fig.write_image(f"{plot_base_path}/diff_eia_vs_rawcustompp.png",scale=1.5) 
-
+    log_file.write("Generated boxplots depicting statewise difference in installed capacity in GW \n")
 
 def plot_capacity_country_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path):
     """
