@@ -7,7 +7,6 @@
 
 import pathlib
 import datetime as dt
-import pandas as pd
 import pypsa
 import geopandas as gpd
 
@@ -32,15 +31,15 @@ def parse_inputs(base_path):
 
 
 def cluster_and_map_network(pypsa_network, gadm_dataframe):
-
-    buses_gdf = gpd.GeoDataFrame(
-        pypsa_network.buses,
-        geometry=gpd.points_from_xy(
-            pypsa_network.buses.x,
-            pypsa_network.buses.y
-        ),
-        crs="EPSG:4326"
-    ).to_crs(3857).reset_index()
+    buses_gdf = (
+        gpd.GeoDataFrame(
+            pypsa_network.buses,
+            geometry=gpd.points_from_xy(pypsa_network.buses.x, pypsa_network.buses.y),
+            crs="EPSG:4326",
+        )
+        .to_crs(3857)
+        .reset_index()
+    )
 
     spatial_join_gadm_bus_gdf = (
         buses_gdf.sjoin(gadm_dataframe, how="left")
@@ -48,7 +47,9 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
         .rename(columns={"ISO_1": "state_code"})
     )
 
-    pypsa_network.generators["state"] = pypsa_network.generators.index.map(spatial_join_gadm_bus_gdf.to_dict())
+    pypsa_network.generators["state"] = pypsa_network.generators.index.map(
+        spatial_join_gadm_bus_gdf.to_dict()
+    )
 
     return pypsa_network
 
@@ -77,6 +78,8 @@ if __name__ == "__main__":
     ) = parse_inputs(default_path)
 
     new_network = cluster_and_map_network(network_pypsa_earth_df, gadm_shapes_df)
-    new_network.export_to_netcdf(pathlib.Path(output_path, snakemake.output.mapped_network_output_file_name))
+    new_network.export_to_netcdf(
+        pathlib.Path(output_path, snakemake.output.mapped_network_output_file_name)
+    )
 
     log_output_file.close()

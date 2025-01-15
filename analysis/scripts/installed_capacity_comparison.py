@@ -16,11 +16,11 @@ from _helpers_usa import get_state_node, config, get_gadm_mapping, rename_carrie
 import plotly.express as px
 
 
-def parse_inputs(base_path, alternative_clustering):
+def parse_inputs(base_path, alternative_clustering_flag):
     """
     The function parses the necessary inputs for the analysis
     """
-    if alternative_clustering:
+    if alternative_clustering_flag:
         network_pypsa_earth_path = pathlib.Path(
             base_path, snakemake.input.pypsa_earth_network_path
         )
@@ -223,7 +223,7 @@ def plot_capacity_state_by_state_comparison(
     series_sto_to_use = pypsa_network.storage_units.groupby(
         ["carrier", "bus"]
     ).p_nom.sum()
-    series_to_use = series_gen_to_use.append(series_sto_to_use)
+    series_to_use = series_gen_to_use._append(series_sto_to_use)
     df = pd.DataFrame(
         {"carrier_gid": series_to_use.index, "installed_capacity": series_to_use.values}
     )
@@ -563,7 +563,7 @@ if __name__ == "__main__":
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
-        log_path, f"output_generation_comparison_{today_date[:10]}.txt"
+        log_path, f"output_installed_capacity_comparison_{today_date[:10]}.txt"
     )
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")

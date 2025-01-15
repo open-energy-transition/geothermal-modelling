@@ -140,7 +140,7 @@ rule map_network_to_gadm:
             "elec_s.nc",
         ),
     output:
-        mapped_network_output_file_name="elec_s_gadm_mapped.nc"
+        mapped_network_output_file_name="elec_s_gadm_mapped.nc",
     script:
         "analysis/scripts/map_network_to_gadm.py"
 
