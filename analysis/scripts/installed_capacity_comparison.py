@@ -13,8 +13,9 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import numpy as np
 from matplotlib.patches import Patch
-from _helpers_usa import get_state_node, config
-
+from _helpers_usa import get_state_node, config, get_gadm_mapping
+import plotly.express as px
+import plotly.graph_objects as go
 
 def parse_inputs(base_path, alternative_clustering):
     """
@@ -26,14 +27,16 @@ def parse_inputs(base_path, alternative_clustering):
         network_pypsa_earth_path = pathlib.Path(base_path, snakemake.input.pypsa_earth_network_nonac_path)
     eia_installed_capacity_reference_path = pathlib.Path(base_path, snakemake.input.eia_installed_capacity_path)
     eia_state_temporal_installed_capacity_path = pathlib.Path(base_path, snakemake.input.eia_state_temporal_installed_capacity_path)
+    eia_raw_reference_path = pathlib.Path(base_path, snakemake.input.eia_raw_reference_path)
     gadm_shapes_path = pathlib.Path(base_path, snakemake.input.gadm_shapes_path)
 
     # load the data
     network_pypsa_earth = pypsa.Network(network_pypsa_earth_path)
     eia_installed_capacity_reference = pd.read_excel(eia_installed_capacity_reference_path, skiprows=1, index_col="Energy Source")
     eia_state_temporal_installed_capacity_reference = pd.read_excel(eia_state_temporal_installed_capacity_path, skiprows=1)
-        
-    return network_pypsa_earth, eia_installed_capacity_reference, eia_state_temporal_installed_capacity_reference, gadm_shapes_path
+    eia_raw_reference = pd.read_csv(eia_raw_reference_path)
+
+    return network_pypsa_earth, eia_installed_capacity_reference, eia_raw_reference, eia_state_temporal_installed_capacity_reference, gadm_shapes_path
 
 
 def add_legend_patches(ax, colors, labels, legend_kw):
@@ -97,7 +100,7 @@ def rename_carrier(x):
     else:
         return x
 
-def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
+def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_raw_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
     """
     The function plots the state-by-state comparison between the EIA reference installed capacity data and the PyPSA-Earth network
     """
@@ -134,6 +137,113 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, year_t
     series_sto_to_use = pypsa_network.storage_units.groupby(["carrier","bus"]).p_nom.sum()
     series_to_use = series_gen_to_use._append(series_sto_to_use)
     df = pd.DataFrame({"carrier_gid": series_to_use.index, "installed_capacity": series_to_use.values})
+
+    df[["carrier", "GID_1_ACDC"]] = df["carrier_gid"].apply(lambda x: pd.Series(x))
+    pypsa_installed_capacity_by_state = df[["carrier", "GID_1_ACDC", "installed_capacity"]].copy()
+    pypsa_installed_capacity_by_state["GID_1"] = pypsa_installed_capacity_by_state["GID_1_ACDC"].str[:-3]
+
+    gadm_gdp_usa_state = pd.DataFrame(get_gadm_mapping(gadm_shapes_path).items(), columns=['GID_1','state'])
+    pypsa_df = pypsa_installed_capacity_by_state.merge(gadm_gdp_usa_state, left_on='GID_1', right_on='GID_1', how='inner')
+
+    wind_cols = [x for x in pypsa_df.carrier.unique() if 'wind' in x]
+    pypsa_wind_df = pypsa_df.query("carrier in @wind_cols")
+    pypsa_wind_df = pypsa_wind_df.groupby('state').agg({'GID_1_ACDC':'first','installed_capacity':'sum','GID_1':'first'})
+    pypsa_wind_df.reset_index(inplace=True)
+    pypsa_wind_df['carrier'] = 'wind'
+    pypsa_nowind_df = pypsa_df.query("carrier not in @wind_cols")
+    pypsa_agg_df = pd.concat([pypsa_nowind_df,pypsa_wind_df],axis=0)
+    pypsa_gas_df = pypsa_agg_df[pypsa_agg_df["carrier"].isin(['CCGT','OCGT'])].groupby('state').agg({'GID_1_ACDC':'first','installed_capacity':'sum','GID_1':'first'})
+    pypsa_gas_df['carrier'] = 'gas'
+    pypsa_agg_df = pd.concat([pypsa_agg_df,pypsa_gas_df.reset_index()],axis=0)
+
+    df_full_merge = pd.DataFrame(eia_installed_capacity_by_state_year.set_index(['state','carrier'])['installed_capacity'])
+    df_full_merge = df_full_merge.join(pypsa_agg_df.set_index(['state','carrier'])['installed_capacity'],lsuffix='_eia',rsuffix='_pypsa')
+    df_full_merge /= 1000
+    df_full_merge = df_full_merge.reset_index().set_index('state')
+    reqd_cols = ['nuclear','coal','gas','wind','solar','geothermal','oil','biomass','hydro','PHS']
+    df_full_merge = df_full_merge.query("carrier in @col", local_dict={'col':reqd_cols})
+
+    # Grouped bar plots to compare the installed capacities statewise
+
+    fig1 = px.bar(df_full_merge,y='installed_capacity_pypsa',color='carrier',barmode='stack',text_auto='.1f')
+    fig1.update_layout(yaxis_range=[0,160],yaxis_title='Installed capacity PyPSA (GW)')
+    fig1.write_image(f"{plot_base_path}/installed_capacity_pypsa_statewise.png",scale=1.5) 
+    fig2 = px.bar(df_full_merge,y='installed_capacity_eia',color='carrier',barmode='stack',text_auto='.1f')
+    fig2.update_layout(yaxis_range=[0,160],yaxis_title='Installed capacity EIA (GW)')
+    fig2.write_image(f"{plot_base_path}/installed_capacity_eia_statewise.png",scale=1.5) 
+
+    df_full_merge = df_full_merge.reset_index().set_index('carrier')
+    fig1 = px.bar(df_full_merge,y='installed_capacity_pypsa',color='state',barmode='stack',text_auto='.1f')
+    fig1.update_layout(yaxis_range=[0,600],yaxis_title='Installed capacity PyPSA (GW)')
+    fig1.write_image(f"{plot_base_path}/installed_capacity_pypsa_carrierwise.png",scale=1.5) 
+    fig2 = px.bar(df_full_merge,y='installed_capacity_eia',color='state',barmode='stack',text_auto='.1f')
+    fig2.update_layout(yaxis_range=[0,600],yaxis_title='Installed capacity EIA (GW)')
+    fig2.write_image(f"{plot_base_path}/installed_capacity_eia_carrierwise.png",scale=1.5) 
+
+    df_ppl = eia_raw_reference.copy()
+    df_ppl.loc[df_ppl['Technology'] == 'Pumped Storage',"Fueltype"] = "PHS"
+    df_ppl = df_ppl.rename(columns = {'Fueltype':'carrier'})
+    df_ppl['carrier'] = df_ppl['carrier'].replace({"onwind":"wind","CCGT":"gas","OCGT":"gas"})
+    df_ppl_group = df_ppl.groupby(['carrier','state'])['Capacity'].sum()
+    df_ppl_group /= 1000
+
+    df_compare = pd.DataFrame(df_full_merge.reset_index().set_index(["carrier","state"])).join(df_ppl_group)
+    df_compare = df_compare.reset_index()
+    df_compare['diff_pypsa'] = df_compare.apply(lambda x: x['installed_capacity_eia'] - x['installed_capacity_pypsa'],axis=1)
+    df_compare['error_pypsa'] = df_compare.apply(lambda x: (x['installed_capacity_eia'] - x['installed_capacity_pypsa']) * 100 / x['installed_capacity_eia'],axis=1)
+    tot_capacity = df_compare.sum()['installed_capacity_eia']
+    df_compare['error2_pypsa'] = df_compare.apply(lambda x: (x['installed_capacity_eia'] - x['installed_capacity_pypsa']) * 100 / tot_capacity,axis=1)
+
+    df_compare['diff_custom'] = df_compare.apply(lambda x: x['installed_capacity_eia'] - x['Capacity'],axis=1)
+    df_compare['error_custom'] = df_compare.apply(lambda x: (x['installed_capacity_eia'] - x['Capacity']) * 100 / x['installed_capacity_eia'],axis=1)
+    tot_capacity = df_compare.sum()['installed_capacity_eia']
+    df_compare['error2_custom'] = df_compare.apply(lambda x: (x['installed_capacity_eia'] - x['Capacity']) * 100 / tot_capacity,axis=1)
+
+    fig = px.box(df_compare,x='carrier',y='error_pypsa',custom_data='state')
+    fig.update_traces(
+        hovertemplate="<br>".join([
+            "Carrier: %{x}",
+            "Error %: %{y}",
+            "State: %{customdata}",
+        ])
+    )
+    fig.update_layout(yaxis_range=[-160,160], yaxis_title="Error % statewise",title="EIA vs PyPSA")
+    fig.write_image(f"{plot_base_path}/error_percent_statewise_eia_through_pypsa.png",scale=1.5) 
+
+
+    fig = px.box(df_compare,x='carrier',y='error_custom',custom_data='state')
+    fig.update_traces(
+        hovertemplate="<br>".join([
+            "Carrier: %{x}",
+            "Error %: %{y}",
+            "State: %{customdata}",
+        ])
+    )
+    fig.update_layout(yaxis_range=[-160,160],yaxis_title="Error % statewise",title="EIA vs raw custom powerplants")
+    fig.write_image(f"{plot_base_path}/error_percent_statewise_eia.png",scale=1.5) 
+
+    fig = px.box(df_compare,x='carrier',y='diff_pypsa',custom_data='state',title='EIA vs PyPSA')
+    fig.update_traces(
+        hovertemplate="<br>".join([
+            "Carrier: %{x}",
+            "Diff GW: %{y}",
+            "State: %{customdata}",
+        ])
+    )
+    fig.update_layout(yaxis_range=[-10,10], yaxis_title='Difference (GW)')
+    fig.write_image(f"{plot_base_path}/diff_eia_vs_pypsa.png",scale=1.5) 
+
+    fig = px.box(df_compare,x='carrier',y='diff_custom',custom_data='state',title='EIA vs raw custom powerplants')
+    fig.update_traces(
+        hovertemplate="<br>".join([
+            "Carrier: %{x}",
+            "Diff GW: %{y}",
+            "State: %{customdata}",
+        ])
+    )
+    fig.update_layout(yaxis_range=[-10,10], yaxis_title='Difference (GW)')
+    fig.write_image(f"{plot_base_path}/diff_eia_vs_rawcustompp.png",scale=1.5) 
+
 
 def plot_capacity_country_comparison(pypsa_network, eia_reference, year_to_use, log_file, plot_base_path):
     """
@@ -204,13 +314,13 @@ if __name__ == '__main__':
     config_dict = config(config_path)
     alternative_clustering = config_dict["cluster_options"]["alternative_clustering"]
 
-    network_pypsa_earth_df, eia_installed_capacity_df, eia_state_temporal_installed_capacity_df, gadm_path = parse_inputs(default_path, alternative_clustering)
+    network_pypsa_earth_df, eia_installed_capacity_df, eia_raw_df, eia_state_temporal_installed_capacity_df, gadm_path = parse_inputs(default_path, alternative_clustering)
 
     if snakemake.params.plot_country_comparison:
         plot_capacity_country_comparison(network_pypsa_earth_df, eia_installed_capacity_df, year_for_comparison, log_output_file, plot_path)
 
     if snakemake.params.plot_state_by_state_comparison:
-        plot_capacity_state_by_state_comparison(network_pypsa_earth_df, eia_state_temporal_installed_capacity_df, year_for_comparison, log_output_file, plot_path, gadm_path)
+        plot_capacity_state_by_state_comparison(network_pypsa_earth_df, eia_state_temporal_installed_capacity_df, eia_raw_df, year_for_comparison, log_output_file, plot_path, gadm_path)
 
     if snakemake.params.plot_spatial_representation:
         plot_capacity_spatial_representation(network_pypsa_earth_df, "capacity", snakemake.params.state_to_omit, plot_path, gadm_path)

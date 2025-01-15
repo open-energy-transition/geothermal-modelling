@@ -51,6 +51,7 @@ rule installed_capacity_comparison:
     input:
         eia_installed_capacity_path=pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "capacities_eia.xlsx"),
         eia_state_temporal_installed_capacity_path=pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "existcapacity_annual.xlsx"),
+        eia_raw_reference_path = pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "custom_powerplants_eia_with_state.csv"),
         gadm_shapes_path=pathlib.Path("analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"),
         pypsa_earth_network_path=pathlib.Path("workflow", "pypsa-earth", "results", "US_2021", "networks", "elec_s_50_ec_lcopt_Co2L-200H.nc")
         #pypsa_earth_network_nonac_path = pathlib.Path() #will be added later
