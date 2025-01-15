@@ -7,9 +7,10 @@ import pathlib
 
 sys.path.append("workflow/pypsa-earth")
 
+
 rule copy_custom_powerplants:
-    input: 
-        "data/custom_powerplants_eia.csv"
+    input:
+        "data/custom_powerplants_eia.csv",
     output:
         "workflow/pypsa-earth/data/custom_powerplants.csv",
     shell:
@@ -18,14 +19,36 @@ rule copy_custom_powerplants:
 
 rule build_custom_powerplants:
     input:
-        eia_generators_data_path = pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "EIA_generators", "eia8602021", "3_1_Generator_Y2021.xlsx"),
-        eia_plants_data_path = pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "EIA_generators", "eia8602021", "2___Plant_Y2021.xlsx"),
-        ror_custom_powerplants_path = pathlib.Path("analysis", "gdrive_data", "data", "powerplant_data", "custom_powerplants_ror.csv")
+        eia_generators_data_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "powerplant_data",
+            "EIA_generators",
+            "eia8602021",
+            "3_1_Generator_Y2021.xlsx",
+        ),
+        eia_plants_data_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "powerplant_data",
+            "EIA_generators",
+            "eia8602021",
+            "2___Plant_Y2021.xlsx",
+        ),
+        ror_custom_powerplants_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "powerplant_data",
+            "custom_powerplants_ror.csv",
+        ),
     output:
-        output_filepath = pathlib.Path("data","custom_powerplants_eia.csv")
+        output_filepath=pathlib.Path("data", "custom_powerplants_eia.csv"),
     script:
         "analysis/scripts/build_custom_powerplants.py"
-        
+
 
 rule retrieve_data:
     params:

@@ -568,7 +568,7 @@ if __name__ == "__main__":
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
 
-    config_path = pathlib.Path(default_path, "configs","config.usa_baseline.yaml")
+    config_path = pathlib.Path(default_path, "configs", "config.usa_baseline.yaml")
 
     # initial configurations
     eia_name = "EIA"

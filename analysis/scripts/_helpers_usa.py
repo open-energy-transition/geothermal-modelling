@@ -49,6 +49,7 @@ def config(config_path):
         config_dict = yaml.safe_load(file)
     return config_dict
 
+
 def rename_carrier(x):
     if x == "ccgt":
         return "CCGT"
@@ -57,25 +58,26 @@ def rename_carrier(x):
     else:
         return x
 
+
 def eia_to_pypsa_terminology():
     eia_to_pypsa_dict = {
-        'Nuclear':'nuclear',
-        'Onshore Wind Turbine':'onwind',
-        'Conventional Hydroelectric':'hydro',
-        'Conventional Steam Coal':'coal',
-        'Hydroelectric Pumped Storage':'PHS',
-        'Solar Photovoltaic':'solar',
-        'Geothermal':'geothermal',
-        'Offshore Wind Turbine':'offwind-ac', #check if it can be differentiated between ac & dc from EIA data
-        'Wood/Wood Waste Biomass':'biomass',
-        'Natural Gas Fired Combined Cycle':'CCGT',
-        'Natural Gas Fired Combustion Turbine':'OCGT',
-        'Natural Gas Steam Turbine':'OCGT',
-        'Natural Gas Internal Combustion Engine':'OCGT',
-        'Petroleum Liquids':'oil',
-        'Petroleum Coke':'oil',
-        'Batteries':'battery',
-        'other':'All Other'
+        "Nuclear": "nuclear",
+        "Onshore Wind Turbine": "onwind",
+        "Conventional Hydroelectric": "hydro",
+        "Conventional Steam Coal": "coal",
+        "Hydroelectric Pumped Storage": "PHS",
+        "Solar Photovoltaic": "solar",
+        "Geothermal": "geothermal",
+        "Offshore Wind Turbine": "offwind-ac",  # check if it can be differentiated between ac & dc from EIA data
+        "Wood/Wood Waste Biomass": "biomass",
+        "Natural Gas Fired Combined Cycle": "CCGT",
+        "Natural Gas Fired Combustion Turbine": "OCGT",
+        "Natural Gas Steam Turbine": "OCGT",
+        "Natural Gas Internal Combustion Engine": "OCGT",
+        "Petroleum Liquids": "oil",
+        "Petroleum Coke": "oil",
+        "Batteries": "battery",
+        "other": "All Other",
     }
 
     return eia_to_pypsa_dict
