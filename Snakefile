@@ -127,6 +127,24 @@ rule installed_capacity_comparison:
         "analysis/scripts/installed_capacity_comparison.py"
 
 
+rule map_network_to_gadm:
+    input:
+        gadm_shapes_path=pathlib.Path(
+            "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
+        ),
+        pypsa_earth_network_path=pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "networks",
+            "US_2021",
+            "elec_s.nc",
+        ),
+    output:
+        mapped_network_output_file_name="elec_s_gadm_mapped.nc"
+    script:
+        "analysis/scripts/map_network_to_gadm.py"
+
+
 rule generation_comparison:
     params:
         year_for_comparison=2021,  #Should this be 2021?
