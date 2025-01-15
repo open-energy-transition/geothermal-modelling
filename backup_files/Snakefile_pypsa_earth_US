@@ -211,7 +211,7 @@ rule clean_osm_data:
         "scripts/clean_osm_data.py"
 
 
-#rule build_osm_network:
+# rule build_osm_network:
 #    params:
 #        build_osm_network=config.get("build_osm_network", {}),
 #        countries=config["countries"],
@@ -264,7 +264,7 @@ rule build_shapes:
         "scripts/build_shapes.py"
 
 
-#rule base_network:
+# rule base_network:
 #    params:
 #        voltages=config["electricity"]["voltages"],
 #        transformers=config["transformers"],
@@ -298,7 +298,7 @@ rule build_shapes:
 #        "scripts/base_network.py"
 
 
-#rule build_bus_regions:
+# rule build_bus_regions:
 #    params:
 #        alternative_clustering=config["cluster_options"]["alternative_clustering"],
 #        crs=config["crs"],
