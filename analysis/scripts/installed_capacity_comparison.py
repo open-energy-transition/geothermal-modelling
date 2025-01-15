@@ -11,11 +11,9 @@ import pandas as pd
 import pypsa
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import numpy as np
 from matplotlib.patches import Patch
-from _helpers_usa import get_state_node, config, get_gadm_mapping
+from _helpers_usa import get_state_node, config, get_gadm_mapping, rename_carrier
 import plotly.express as px
-import plotly.graph_objects as go
 
 def parse_inputs(base_path, alternative_clustering):
     """
@@ -92,13 +90,6 @@ def plot_capacity_spatial_representation(pypsa_network, plot_type, state_to_drop
 
         plt.savefig(pathlib.Path(plot_base_path,  f"installed_capacity_spatial_representation.png"), dpi=800)
 
-def rename_carrier(x):
-    if x == 'ccgt':
-        return 'CCGT'
-    elif x == 'phs':
-        return 'PHS'
-    else:
-        return x
 
 def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_raw_reference, year_to_use, log_file, plot_base_path, gadm_shapes_path):
     """
@@ -136,7 +127,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     # Installed capacity groupby and summed by carrier and bus
     series_gen_to_use = pypsa_network.generators.groupby(["carrier", "bus"]).p_nom.sum()
     series_sto_to_use = pypsa_network.storage_units.groupby(["carrier","bus"]).p_nom.sum()
-    series_to_use = series_gen_to_use._append(series_sto_to_use)
+    series_to_use = series_gen_to_use.append(series_sto_to_use)
     df = pd.DataFrame({"carrier_gid": series_to_use.index, "installed_capacity": series_to_use.values})
 
     df[["carrier", "GID_1_ACDC"]] = df["carrier_gid"].apply(lambda x: pd.Series(x))
@@ -147,11 +138,11 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     pypsa_df = pypsa_installed_capacity_by_state.merge(gadm_gdp_usa_state, left_on='GID_1', right_on='GID_1', how='inner')
 
     wind_cols = [x for x in pypsa_df.carrier.unique() if 'wind' in x]
-    pypsa_wind_df = pypsa_df.query("carrier in @wind_cols")
+    pypsa_wind_df = pypsa_df.query("carrier in @w", local_dict={"w": wind_cols})
     pypsa_wind_df = pypsa_wind_df.groupby('state').agg({'GID_1_ACDC':'first','installed_capacity':'sum','GID_1':'first'})
     pypsa_wind_df.reset_index(inplace=True)
     pypsa_wind_df['carrier'] = 'wind'
-    pypsa_nowind_df = pypsa_df.query("carrier not in @wind_cols")
+    pypsa_nowind_df = pypsa_df.query("carrier not in @w", local_dict={"w": wind_cols})
     pypsa_agg_df = pd.concat([pypsa_nowind_df,pypsa_wind_df],axis=0)
     pypsa_gas_df = pypsa_agg_df[pypsa_agg_df["carrier"].isin(['CCGT','OCGT'])].groupby('state').agg({'GID_1_ACDC':'first','installed_capacity':'sum','GID_1':'first'})
     pypsa_gas_df['carrier'] = 'gas'
@@ -163,7 +154,7 @@ def plot_capacity_state_by_state_comparison(pypsa_network, eia_reference, eia_ra
     df_full_merge /= 1000
     df_full_merge = df_full_merge.reset_index().set_index('state')
     reqd_cols = ['nuclear','coal','gas','wind','solar','geothermal','oil','biomass','hydro','PHS']
-    df_full_merge = df_full_merge.query("carrier in @col", local_dict={'col':reqd_cols})
+    df_full_merge = df_full_merge.query("carrier in @col", local_dict={'col': reqd_cols})
     log_file.write("Merged the EIA and PyPSA installed capacity data state-wise \n")
 
     # Grouped bar plots to compare the installed capacities statewise

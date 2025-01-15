@@ -42,8 +42,18 @@ def extract_time_res(network_path):
     else:
         return None
 
+
 def config(config_path):
     path_config = pathlib.Path(config_path)
     with open(path_config) as file:
         config_dict = yaml.safe_load(file)
     return config_dict
+
+
+def rename_carrier(x):
+    if x == 'ccgt':
+        return 'CCGT'
+    elif x == 'phs':
+        return 'PHS'
+    else:
+        return x
