@@ -3,6 +3,7 @@ import datetime as dt
 import pandas as pd
 from _helpers_usa import eia_to_pypsa_terminology
 import numpy as np
+from swifter import swifter
 
 
 def parse_inputs(base_path, log_file):
@@ -12,17 +13,17 @@ def parse_inputs(base_path, log_file):
     log_file.write("        \n")
     log_file.write("        \n")
     log_file.write("Parse inputs for build powerplants \n")
-    eia_generators_path = snakemake.input.eia_generators_data_path
-    eia_plants_path = snakemake.input.eia_plants_data_path
-    ror_custom_path = snakemake.input.ror_custom_powerplants_path
+    eia_generators_path = pathlib.Path(base_path, snakemake.input.eia_generators_data_path)
+    eia_plants_path = pathlib.Path(base_path, snakemake.input.eia_plants_data_path)
+    ror_custom_path = pathlib.Path(base_path, snakemake.input.ror_custom_powerplants_path)
 
-    eia_generators_df = pd.read_excel(
+    df_eia_generators = pd.read_excel(
         eia_generators_path, sheet_name="Operable", skiprows=1
     )
-    eia_plants_df = pd.read_excel(eia_plants_path, skiprows=1)
-    ror_custom_ppl_df = pd.read_csv(ror_custom_path)
+    df_eia_plants = pd.read_excel(eia_plants_path, skiprows=1)
+    df_ror_custom_ppl = pd.read_csv(ror_custom_path)
 
-    return eia_generators_df, eia_plants_df, ror_custom_ppl_df
+    return df_eia_generators, df_eia_plants, df_ror_custom_ppl
 
 
 def build_custom_pp(eia_generators_df, eia_plants_df, log_file):
@@ -43,7 +44,6 @@ def build_custom_pp(eia_generators_df, eia_plants_df, log_file):
         ]
     ]
     df_eia_reqd["Technology"] = df_eia_reqd["Technology"].map(eia_to_pypsa_dict)
-    # df_eia_reqd = df_eia_reqd.rename(columns={'Plant Name':'Name','Technology':'Fueltype','Op'})
 
     df_ppl = pd.DataFrame(
         columns=[
@@ -124,9 +124,9 @@ if __name__ == "__main__":
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "custom_powerplants")
-    plot_path = pathlib.Path(default_path, "analysis", "plots", "custom_powerplants")
+    output_path = pathlib.Path(default_path, "analysis", "outputs", "custom_powerplants")
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
         log_path, f"output_build_custom_powerplants_{today_date[:10]}.txt"
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         df_custom_ppl_eia, ror_custom_ppl, log_output_file
     )
 
-    df_custom_ppl.to_csv(snakemake.output.output_filepath)
+    df_custom_ppl.to_csv(pathlib.Path(output_path, snakemake.output.output_file_name))
 
     log_output_file.write("        \n")
     log_output_file.write("        \n")

@@ -45,7 +45,7 @@ rule build_custom_powerplants:
             "custom_powerplants_ror.csv",
         ),
     output:
-        output_filepath=pathlib.Path("data", "custom_powerplants_eia.csv"),
+        output_file_name="custom_powerplants_eia.csv"
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
