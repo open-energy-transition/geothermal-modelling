@@ -3,7 +3,8 @@ import geopandas as gpd
 import pathlib
 import numpy as np
 import pypsa
-import random
+
+from _helpers_usa import get_colors
 
 if __name__ == "__main__":
     # Path
@@ -56,8 +57,6 @@ if __name__ == "__main__":
     # Obtaining the centroids of the Utility demands
     df_utility_centroid = df_utility_demand.copy()
     df_utility_centroid.geometry = df_utility_centroid.geometry.centroid
-
-    get_colors = lambda n: ["#%06x" % random.randint(0, 0xFFFFFF) for _ in range(n)]
 
     # Removing those shapes which do not have a representation in the demand timeseries data
     demand_columns = df_ba_demand.columns

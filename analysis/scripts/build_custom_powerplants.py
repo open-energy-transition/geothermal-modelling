@@ -116,6 +116,11 @@ def identify_ror_plants(custom_ppl_eia_df, custom_ppl_ror_df, log_file):
 
 
 if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("build_custom_powerplants")
+
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "custom_powerplants")

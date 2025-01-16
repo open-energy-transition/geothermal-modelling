@@ -6,7 +6,9 @@ import os
 from shapely.validation import make_valid
 import numpy as np
 import plotly.express as px
-import random
+import sys
+
+from _helpers_usa import get_colors
 
 
 def compute_demand_disaggregation(
@@ -18,10 +20,10 @@ def compute_demand_disaggregation(
 ):
     holes_mapped_intersect_filter["Sales (Megawatthours)"] = 0
     df_final = pd.DataFrame()
-    tot = 0
     for state in df_utilities_grouped_state.index:
-        holes_state = holes_mapped_intersect_filter.query("State == @state")
-        demand = df_utilities_grouped_state.loc[state]
+        holes_state = holes_mapped_intersect_filter.query(
+            "State == @s", local_dict={"s": state}
+        )
         full_state_pop = df_gadm_usa.query("State == @state")["pop"].values[0]
         state_demand = df_demand_utility.query("STATE == @state")[
             "Sales (Megawatthours)"
@@ -63,7 +65,6 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
         missing_demand = df_utilities_grouped_state.loc[state]
         df_filter_final = df_final.query("State == @state")
         assigned_utility_demand = df_filter_final["Sales (Megawatthours)"].sum()
-        unmet_demand = missing_demand - assigned_utility_demand
         if assigned_utility_demand != 0:
             rescaling_factor = actual_state_demand / assigned_utility_demand
         elif assigned_utility_demand == 0:
@@ -127,6 +128,11 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
 
 
 if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("preprocess_demand_data")
+
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs")
@@ -171,8 +177,6 @@ if __name__ == "__main__":
     sys.path.insert(0, str(pypsa_earth_scripts_path))
     import build_shapes
 
-    get_colors = lambda n: ["#%06x" % random.randint(0, 0xFFFFFF) for _ in range(n)]
-
     # Make geometry valid
     df_erst_gpd["geometry"] = df_erst_gpd["geometry"].apply(make_valid)
 
@@ -207,7 +211,7 @@ if __name__ == "__main__":
     # Find the difference in geometry between country and the merged ERST geometry
     holes = df_country.difference(df_erst_gpd_dissolved)
 
-    # Convert holes geomtry : multipolygons into polygons to create a separate row for each hole
+    # Convert holes geometry : multipolygons into polygons to create a separate row for each hole
     holes_exploded = holes.explode()
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(), crs=df_erst_gpd.crs)
     save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)

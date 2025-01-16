@@ -1358,6 +1358,11 @@ def parse_inputs(base_path, log_output_file):
 
 
 if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("network_comparison")
+
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "network_comparison")

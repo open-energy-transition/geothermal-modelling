@@ -55,6 +55,11 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
 
 
 if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("map_network_to_gadm")
+
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "map_network_to_gadm")

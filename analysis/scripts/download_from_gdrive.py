@@ -11,54 +11,68 @@ import requests
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-url = snakemake.params["gdrive_url"]
-default_path = pathlib.Path(__file__).parent.parent.parent
-cookies_path = pathlib.Path(pathlib.Path.home(), snakemake.params["cookies_path"])
-pathlib.Path(cookies_path).mkdir(parents=True, exist_ok=True)
-cookies_file_path = pathlib.Path(
-    cookies_path, "cookies.txt"
-)
-cookies_file_path.touch(exist_ok=True)
-cookies_file = open(cookies_file_path, 'w')
-download_path = pathlib.Path(default_path, snakemake.params["output_path"])
+if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
 
-# get the cookies.txt file
+        snakemake = mock_snakemake("download_from_gdrive")
 
-# --> send HTTP requests
-response = requests.get(url)
+    url = snakemake.params["gdrive_url"]
+    default_path = pathlib.Path(__file__).parent.parent.parent
+    cookies_path = pathlib.Path(pathlib.Path.home(), snakemake.params["cookies_path"])
+    pathlib.Path(cookies_path).mkdir(parents=True, exist_ok=True)
+    cookies_file_path = pathlib.Path(cookies_path, "cookies.txt")
+    cookies_file_path.touch(exist_ok=True)
+    cookies_file = open(cookies_file_path, "w")
+    download_path = pathlib.Path(default_path, snakemake.params["output_path"])
 
-# --> get response about Cookies
-cookies = response.cookies
+    # get the cookies.txt file
 
-# --> store the cookies to cookies.txt
-cookies_file.write("# Netscape HTTP Cookie File \n")
-cookies_file.write("# http://curl.haxx.se/rfc/cookie_spec.html \n")
-cookies_file.write("# This is a generated file!  Do not edit. \n")
-cookies_file.write(" \n")
+    # --> send HTTP requests
+    response = requests.get(url)
 
-domain = ".google.com"
-domain_specified = "TRUE"
-path = "/"
-secure = "TRUE"
+    # --> get response about Cookies
+    cookies = response.cookies
 
-# add five months to today. Convert the time to epoch time. Cast it to integer and string
-expires = str(int((datetime.today() + relativedelta(months=snakemake.params.delta_months)).timestamp()))
+    # --> store the cookies to cookies.txt
+    cookies_file.write("# Netscape HTTP Cookie File \n")
+    cookies_file.write("# http://curl.haxx.se/rfc/cookie_spec.html \n")
+    cookies_file.write("# This is a generated file!  Do not edit. \n")
+    cookies_file.write(" \n")
 
-cookie_list = [domain, domain_specified, path, secure, expires]
+    domain = ".google.com"
+    domain_specified = "TRUE"
+    path = "/"
+    secure = "TRUE"
 
-for cookie in cookies:
-    cookie_list.append(cookie.name)
-    cookie_list.append(cookie.value)
-
-cookies_file.write("\t".join(cookie_list))
-
-cookies_file.close()
-
-# Download the data
-try:
-    gdown.download_folder(
-        url, output=str(download_path), quiet=False, resume=True, use_cookies=True,
+    # add five months to today. Convert the time to epoch time. Cast it to integer and string
+    expires = str(
+        int(
+            (
+                datetime.today() + relativedelta(months=snakemake.params.delta_months)
+            ).timestamp()
+        )
     )
-except Exception as e:
-    print("Error", e)
-    pass
+
+    cookie_list = [domain, domain_specified, path, secure, expires]
+
+    for cookie in cookies:
+        cookie_list.append(cookie.name)
+        cookie_list.append(cookie.value)
+
+    cookies_file.write("\t".join(cookie_list))
+
+    cookies_file.close()
+
+    # Download the data
+    try:
+        gdown.download_folder(
+            url,
+            output=str(download_path),
+            quiet=False,
+            resume=True,
+            use_cookies=True,
+        )
+    except Exception as e:
+        print("Error", e)
+        pass

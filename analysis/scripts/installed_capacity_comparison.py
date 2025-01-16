@@ -75,7 +75,6 @@ def plot_capacity_spatial_representation(
         "carrier == 'AC' and ~(index in @iso_code_to_omit)"
     )
     bus_index = buses.index.tolist()
-    fig = plt.figure(figsize=(15, 12))
     ax = plt.axes(projection=ccrs.EqualEarth())
     pypsa_network.lines.loc[
         pypsa_network.lines.bus0.isin(iso_code_to_omit), "s_nom"
@@ -555,6 +554,11 @@ def plot_capacity_country_comparison(
 
 
 if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("installed_capacity_comparison")
+
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "installed_capacity")

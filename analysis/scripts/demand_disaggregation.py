@@ -63,10 +63,9 @@ def disaggregation_v2(
 ):
     holes_mapped_intersect_filter["Sales (Megawatthours)"] = 0
     df_final = pd.DataFrame()
-    tot = 0
+
     for state in df_utilities_grouped_state.index:
         holes_state = holes_mapped_intersect_filter.query("State == @state")
-        demand = df_utilities_grouped_state.loc[state]
         full_state_pop = df_gadm_usa.query("State == @state")["pop"].values[0]
         state_demand = df_demand_utility.query("State == @state")[
             "Sales (Megawatthours)"
@@ -103,7 +102,6 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
         missing_demand = df_utilities_grouped_state.loc[state]
         df_filter_final = df_final.query("State == @state")
         assigned_utility_demand = df_filter_final["Sales (Megawatthours)"].sum()
-        unmet_demand = missing_demand - assigned_utility_demand
         if assigned_utility_demand != 0:
             rescaling_factor = actual_state_demand / assigned_utility_demand
         elif assigned_utility_demand == 0:
