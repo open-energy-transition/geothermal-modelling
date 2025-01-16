@@ -7,7 +7,6 @@ import pathlib
 
 sys.path.append("workflow/pypsa-earth")
 
-
 rule copy_custom_powerplants:
     input:
         "data/custom_powerplants_eia.csv",
@@ -52,9 +51,10 @@ rule build_custom_powerplants:
 
 rule retrieve_data:
     params:
-        gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec?usp=drive_link",
+        gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
         cookies_path= pathlib.Path(".cache", "gdown"),
-        output_path=pathlib.Path("analysis", "gdrive_data", "data")
+        output_path=pathlib.Path("analysis", "gdrive_data", "data"),
+        delta_months=5
     script:
         "analysis/scripts/download_from_gdrive.py"
 
