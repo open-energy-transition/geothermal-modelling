@@ -16,9 +16,9 @@
 14,Barry 8,CCGT,CCGT,PP,US,170.1,,,,,,2000.0,,,,31.0069,-88.0103,,,,8
 15,Barry 9,CCGT,CCGT,PP,US,170.1,,,,,,2000.0,,,,31.0069,-88.0103,,,,9
 16,Barry 10,CCGT,CCGT,PP,US,195.2,,,,,,2000.0,,,,31.0069,-88.0103,,,,10
-17,Walter Bouldin Dam 1,hydro,Reservoir,PP,US,75.0,,,,,,1967.0,,,,32.583889,-86.283056,,,,1
-18,Walter Bouldin Dam 2,hydro,Reservoir,PP,US,75.0,,,,,,1967.0,,,,32.583889,-86.283056,,,,2
-19,Walter Bouldin Dam 3,hydro,Reservoir,PP,US,75.0,,,,,,1967.0,,,,32.583889,-86.283056,,,,3
+17,Walter Bouldin Dam 1,hydro,Run-Of-River,PP,US,75.0,,,,,,1967.0,,,,32.583889,-86.283056,,,,1
+18,Walter Bouldin Dam 2,hydro,Run-Of-River,PP,US,75.0,,,,,,1967.0,,,,32.583889,-86.283056,,,,2
+19,Walter Bouldin Dam 3,hydro,Run-Of-River,PP,US,75.0,,,,,,1967.0,,,,32.583889,-86.283056,,,,3
 20,Gadsden 1,OCGT,OCGT,PP,US,69.0,,,,,,1949.0,,,,34.0128,-85.9708,,,,1
 21,Gadsden 2,OCGT,OCGT,PP,US,69.0,,,,,,1949.0,,,,34.0128,-85.9708,,,,2
 22,Copper 1,OCGT,OCGT,PP,US,86.9,,,,,,1980.0,,,2030.0,31.7569,-106.375,,,,1
@@ -37,27 +37,27 @@
 35,H Neely Henry Dam 2,hydro,Reservoir,PP,US,24.3,,,,,,1966.0,,,,33.7845,-86.0524,,,,2
 36,H Neely Henry Dam 3,hydro,Reservoir,PP,US,24.3,,,,,,1966.0,,,,33.7845,-86.0524,,,,3
 37,Holt Dam 1,hydro,Reservoir,PP,US,46.9,,,,,,1968.0,,,,33.2553,-87.4495,,,,1
-38,Jordan Dam 1,hydro,Reservoir,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,1
-39,Jordan Dam 2,hydro,Reservoir,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,2
-40,Jordan Dam 3,hydro,Reservoir,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,3
-41,Jordan Dam 4,hydro,Reservoir,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,4
+38,Jordan Dam 1,hydro,Run-Of-River,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,1
+39,Jordan Dam 2,hydro,Run-Of-River,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,2
+40,Jordan Dam 3,hydro,Run-Of-River,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,3
+41,Jordan Dam 4,hydro,Run-Of-River,PP,US,25.0,,,,,,1929.0,,,,32.6189,-86.2548,,,,4
 42,Logan Martin Dam 1,hydro,Reservoir,PP,US,42.7,,,,,,1964.0,,,,33.425878,-86.337547,,,,1
 43,Logan Martin Dam 2,hydro,Reservoir,PP,US,42.7,,,,,,1964.0,,,,33.425878,-86.337547,,,,2
 44,Logan Martin Dam 3,hydro,Reservoir,PP,US,42.7,,,,,,1964.0,,,,33.425878,-86.337547,,,,3
-45,Lay Dam 1,hydro,Reservoir,PP,US,29.5,,,,,,1968.0,,,,32.9633,-86.5187,,,,1
-46,Lay Dam 2,hydro,Reservoir,PP,US,29.5,,,,,,1968.0,,,,32.9633,-86.5187,,,,2
-47,Lay Dam 3,hydro,Reservoir,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,3
-48,Lay Dam 4,hydro,Reservoir,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,4
-49,Lay Dam 5,hydro,Reservoir,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,5
-50,Lay Dam 6,hydro,Reservoir,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,6
+45,Lay Dam 1,hydro,Run-Of-River,PP,US,29.5,,,,,,1968.0,,,,32.9633,-86.5187,,,,1
+46,Lay Dam 2,hydro,Run-Of-River,PP,US,29.5,,,,,,1968.0,,,,32.9633,-86.5187,,,,2
+47,Lay Dam 3,hydro,Run-Of-River,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,3
+48,Lay Dam 4,hydro,Run-Of-River,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,4
+49,Lay Dam 5,hydro,Run-Of-River,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,5
+50,Lay Dam 6,hydro,Run-Of-River,PP,US,29.5,,,,,,1967.0,,,,32.9633,-86.5187,,,,6
 51,Martin Dam 1,hydro,Reservoir,PP,US,50.2,,,,,,1927.0,,,,32.680394,-85.911442,,,,1
 52,Martin Dam 2,hydro,Reservoir,PP,US,50.2,,,,,,1927.0,,,,32.680394,-85.911442,,,,2
 53,Martin Dam 3,hydro,Reservoir,PP,US,50.2,,,,,,1927.0,,,,32.680394,-85.911442,,,,3
 54,Martin Dam 4,hydro,Reservoir,PP,US,60.0,,,,,,1952.0,,,,32.680394,-85.911442,,,,4
-55,Mitchell Dam 1,hydro,Reservoir,PP,US,20.0,,,,,,1949.0,,,,32.806025,-86.444892,,,,1
-56,Mitchell Dam 2,hydro,Reservoir,PP,US,50.0,,,,,,1985.0,,,,32.806025,-86.444892,,,,2
-57,Mitchell Dam 3,hydro,Reservoir,PP,US,50.0,,,,,,1985.0,,,,32.806025,-86.444892,,,,3
-58,Mitchell Dam 4,hydro,Reservoir,PP,US,50.0,,,,,,1985.0,,,,32.806025,-86.444892,,,,4
+55,Mitchell Dam 1,hydro,Run-Of-River,PP,US,20.0,,,,,,1949.0,,,,32.806025,-86.444892,,,,1
+56,Mitchell Dam 2,hydro,Run-Of-River,PP,US,50.0,,,,,,1985.0,,,,32.806025,-86.444892,,,,2
+57,Mitchell Dam 3,hydro,Run-Of-River,PP,US,50.0,,,,,,1985.0,,,,32.806025,-86.444892,,,,3
+58,Mitchell Dam 4,hydro,Run-Of-River,PP,US,50.0,,,,,,1985.0,,,,32.806025,-86.444892,,,,4
 59,Lewis Smith Dam 1,hydro,Reservoir,PP,US,90.5,,,,,,1961.0,,,,33.9406,-87.1077,,,,1
 60,Lewis Smith Dam 2,hydro,Reservoir,PP,US,90.5,,,,,,1962.0,,,,33.9406,-87.1077,,,,2
 61,Thurlow Dam 1,hydro,Reservoir,PP,US,40.5,,,,,,1931.0,,,,32.535436,-85.887614,,,,1
@@ -80,9 +80,9 @@
 78,Madelia 4,oil,,PP,US,4.3,,,,,,1973.0,,,,44.0501,-94.4178,,,,4
 79,Madelia 5,oil,,PP,US,1.3,,,,,,1954.0,,,,44.0501,-94.4178,,,,5
 80,Rollins 1,hydro,Reservoir,PP,US,12.1,,,,,,1980.0,,,,39.134259,-120.953341,,,,1
-81,Millers Ferry 1,hydro,Reservoir,PP,US,33.7,,,,,,1970.0,,,,32.100881,-87.399767,,,,1
-82,Millers Ferry 2,hydro,Reservoir,PP,US,33.7,,,,,,1970.0,,,,32.100881,-87.399767,,,,2
-83,Millers Ferry 3,hydro,Reservoir,PP,US,33.7,,,,,,1970.0,,,,32.100881,-87.399767,,,,3
+81,Millers Ferry 1,hydro,Run-Of-River,PP,US,33.7,,,,,,1970.0,,,,32.100881,-87.399767,,,,1
+82,Millers Ferry 2,hydro,Run-Of-River,PP,US,33.7,,,,,,1970.0,,,,32.100881,-87.399767,,,,2
+83,Millers Ferry 3,hydro,Run-Of-River,PP,US,33.7,,,,,,1970.0,,,,32.100881,-87.399767,,,,3
 84,Browns Ferry 1,nuclear,,PP,US,1263.5,,,,,,1974.0,,,,34.7042,-87.1189,,,,1
 85,Browns Ferry 2,nuclear,,PP,US,1152.0,,,,,,1975.0,,,,34.7042,-87.1189,,,,2
 86,Browns Ferry 3,nuclear,,PP,US,1152.0,,,,,,1977.0,,,,34.7042,-87.1189,,,,3
@@ -109,8 +109,8 @@
 107,Wheeler Dam 9,hydro,Reservoir,PP,US,35.1,,,,,,1949.0,,,,34.8069,-87.3819,,,,9
 108,Wheeler Dam 10,hydro,Reservoir,PP,US,35.1,,,,,,1950.0,,,,34.8069,-87.3819,,,,10
 109,Wheeler Dam 11,hydro,Reservoir,PP,US,43.6,,,,,,1962.0,,,,34.8069,-87.3819,,,,11
-110,Gantt 1,hydro,Reservoir,PP,US,1.2,,,,,,1926.0,,,,31.4033,-86.479469,,,,1
-111,Gantt 2,hydro,Reservoir,PP,US,1.8,,,,,,1985.0,,,,31.4033,-86.479469,,,,2
+110,Gantt 1,hydro,Run-Of-River,PP,US,1.2,,,,,,1926.0,,,,31.4033,-86.479469,,,,1
+111,Gantt 2,hydro,Run-Of-River,PP,US,1.8,,,,,,1985.0,,,,31.4033,-86.479469,,,,2
 112,J K Smith 1,OCGT,OCGT,PP,US,149.0,,,,,,1999.0,,,,37.8833,-84.1017,,,,1
 113,J K Smith 2,OCGT,OCGT,PP,US,98.0,,,,,,2010.0,,,,37.8833,-84.1017,,,,2
 114,J K Smith 3,OCGT,OCGT,PP,US,149.0,,,,,,1999.0,,,,37.8833,-84.1017,,,,3
@@ -120,9 +120,9 @@
 118,J K Smith 7,OCGT,OCGT,PP,US,98.0,,,,,,2005.0,,,,37.8833,-84.1017,,,,7
 119,J K Smith 8,OCGT,OCGT,PP,US,98.0,,,,,,2005.0,,,,37.8833,-84.1017,,,,8
 120,J K Smith 9,OCGT,OCGT,PP,US,98.0,,,,,,2010.0,,,,37.8833,-84.1017,,,,9
-121,Point A 1,hydro,Reservoir,PP,US,1.6,,,,,,1925.0,,,,31.361146,-86.518307,,,,1
-122,Point A 2,hydro,Reservoir,PP,US,1.6,,,,,,1925.0,,,,31.361146,-86.518307,,,,2
-123,Point A 3,hydro,Reservoir,PP,US,2.0,,,,,,1949.0,,,,31.361146,-86.518307,,,,3
+121,Point A 1,hydro,Run-Of-River,PP,US,1.6,,,,,,1925.0,,,,31.361146,-86.518307,,,,1
+122,Point A 2,hydro,Run-Of-River,PP,US,1.6,,,,,,1925.0,,,,31.361146,-86.518307,,,,2
+123,Point A 3,hydro,Run-Of-River,PP,US,2.0,,,,,,1949.0,,,,31.361146,-86.518307,,,,3
 124,Platte 1,coal,,PP,US,109.8,,,,,,1982.0,,,,40.854765,-98.348222,,,,1
 125,Whelan Energy Center 1,coal,,PP,US,76.3,,,,,,1981.0,,,,40.580872,-98.312437,,,,1
 126,Whelan Energy Center 2,coal,,PP,US,248.0,,,,,,2011.0,,,,40.580872,-98.312437,,,,2
@@ -4646,26 +4646,26 @@
 4644,Leaburg 2,hydro,Reservoir,PP,US,7.5,,,,,,1950.0,,,,44.1011,-122.6892,,,,2
 4645,Walterville 1,hydro,Reservoir,PP,US,8.0,,,,,,1949.0,,,,44.069636,-122.835046,,,,1
 4646,Big Cliff 1,hydro,Reservoir,PP,US,18.0,,,,,,1954.0,,,,44.7514,-122.2832,,,,1
-4647,Bonneville 1,hydro,Reservoir,PP,US,53.5,,,,,,1938.0,,,,45.6441,-121.941009,,,,1
-4648,Bonneville 2,hydro,Reservoir,PP,US,62.1,,,,,,1944.0,,,,45.6441,-121.941009,,,,2
-4649,Bonneville 3,hydro,Reservoir,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,3
-4650,Bonneville 4,hydro,Reservoir,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,4
-4651,Bonneville 5,hydro,Reservoir,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,5
-4652,Bonneville 6,hydro,Reservoir,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,6
-4653,Bonneville 7,hydro,Reservoir,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,7
-4654,Bonneville 8,hydro,Reservoir,PP,US,66.5,,,,,,1981.0,,,,45.6441,-121.941009,,,,8
-4655,Bonneville 9,hydro,Reservoir,PP,US,66.5,,,,,,1981.0,,,,45.6441,-121.941009,,,,9
-4656,Bonneville 10,hydro,Reservoir,PP,US,66.5,,,,,,1981.0,,,,45.6441,-121.941009,,,,10
-4657,Bonneville 11,hydro,Reservoir,PP,US,53.5,,,,,,1938.0,,,,45.6441,-121.941009,,,,11
-4658,Bonneville 12,hydro,Reservoir,PP,US,62.1,,,,,,1941.0,,,,45.6441,-121.941009,,,,12
-4659,Bonneville 13,hydro,Reservoir,PP,US,62.1,,,,,,1941.0,,,,45.6441,-121.941009,,,,13
-4660,Bonneville 14,hydro,Reservoir,PP,US,62.1,,,,,,1941.0,,,,45.6441,-121.941009,,,,14
-4661,Bonneville 15,hydro,Reservoir,PP,US,62.1,,,,,,1942.0,,,,45.6441,-121.941009,,,,15
-4662,Bonneville 16,hydro,Reservoir,PP,US,62.1,,,,,,1943.0,,,,45.6441,-121.941009,,,,16
-4663,Bonneville 17,hydro,Reservoir,PP,US,62.1,,,,,,1943.0,,,,45.6441,-121.941009,,,,17
-4664,Bonneville 18,hydro,Reservoir,PP,US,62.1,,,,,,1943.0,,,,45.6441,-121.941009,,,,18
-4665,Bonneville 19,hydro,Reservoir,PP,US,13.1,,,,,,1982.0,,,,45.6441,-121.941009,,,,19
-4666,Bonneville 20,hydro,Reservoir,PP,US,13.1,,,,,,1981.0,,,,45.6441,-121.941009,,,,20
+4647,Bonneville 1,hydro,Run-Of-River,PP,US,53.5,,,,,,1938.0,,,,45.6441,-121.941009,,,,1
+4648,Bonneville 2,hydro,Run-Of-River,PP,US,62.1,,,,,,1944.0,,,,45.6441,-121.941009,,,,2
+4649,Bonneville 3,hydro,Run-Of-River,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,3
+4650,Bonneville 4,hydro,Run-Of-River,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,4
+4651,Bonneville 5,hydro,Run-Of-River,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,5
+4652,Bonneville 6,hydro,Run-Of-River,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,6
+4653,Bonneville 7,hydro,Run-Of-River,PP,US,66.5,,,,,,1982.0,,,,45.6441,-121.941009,,,,7
+4654,Bonneville 8,hydro,Run-Of-River,PP,US,66.5,,,,,,1981.0,,,,45.6441,-121.941009,,,,8
+4655,Bonneville 9,hydro,Run-Of-River,PP,US,66.5,,,,,,1981.0,,,,45.6441,-121.941009,,,,9
+4656,Bonneville 10,hydro,Run-Of-River,PP,US,66.5,,,,,,1981.0,,,,45.6441,-121.941009,,,,10
+4657,Bonneville 11,hydro,Run-Of-River,PP,US,53.5,,,,,,1938.0,,,,45.6441,-121.941009,,,,11
+4658,Bonneville 12,hydro,Run-Of-River,PP,US,62.1,,,,,,1941.0,,,,45.6441,-121.941009,,,,12
+4659,Bonneville 13,hydro,Run-Of-River,PP,US,62.1,,,,,,1941.0,,,,45.6441,-121.941009,,,,13
+4660,Bonneville 14,hydro,Run-Of-River,PP,US,62.1,,,,,,1941.0,,,,45.6441,-121.941009,,,,14
+4661,Bonneville 15,hydro,Run-Of-River,PP,US,62.1,,,,,,1942.0,,,,45.6441,-121.941009,,,,15
+4662,Bonneville 16,hydro,Run-Of-River,PP,US,62.1,,,,,,1943.0,,,,45.6441,-121.941009,,,,16
+4663,Bonneville 17,hydro,Run-Of-River,PP,US,62.1,,,,,,1943.0,,,,45.6441,-121.941009,,,,17
+4664,Bonneville 18,hydro,Run-Of-River,PP,US,62.1,,,,,,1943.0,,,,45.6441,-121.941009,,,,18
+4665,Bonneville 19,hydro,Run-Of-River,PP,US,13.1,,,,,,1982.0,,,,45.6441,-121.941009,,,,19
+4666,Bonneville 20,hydro,Run-Of-River,PP,US,13.1,,,,,,1981.0,,,,45.6441,-121.941009,,,,20
 4667,Cougar 1,hydro,Reservoir,PP,US,13.0,,,,,,1964.0,,,,44.1307,-122.2439,,,,1
 4668,Cougar 2,hydro,Reservoir,PP,US,13.0,,,,,,1964.0,,,,44.1307,-122.2439,,,,2
 4669,Detroit 1,hydro,Reservoir,PP,US,50.0,,,,,,1953.0,,,,44.7224,-122.2511,,,,1
@@ -4675,39 +4675,39 @@
 4673,Green Peter 2,hydro,Reservoir,PP,US,40.0,,,,,,1967.0,,,,44.4494,-122.5494,,,,2
 4674,Hills Creek 1,hydro,Reservoir,PP,US,15.0,,,,,,1962.0,,,,43.7107,-122.4238,,,,1
 4675,Hills Creek 2,hydro,Reservoir,PP,US,15.0,,,,,,1962.0,,,,43.7107,-122.4238,,,,2
-4676,John Day 1,hydro,Reservoir,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,1
-4677,John Day 2,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,2
-4678,John Day 3,hydro,Reservoir,PP,US,135.0,,,,,,1970.0,,,,45.71644,-120.69408,,,,3
-4679,John Day 4,hydro,Reservoir,PP,US,135.0,,,,,,1970.0,,,,45.71644,-120.69408,,,,4
-4680,John Day 5,hydro,Reservoir,PP,US,135.0,,,,,,1970.0,,,,45.71644,-120.69408,,,,5
-4681,John Day 6,hydro,Reservoir,PP,US,135.0,,,,,,1971.0,,,,45.71644,-120.69408,,,,6
-4682,John Day 7,hydro,Reservoir,PP,US,135.0,,,,,,1971.0,,,,45.71644,-120.69408,,,,7
-4683,John Day 8,hydro,Reservoir,PP,US,135.0,,,,,,1971.0,,,,45.71644,-120.69408,,,,8
-4684,John Day 9,hydro,Reservoir,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,9
-4685,John Day 10,hydro,Reservoir,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,10
-4686,John Day 11,hydro,Reservoir,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,11
-4687,John Day 12,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,12
-4688,John Day 13,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,13
-4689,John Day 14,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,14
-4690,John Day 15,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,15
-4691,John Day 16,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,16
+4676,John Day 1,hydro,Run-Of-River,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,1
+4677,John Day 2,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,2
+4678,John Day 3,hydro,Run-Of-River,PP,US,135.0,,,,,,1970.0,,,,45.71644,-120.69408,,,,3
+4679,John Day 4,hydro,Run-Of-River,PP,US,135.0,,,,,,1970.0,,,,45.71644,-120.69408,,,,4
+4680,John Day 5,hydro,Run-Of-River,PP,US,135.0,,,,,,1970.0,,,,45.71644,-120.69408,,,,5
+4681,John Day 6,hydro,Run-Of-River,PP,US,135.0,,,,,,1971.0,,,,45.71644,-120.69408,,,,6
+4682,John Day 7,hydro,Run-Of-River,PP,US,135.0,,,,,,1971.0,,,,45.71644,-120.69408,,,,7
+4683,John Day 8,hydro,Run-Of-River,PP,US,135.0,,,,,,1971.0,,,,45.71644,-120.69408,,,,8
+4684,John Day 9,hydro,Run-Of-River,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,9
+4685,John Day 10,hydro,Run-Of-River,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,10
+4686,John Day 11,hydro,Run-Of-River,PP,US,135.0,,,,,,1968.0,,,,45.71644,-120.69408,,,,11
+4687,John Day 12,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,12
+4688,John Day 13,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,13
+4689,John Day 14,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,14
+4690,John Day 15,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,15
+4691,John Day 16,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,45.71644,-120.69408,,,,16
 4692,Lookout Point 1,hydro,Reservoir,PP,US,40.0,,,,,,1955.0,,,,43.9153,-122.7531,,,,1
 4693,Lookout Point 2,hydro,Reservoir,PP,US,40.0,,,,,,1955.0,,,,43.9153,-122.7531,,,,2
 4694,Lookout Point 3,hydro,Reservoir,PP,US,40.0,,,,,,1955.0,,,,43.9153,-122.7531,,,,3
-4695,McNary 1,hydro,Reservoir,PP,US,70.0,,,,,,1953.0,,,,45.9402,-119.2988,,,,1
-4696,McNary 2,hydro,Reservoir,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,2
-4697,McNary 3,hydro,Reservoir,PP,US,70.0,,,,,,1956.0,,,,45.9402,-119.2988,,,,3
-4698,McNary 4,hydro,Reservoir,PP,US,70.0,,,,,,1956.0,,,,45.9402,-119.2988,,,,4
-4699,McNary 5,hydro,Reservoir,PP,US,70.0,,,,,,1957.0,,,,45.9402,-119.2988,,,,5
-4700,McNary 6,hydro,Reservoir,PP,US,80.5,,,,,,1957.0,,,,45.9402,-119.2988,,,,6
-4701,McNary 7,hydro,Reservoir,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,7
-4702,McNary 8,hydro,Reservoir,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,8
-4703,McNary 9,hydro,Reservoir,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,9
-4704,McNary 10,hydro,Reservoir,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,10
-4705,McNary 11,hydro,Reservoir,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,11
-4706,McNary 12,hydro,Reservoir,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,12
-4707,McNary 13,hydro,Reservoir,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,13
-4708,McNary 14,hydro,Reservoir,PP,US,70.0,,,,,,1956.0,,,,45.9402,-119.2988,,,,14
+4695,McNary 1,hydro,Run-Of-River,PP,US,70.0,,,,,,1953.0,,,,45.9402,-119.2988,,,,1
+4696,McNary 2,hydro,Run-Of-River,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,2
+4697,McNary 3,hydro,Run-Of-River,PP,US,70.0,,,,,,1956.0,,,,45.9402,-119.2988,,,,3
+4698,McNary 4,hydro,Run-Of-River,PP,US,70.0,,,,,,1956.0,,,,45.9402,-119.2988,,,,4
+4699,McNary 5,hydro,Run-Of-River,PP,US,70.0,,,,,,1957.0,,,,45.9402,-119.2988,,,,5
+4700,McNary 6,hydro,Run-Of-River,PP,US,80.5,,,,,,1957.0,,,,45.9402,-119.2988,,,,6
+4701,McNary 7,hydro,Run-Of-River,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,7
+4702,McNary 8,hydro,Run-Of-River,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,8
+4703,McNary 9,hydro,Run-Of-River,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,9
+4704,McNary 10,hydro,Run-Of-River,PP,US,70.0,,,,,,1954.0,,,,45.9402,-119.2988,,,,10
+4705,McNary 11,hydro,Run-Of-River,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,11
+4706,McNary 12,hydro,Run-Of-River,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,12
+4707,McNary 13,hydro,Run-Of-River,PP,US,70.0,,,,,,1955.0,,,,45.9402,-119.2988,,,,13
+4708,McNary 14,hydro,Run-Of-River,PP,US,70.0,,,,,,1956.0,,,,45.9402,-119.2988,,,,14
 4709,Brunot Island 1,oil,,PP,US,25.5,,,,,,1972.0,,,,40.464851,-80.043761,,,,1
 4710,Brunot Island 2,CCGT,CCGT,PP,US,65.3,,,,,,1973.0,,,,40.464851,-80.043761,,,,2
 4711,Brunot Island 3,CCGT,CCGT,PP,US,65.3,,,,,,1973.0,,,,40.464851,-80.043761,,,,3
@@ -4776,20 +4776,20 @@
 4774,TalenEnergy Martins Creek LLC Harrisburg 3,oil,,PP,US,16.0,,,,,,1967.0,,,2022.0,40.257865,-76.857897,,,,3
 4775,TalenEnergy Martins Creek LLC Harwood 1,oil,,PP,US,16.0,,,,,,1967.0,,,2022.0,40.9353,-76.0284,,,,1
 4776,TalenEnergy Martins Creek LLC Harwood 2,oil,,PP,US,16.0,,,,,,1967.0,,,2022.0,40.9353,-76.0284,,,,2
-4777,Holtwood 1,hydro,Reservoir,PP,US,10.4,,,,,,1910.0,,,,39.827198,-76.331772,,,,1
-4778,Holtwood 2,hydro,Reservoir,PP,US,12.0,,,,,,1924.0,,,,39.827198,-76.331772,,,,2
-4779,Holtwood 3,hydro,Reservoir,PP,US,1.4,,,,,,2011.0,,,,39.827198,-76.331772,,,,3
-4780,Holtwood 4,hydro,Reservoir,PP,US,1.4,,,,,,2011.0,,,,39.827198,-76.331772,,,,4
-4781,Holtwood 5,hydro,Reservoir,PP,US,66.0,,,,,,2013.0,,,,39.827198,-76.331772,,,,5
-4782,Holtwood 6,hydro,Reservoir,PP,US,66.0,,,,,,2013.0,,,,39.827198,-76.331772,,,,6
-4783,Holtwood 7,hydro,Reservoir,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,7
-4784,Holtwood 8,hydro,Reservoir,PP,US,13.5,,,,,,1911.0,,,,39.827198,-76.331772,,,,8
-4785,Holtwood 9,hydro,Reservoir,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,9
-4786,Holtwood 10,hydro,Reservoir,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,10
-4787,Holtwood 11,hydro,Reservoir,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,11
-4788,Holtwood 12,hydro,Reservoir,PP,US,10.4,,,,,,1913.0,,,,39.827198,-76.331772,,,,12
-4789,Holtwood 13,hydro,Reservoir,PP,US,11.4,,,,,,1914.0,,,,39.827198,-76.331772,,,,13
-4790,Holtwood 14,hydro,Reservoir,PP,US,13.2,,,,,,1914.0,,,,39.827198,-76.331772,,,,14
+4777,Holtwood 1,hydro,Run-Of-River,PP,US,10.4,,,,,,1910.0,,,,39.827198,-76.331772,,,,1
+4778,Holtwood 2,hydro,Run-Of-River,PP,US,12.0,,,,,,1924.0,,,,39.827198,-76.331772,,,,2
+4779,Holtwood 3,hydro,Run-Of-River,PP,US,1.4,,,,,,2011.0,,,,39.827198,-76.331772,,,,3
+4780,Holtwood 4,hydro,Run-Of-River,PP,US,1.4,,,,,,2011.0,,,,39.827198,-76.331772,,,,4
+4781,Holtwood 5,hydro,Run-Of-River,PP,US,66.0,,,,,,2013.0,,,,39.827198,-76.331772,,,,5
+4782,Holtwood 6,hydro,Run-Of-River,PP,US,66.0,,,,,,2013.0,,,,39.827198,-76.331772,,,,6
+4783,Holtwood 7,hydro,Run-Of-River,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,7
+4784,Holtwood 8,hydro,Run-Of-River,PP,US,13.5,,,,,,1911.0,,,,39.827198,-76.331772,,,,8
+4785,Holtwood 9,hydro,Run-Of-River,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,9
+4786,Holtwood 10,hydro,Run-Of-River,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,10
+4787,Holtwood 11,hydro,Run-Of-River,PP,US,10.4,,,,,,1911.0,,,,39.827198,-76.331772,,,,11
+4788,Holtwood 12,hydro,Run-Of-River,PP,US,10.4,,,,,,1913.0,,,,39.827198,-76.331772,,,,12
+4789,Holtwood 13,hydro,Run-Of-River,PP,US,11.4,,,,,,1914.0,,,,39.827198,-76.331772,,,,13
+4790,Holtwood 14,hydro,Run-Of-River,PP,US,13.2,,,,,,1914.0,,,,39.827198,-76.331772,,,,14
 4791,TalenEnergy Martins Creek LLC Jenkins 1,oil,,PP,US,16.0,,,,,,1969.0,,,2022.0,41.282405,-75.816439,,,,1
 4792,TalenEnergy Martins Creek LLC Jenkins 2,oil,,PP,US,16.0,,,,,,1969.0,,,2022.0,41.282405,-75.816439,,,,2
 4793,TalenEnergy Martins Creek LLC Lock Haven 1,oil,,PP,US,18.5,,,,,,1969.0,,,2022.0,41.1189,-77.4709,,,,1
@@ -5673,30 +5673,30 @@
 5671,Box Canyon 2,hydro,Reservoir,PP,US,22.5,,,,,,1955.0,,,,48.780856,-117.418337,,,,2
 5672,Box Canyon 3,hydro,Reservoir,PP,US,22.5,,,,,,1955.0,,,,48.780856,-117.418337,,,,3
 5673,Box Canyon 4,hydro,Reservoir,PP,US,22.5,,,,,,1955.0,,,,48.780856,-117.418337,,,,4
-5674,The Dalles 1,hydro,Reservoir,PP,US,78.0,,,,,,1957.0,,,,45.614,-121.1346,,,,1
-5675,The Dalles 2,hydro,Reservoir,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,2
-5676,The Dalles 3,hydro,Reservoir,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,3
-5677,The Dalles 4,hydro,Reservoir,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,4
-5678,The Dalles 5,hydro,Reservoir,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,5
-5679,The Dalles 6,hydro,Reservoir,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,6
-5680,The Dalles 7,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,7
-5681,The Dalles 8,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,8
-5682,The Dalles 9,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,9
-5683,The Dalles 10,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,10
-5684,The Dalles 11,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,11
-5685,The Dalles 12,hydro,Reservoir,PP,US,78.0,,,,,,1957.0,,,,45.614,-121.1346,,,,12
-5686,The Dalles 13,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,13
-5687,The Dalles 14,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,14
-5688,The Dalles 15,hydro,Reservoir,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,15
-5689,The Dalles 16,hydro,Reservoir,PP,US,78.0,,,,,,1958.0,,,,45.614,-121.1346,,,,16
-5690,The Dalles 17,hydro,Reservoir,PP,US,78.0,,,,,,1958.0,,,,45.614,-121.1346,,,,17
-5691,The Dalles 18,hydro,Reservoir,PP,US,89.7,,,,,,1958.0,,,,45.614,-121.1346,,,,18
-5692,The Dalles 19,hydro,Reservoir,PP,US,78.0,,,,,,1958.0,,,,45.614,-121.1346,,,,19
-5693,The Dalles 20,hydro,Reservoir,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,20
-5694,The Dalles 21,hydro,Reservoir,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,21
-5695,The Dalles 22,hydro,Reservoir,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,22
-5696,The Dalles 23,hydro,Reservoir,PP,US,14.0,,,,,,1957.0,,,,45.614,-121.1346,,,,23
-5697,The Dalles 24,hydro,Reservoir,PP,US,14.0,,,,,,1957.0,,,,45.614,-121.1346,,,,24
+5674,The Dalles 1,hydro,Run-Of-River,PP,US,78.0,,,,,,1957.0,,,,45.614,-121.1346,,,,1
+5675,The Dalles 2,hydro,Run-Of-River,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,2
+5676,The Dalles 3,hydro,Run-Of-River,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,3
+5677,The Dalles 4,hydro,Run-Of-River,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,4
+5678,The Dalles 5,hydro,Run-Of-River,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,5
+5679,The Dalles 6,hydro,Run-Of-River,PP,US,78.0,,,,,,1960.0,,,,45.614,-121.1346,,,,6
+5680,The Dalles 7,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,7
+5681,The Dalles 8,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,8
+5682,The Dalles 9,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,9
+5683,The Dalles 10,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,10
+5684,The Dalles 11,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,11
+5685,The Dalles 12,hydro,Run-Of-River,PP,US,78.0,,,,,,1957.0,,,,45.614,-121.1346,,,,12
+5686,The Dalles 13,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,13
+5687,The Dalles 14,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,14
+5688,The Dalles 15,hydro,Run-Of-River,PP,US,86.0,,,,,,1973.0,,,,45.614,-121.1346,,,,15
+5689,The Dalles 16,hydro,Run-Of-River,PP,US,78.0,,,,,,1958.0,,,,45.614,-121.1346,,,,16
+5690,The Dalles 17,hydro,Run-Of-River,PP,US,78.0,,,,,,1958.0,,,,45.614,-121.1346,,,,17
+5691,The Dalles 18,hydro,Run-Of-River,PP,US,89.7,,,,,,1958.0,,,,45.614,-121.1346,,,,18
+5692,The Dalles 19,hydro,Run-Of-River,PP,US,78.0,,,,,,1958.0,,,,45.614,-121.1346,,,,19
+5693,The Dalles 20,hydro,Run-Of-River,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,20
+5694,The Dalles 21,hydro,Run-Of-River,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,21
+5695,The Dalles 22,hydro,Run-Of-River,PP,US,78.0,,,,,,1959.0,,,,45.614,-121.1346,,,,22
+5696,The Dalles 23,hydro,Run-Of-River,PP,US,14.0,,,,,,1957.0,,,,45.614,-121.1346,,,,23
+5697,The Dalles 24,hydro,Run-Of-River,PP,US,14.0,,,,,,1957.0,,,,45.614,-121.1346,,,,24
 5698,Alder 1,hydro,Reservoir,PP,US,25.0,,,,,,1947.0,,,,46.8016,-122.3102,,,,1
 5699,Alder 2,hydro,Reservoir,PP,US,25.0,,,,,,1945.0,,,,46.8016,-122.3102,,,,2
 5700,Cushman 1 1,hydro,Reservoir,PP,US,21.6,,,,,,1926.0,,,,47.4181,-123.2252,,,,1
@@ -5717,33 +5717,33 @@
 5715,Mayfield 4,hydro,Reservoir,PP,US,40.5,,,,,,1963.0,,,,46.5035,-122.5885,,,,4
 5716,Mossyrock 1,hydro,Reservoir,PP,US,150.0,,,,,,1968.0,,,,46.5347,-122.4247,,,,1
 5717,Mossyrock 2,hydro,Reservoir,PP,US,150.0,,,,,,1968.0,,,,46.5347,-122.4247,,,,2
-5718,Chief Joseph 1,hydro,Reservoir,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,1
-5719,Chief Joseph 2,hydro,Reservoir,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,2
-5720,Chief Joseph 3,hydro,Reservoir,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,3
-5721,Chief Joseph 4,hydro,Reservoir,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,4
-5722,Chief Joseph 5,hydro,Reservoir,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,5
-5723,Chief Joseph 6,hydro,Reservoir,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,6
-5724,Chief Joseph 7,hydro,Reservoir,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,7
-5725,Chief Joseph 8,hydro,Reservoir,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,8
-5726,Chief Joseph 9,hydro,Reservoir,PP,US,95.0,,,,,,1977.0,,,,47.9951,-119.6404,,,,9
-5727,Chief Joseph 10,hydro,Reservoir,PP,US,95.0,,,,,,1977.0,,,,47.9951,-119.6404,,,,10
-5728,Chief Joseph 11,hydro,Reservoir,PP,US,95.0,,,,,,1977.0,,,,47.9951,-119.6404,,,,11
-5729,Chief Joseph 12,hydro,Reservoir,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,12
-5730,Chief Joseph 13,hydro,Reservoir,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,13
-5731,Chief Joseph 14,hydro,Reservoir,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,14
-5732,Chief Joseph 15,hydro,Reservoir,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,15
-5733,Chief Joseph 16,hydro,Reservoir,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,16
-5734,Chief Joseph 17,hydro,Reservoir,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,17
-5735,Chief Joseph 18,hydro,Reservoir,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,18
-5736,Chief Joseph 19,hydro,Reservoir,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,19
-5737,Chief Joseph 20,hydro,Reservoir,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,20
-5738,Chief Joseph 21,hydro,Reservoir,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,21
-5739,Chief Joseph 22,hydro,Reservoir,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,22
-5740,Chief Joseph 23,hydro,Reservoir,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,23
-5741,Chief Joseph 24,hydro,Reservoir,PP,US,88.2,,,,,,1956.0,,,,47.9951,-119.6404,,,,24
-5742,Chief Joseph 25,hydro,Reservoir,PP,US,88.2,,,,,,1956.0,,,,47.9951,-119.6404,,,,25
-5743,Chief Joseph 26,hydro,Reservoir,PP,US,88.2,,,,,,1956.0,,,,47.9951,-119.6404,,,,26
-5744,Chief Joseph 27,hydro,Reservoir,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,27
+5718,Chief Joseph 1,hydro,Run-Of-River,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,1
+5719,Chief Joseph 2,hydro,Run-Of-River,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,2
+5720,Chief Joseph 3,hydro,Run-Of-River,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,3
+5721,Chief Joseph 4,hydro,Run-Of-River,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,4
+5722,Chief Joseph 5,hydro,Run-Of-River,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,5
+5723,Chief Joseph 6,hydro,Run-Of-River,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,6
+5724,Chief Joseph 7,hydro,Run-Of-River,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,7
+5725,Chief Joseph 8,hydro,Run-Of-River,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,8
+5726,Chief Joseph 9,hydro,Run-Of-River,PP,US,95.0,,,,,,1977.0,,,,47.9951,-119.6404,,,,9
+5727,Chief Joseph 10,hydro,Run-Of-River,PP,US,95.0,,,,,,1977.0,,,,47.9951,-119.6404,,,,10
+5728,Chief Joseph 11,hydro,Run-Of-River,PP,US,95.0,,,,,,1977.0,,,,47.9951,-119.6404,,,,11
+5729,Chief Joseph 12,hydro,Run-Of-River,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,12
+5730,Chief Joseph 13,hydro,Run-Of-River,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,13
+5731,Chief Joseph 14,hydro,Run-Of-River,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,14
+5732,Chief Joseph 15,hydro,Run-Of-River,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,15
+5733,Chief Joseph 16,hydro,Run-Of-River,PP,US,95.0,,,,,,1978.0,,,,47.9951,-119.6404,,,,16
+5734,Chief Joseph 17,hydro,Run-Of-River,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,17
+5735,Chief Joseph 18,hydro,Run-Of-River,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,18
+5736,Chief Joseph 19,hydro,Run-Of-River,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,19
+5737,Chief Joseph 20,hydro,Run-Of-River,PP,US,95.0,,,,,,1979.0,,,,47.9951,-119.6404,,,,20
+5738,Chief Joseph 21,hydro,Run-Of-River,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,21
+5739,Chief Joseph 22,hydro,Run-Of-River,PP,US,88.2,,,,,,1958.0,,,,47.9951,-119.6404,,,,22
+5740,Chief Joseph 23,hydro,Run-Of-River,PP,US,88.2,,,,,,1957.0,,,,47.9951,-119.6404,,,,23
+5741,Chief Joseph 24,hydro,Run-Of-River,PP,US,88.2,,,,,,1956.0,,,,47.9951,-119.6404,,,,24
+5742,Chief Joseph 25,hydro,Run-Of-River,PP,US,88.2,,,,,,1956.0,,,,47.9951,-119.6404,,,,25
+5743,Chief Joseph 26,hydro,Run-Of-River,PP,US,88.2,,,,,,1956.0,,,,47.9951,-119.6404,,,,26
+5744,Chief Joseph 27,hydro,Run-Of-River,PP,US,88.2,,,,,,1955.0,,,,47.9951,-119.6404,,,,27
 5745,Ice Harbor 1,hydro,Reservoir,PP,US,90.0,,,,,,1962.0,,,,46.249801,-118.879838,,,,1
 5746,Ice Harbor 2,hydro,Reservoir,PP,US,90.0,,,,,,1962.0,,,,46.249801,-118.879838,,,,2
 5747,Ice Harbor 3,hydro,Reservoir,PP,US,90.0,,,,,,1962.0,,,,46.249801,-118.879838,,,,3
@@ -5756,12 +5756,12 @@
 5754,Little Goose 4,hydro,Reservoir,PP,US,135.0,,,,,,1978.0,,,,46.5838,-118.0273,,,,4
 5755,Little Goose 5,hydro,Reservoir,PP,US,135.0,,,,,,1978.0,,,,46.5838,-118.0273,,,,5
 5756,Little Goose 6,hydro,Reservoir,PP,US,135.0,,,,,,1978.0,,,,46.5838,-118.0273,,,,6
-5757,Lower Monumental 1,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,46.5635,-118.5397,,,,1
-5758,Lower Monumental 2,hydro,Reservoir,PP,US,135.0,,,,,,1969.0,,,,46.5635,-118.5397,,,,2
-5759,Lower Monumental 3,hydro,Reservoir,PP,US,135.0,,,,,,1970.0,,,,46.5635,-118.5397,,,,3
-5760,Lower Monumental 4,hydro,Reservoir,PP,US,135.0,,,,,,1979.0,,,,46.5635,-118.5397,,,,4
-5761,Lower Monumental 5,hydro,Reservoir,PP,US,135.0,,,,,,1979.0,,,,46.5635,-118.5397,,,,5
-5762,Lower Monumental 6,hydro,Reservoir,PP,US,135.0,,,,,,1979.0,,,,46.5635,-118.5397,,,,6
+5757,Lower Monumental 1,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,46.5635,-118.5397,,,,1
+5758,Lower Monumental 2,hydro,Run-Of-River,PP,US,135.0,,,,,,1969.0,,,,46.5635,-118.5397,,,,2
+5759,Lower Monumental 3,hydro,Run-Of-River,PP,US,135.0,,,,,,1970.0,,,,46.5635,-118.5397,,,,3
+5760,Lower Monumental 4,hydro,Run-Of-River,PP,US,135.0,,,,,,1979.0,,,,46.5635,-118.5397,,,,4
+5761,Lower Monumental 5,hydro,Run-Of-River,PP,US,135.0,,,,,,1979.0,,,,46.5635,-118.5397,,,,5
+5762,Lower Monumental 6,hydro,Run-Of-River,PP,US,135.0,,,,,,1979.0,,,,46.5635,-118.5397,,,,6
 5763,Packwood 1,hydro,Reservoir,PP,US,27.5,,,,,,1964.0,,,,46.595833,-121.569444,,,,1
 5764,John E Amos 1,coal,,PP,US,816.3,,,,,,1971.0,,,,38.4731,-81.8233,,,,1
 5765,John E Amos 2,coal,,PP,US,816.3,,,,,,1972.0,,,,38.4731,-81.8233,,,,2
@@ -7537,7 +7537,7 @@
 7535,Cowlitz Falls 2,hydro,Reservoir,PP,US,35.0,,,,,,1994.0,,,,46.4661,-122.1097,,,,2
 7536,Edenton Generators 1,oil,,PP,US,1.2,,,,,,1988.0,,,,36.028611,-76.571944,,,,1
 7537,Edenton Generators 2,oil,,PP,US,1.2,,,,,,2014.0,,,,36.028611,-76.571944,,,,2
-7538,Dalles Dam North Fishway Project 1,hydro,Reservoir,PP,US,6.5,,,,,,1991.0,,,,45.614375,-121.136885,,,,1
+7538,Dalles Dam North Fishway Project 1,hydro,Run-Of-River,PP,US,6.5,,,,,,1991.0,,,,45.614375,-121.136885,,,,1
 7539,Oxford (KS) 1,oil,,PP,US,1.7,,,,,,1999.0,,,,37.2758,-97.1636,,,,1
 7540,Oxford (KS) 2,oil,,PP,US,1.7,,,,,,1999.0,,,,37.2758,-97.1636,,,,2
 7541,Oxford (KS) 3,oil,,PP,US,1.7,,,,,,2007.0,,,,37.2758,-97.1636,,,,3
@@ -7666,7 +7666,7 @@
 7664,Neil Simpson II 2,OCGT,OCGT,PP,US,40.0,,,,,,2000.0,,,,44.2856,-105.3833,,,,2
 7665,Deadwood Creek 1,hydro,Reservoir,PP,US,2.0,,,,,,1993.0,,,,39.53,-121.095833,,,,1
 7666,Stone Creek 1,hydro,Reservoir,PP,US,12.0,,,,,,1994.0,,,,45.081111,-121.886611,,,,1
-7667,McNary Dam Fish Attraction Project 1,hydro,Reservoir,PP,US,10.0,,,,,,1997.0,,,,45.940034,-119.299078,,,,1
+7667,McNary Dam Fish Attraction Project 1,hydro,Run-Of-River,PP,US,10.0,,,,,,1997.0,,,,45.940034,-119.299078,,,,1
 7668,Arthur Von Rosenberg 1,CCGT,CCGT,PP,US,187.5,,,,,,2000.0,,,,29.257046,-98.384045,,,,1
 7669,Arthur Von Rosenberg 2,CCGT,CCGT,PP,US,187.5,,,,,,2000.0,,,,29.257046,-98.384045,,,,2
 7670,Arthur Von Rosenberg 3,CCGT,CCGT,PP,US,200.0,,,,,,2000.0,,,,29.257046,-98.384045,,,,3
