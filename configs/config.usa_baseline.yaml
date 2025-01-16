@@ -22,6 +22,7 @@ enable:
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/api-how-to
   # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
+  progress_bar: true # show progress bar during downloading routines and other long-running tasks
 
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
@@ -35,6 +36,12 @@ scenario:
   ll: ['copt']
   clusters: [100]
   opts: [Co2L-24H]
+  planning_horizons: # investment years for myopic and perfect; or costs year for overnight
+  - 2030
+  sopts:
+  - "144H"
+  demand:
+  - "AB"
 
 snapshots:
   start: "2013-01-01"
