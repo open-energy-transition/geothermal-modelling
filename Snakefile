@@ -52,8 +52,9 @@ rule build_custom_powerplants:
 
 rule retrieve_data:
     params:
-        gdrive_url="https://drive.google.com/drive/folders/1LwSoZDtnyUx5ki9SmBvdlGW3QwWjs4rA?usp=drive_link",
-        output_path="analysis/gdrive_data/",
+        gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec?usp=drive_link",
+        cookies_path= pathlib.Path(".cache", "gdown"),
+        output_path=pathlib.Path("analysis", "gdrive_data", "data")
     script:
         "analysis/scripts/download_from_gdrive.py"
 
