@@ -44,8 +44,6 @@ rule build_custom_powerplants:
             "powerplant_data",
             "custom_powerplants_ror.csv",
         ),
-    output:
-        output_file_name="custom_powerplants_eia.csv"
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
@@ -176,7 +174,7 @@ rule map_network_to_gadm:
         ),
     output:
         mapped_network_output_file_path=pathlib.Path(
-            "analysis", "output", "map_network_to_gadm", "elec_s_gadm_mapped.nc"
+            "analysis", "outputs", "map_network_to_gadm", "elec_s_gadm_mapped.nc"
         ),
     script:
         "analysis/scripts/map_network_to_gadm.py"
