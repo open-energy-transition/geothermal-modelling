@@ -32,7 +32,7 @@ def plot_network_topology_comparison(
         nrows=1,
         ncols=2,
         sharey=True,
-        subplot_kw={"projection": ccrs.PlateCarree(), "projection": ccrs.PlateCarree()},
+        subplot_kw={"projection": ccrs.PlateCarree(), "projection": ccrs.PlateCarree()},  # noqa
         figsize=(20, 4),
     )
     pypsa_df.plot(
