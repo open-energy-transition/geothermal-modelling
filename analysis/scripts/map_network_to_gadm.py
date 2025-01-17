@@ -37,7 +37,6 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
             geometry=gpd.points_from_xy(pypsa_network.buses.x, pypsa_network.buses.y),
             crs="EPSG:4326",
         )
-        .to_crs(3857)
         .reset_index()
     )
 
@@ -47,7 +46,7 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
         .rename(columns={"ISO_1": "state_code"})
     )
 
-    pypsa_network.generators["state"] = pypsa_network.generators.index.map(
+    pypsa_network.generators["state"] = pypsa_network.generators.bus.map(
         spatial_join_gadm_bus_gdf.to_dict()
     )
 
