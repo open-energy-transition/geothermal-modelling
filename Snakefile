@@ -172,6 +172,10 @@ rule map_network_to_gadm:
             "US_2021",
             "elec_s.nc",
         ),
+    output:
+        mapped_network_output_file_path=pathlib.Path(
+            "analysis", "outputs", "map_network_to_gadm", "elec_s_gadm_mapped.nc"
+        ),
     script:
         "analysis/scripts/map_network_to_gadm.py"
 

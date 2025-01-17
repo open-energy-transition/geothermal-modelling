@@ -64,12 +64,10 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "map_network_to_gadm")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "map_network_to_gadm")
-    output_path = pathlib.Path(
-        default_path, "analysis", "outputs", "map_network_to_gadm"
-    )
+    output_path = pathlib.Path(default_path, snakemake.output.mapped_network_output_file_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
         log_path, f"output_map_to_gadm_{today_date[:10]}.txt"
@@ -83,8 +81,6 @@ if __name__ == "__main__":
     ) = parse_inputs(default_path)
 
     new_network = cluster_and_map_network(network_pypsa_earth_df, gadm_shapes_df)
-    new_network.export_to_netcdf(
-        pathlib.Path(output_path, "elec_s_gadm_mapped.nc")
-    )
+    new_network.export_to_netcdf(output_path)
 
     log_output_file.close()
