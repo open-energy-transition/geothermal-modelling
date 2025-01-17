@@ -124,9 +124,8 @@ if __name__ == "__main__":
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "custom_powerplants")
-    output_path = pathlib.Path(default_path, "analysis", "outputs", "custom_powerplants")
+    output_path = pathlib.Path(snakemake.output.output_file_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
         log_path, f"output_build_custom_powerplants_{today_date[:10]}.txt"
@@ -144,7 +143,7 @@ if __name__ == "__main__":
         df_custom_ppl_eia, ror_custom_ppl, log_output_file
     )
 
-    df_custom_ppl.to_csv(pathlib.Path(output_path, snakemake.output.output_file_name))
+    df_custom_ppl.to_csv(output_path)
 
     log_output_file.write("        \n")
     log_output_file.write("        \n")
