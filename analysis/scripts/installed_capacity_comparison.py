@@ -75,6 +75,7 @@ def plot_capacity_spatial_representation(
         "carrier == 'AC' and ~(index in @iso_code_to_omit)"
     )
     bus_index = buses.index.tolist()
+    fig = plt.figure(figsize=(15, 8), layout="constrained")  # noqa
     ax = plt.axes(projection=ccrs.EqualEarth())
     pypsa_network.lines.loc[
         pypsa_network.lines.bus0.isin(iso_code_to_omit), "s_nom"
@@ -562,9 +563,7 @@ if __name__ == "__main__":
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "installed_capacity")
-    plot_path = pathlib.Path(default_path, "analysis", "plots", "installed_capacity")
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
         log_path, f"output_installed_capacity_comparison_{today_date[:10]}.txt"
@@ -580,6 +579,16 @@ if __name__ == "__main__":
     year_for_comparison = snakemake.params.year_for_comparison
     config_dict = config(config_path)
     alternative_clustering = config_dict["cluster_options"]["alternative_clustering"]
+
+    if alternative_clustering:
+        plot_path = pathlib.Path(
+            default_path, "analysis", "plots", "installed_capacity_ac"
+        )
+    else:
+        plot_path = pathlib.Path(
+            default_path, "analysis", "plots", "installed_capacity_nonac"
+        )
+    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
 
     (
         network_pypsa_earth_df,

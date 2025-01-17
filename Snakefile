@@ -157,7 +157,12 @@ rule installed_capacity_comparison:
             "networks",
             "elec_s_50_ec_lcopt_Co2L-200H.nc",
         ),
-        #pypsa_earth_network_nonac_path = pathlib.Path() #will be added later
+        pypsa_earth_network_nonac_path=pathlib.Path(
+            "analysis",
+            "outputs",
+            "map_network_to_gadm",
+            "elec_s_gadm_mapped.nc",
+        ),
     script:
         "analysis/scripts/installed_capacity_comparison.py"
 
