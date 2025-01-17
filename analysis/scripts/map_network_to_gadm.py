@@ -9,6 +9,7 @@ import pathlib
 import datetime as dt
 import pypsa
 import geopandas as gpd
+from _helpers_usa import generators_aggregation_strategies_dict
 
 
 def parse_inputs(base_path):
@@ -50,6 +51,8 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
     pypsa_network.generators["state"] = pypsa_network.generators.bus.map(
         dict(spatial_join_gadm_bus_gdf.values)
     )
+
+    pypsa_network.generators = pypsa_network.generators.groupby(["state", "carrier"]).agg(generators_aggregation_strategies_dict).reset_index()
 
     return pypsa_network
 
