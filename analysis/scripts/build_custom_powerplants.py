@@ -3,7 +3,6 @@ import datetime as dt
 import pandas as pd
 from _helpers_usa import eia_to_pypsa_terminology
 import numpy as np
-from swifter import swifter
 
 
 def parse_inputs(base_path, log_file):
@@ -13,9 +12,13 @@ def parse_inputs(base_path, log_file):
     log_file.write("        \n")
     log_file.write("        \n")
     log_file.write("Parse inputs for build powerplants \n")
-    eia_generators_path = pathlib.Path(base_path, snakemake.input.eia_generators_data_path)
+    eia_generators_path = pathlib.Path(
+        base_path, snakemake.input.eia_generators_data_path
+    )
     eia_plants_path = pathlib.Path(base_path, snakemake.input.eia_plants_data_path)
-    ror_custom_path = pathlib.Path(base_path, snakemake.input.ror_custom_powerplants_path)
+    ror_custom_path = pathlib.Path(
+        base_path, snakemake.input.ror_custom_powerplants_path
+    )
 
     df_eia_generators = pd.read_excel(
         eia_generators_path, sheet_name="Operable", skiprows=1
