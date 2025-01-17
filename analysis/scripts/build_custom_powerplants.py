@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "custom_powerplants")
-    output_path = pathlib.Path(snakemake.output.output_file_path)
+    output_path = pathlib.Path(default_path, snakemake.output.output_file_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
