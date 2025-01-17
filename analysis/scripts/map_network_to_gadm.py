@@ -46,8 +46,12 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
         .rename(columns={"ISO_1": "state_code"})
     )
 
+    spatial_join_gadm_bus_gdf["state_code"] = spatial_join_gadm_bus_gdf["state_code"].str.replace("US-", "")
+
     pypsa_network.generators["state"] = pypsa_network.generators.bus.map(
-        spatial_join_gadm_bus_gdf.to_dict()
+        dict(
+            spatial_join_gadm_bus_gdf.values
+        )
     )
 
     return pypsa_network
