@@ -144,7 +144,7 @@ if __name__ == "__main__":
         df_custom_ppl_eia, ror_custom_ppl, log_output_file
     )
 
-    df_custom_ppl.to_csv(pathlib.Path(output_path, snakemake.output.output_file_name))
+    df_custom_ppl.to_csv(pathlib.Path(output_path, "custom_powerplants_eia.csv"))
 
     log_output_file.write("        \n")
     log_output_file.write("        \n")

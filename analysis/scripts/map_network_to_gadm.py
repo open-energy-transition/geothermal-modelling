@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     new_network = cluster_and_map_network(network_pypsa_earth_df, gadm_shapes_df)
     new_network.export_to_netcdf(
-        pathlib.Path(output_path, snakemake.output.mapped_network_output_file_name)
+        pathlib.Path(output_path, "elec_s_gadm_mapped.nc")
     )
 
     log_output_file.close()
