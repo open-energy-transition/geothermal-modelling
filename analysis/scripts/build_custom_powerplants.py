@@ -3,6 +3,7 @@ import datetime as dt
 import pandas as pd
 from _helpers_usa import eia_to_pypsa_terminology
 import numpy as np
+from swifter import swifter
 
 
 def parse_inputs(base_path, log_file):
