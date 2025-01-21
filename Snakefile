@@ -6,6 +6,38 @@ import sys
 import pathlib
 
 sys.path.append("workflow/pypsa-earth")
+sys.path.append("workflow/pypsa-earth/scripts")
+
+
+configfile: "workflow/pypsa-earth/config.default.yaml"
+configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
+configfile: "configs/config.usa_baseline.yaml"
+
+
+wildcard_constraints:
+    simpl="[a-zA-Z0-9]*|all",
+    clusters="[0-9]+(m|flex)?|all|min",
+    ll="(v|c)([0-9\.]+|opt|all)|all",
+    opts="[-+a-zA-Z0-9\.]*",
+    unc="[-+a-zA-Z0-9\.]*",
+    planning_horizon="[0-9]{4}",
+    countries="[A-Z]{2}",
+
+
+module pypsa_earth:
+    snakefile:
+        "workflow/pypsa-earth/Snakefile"
+    config:
+        config
+    prefix:
+        "workflow/pypsa-earth"
+
+
+use rule * from pypsa_earth exclude copy_custom_powerplants as pe_*
+
+
+localrules:
+    all,
 
 
 rule copy_custom_powerplants:
@@ -54,8 +86,10 @@ rule retrieve_data:
     params:
         gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
         cookies_path=pathlib.Path(".cache", "gdown"),
-        output_path=pathlib.Path("analysis", "gdrive_data", "data"),
+        output_directory = pathlib.Path("analysis", "gdrive_data", "data/"),
         delta_months=5,
+    output:
+        output_path=pathlib.Path("analysis", "gdrive_data", "data/{group}"),   
     script:
         "analysis/scripts/download_from_gdrive.py"
 
