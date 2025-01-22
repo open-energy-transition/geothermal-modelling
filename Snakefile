@@ -177,20 +177,20 @@ rule installed_capacity_comparison:
         gadm_shapes_path=pathlib.Path(
             "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
         ),
-        pypsa_earth_network_path=pathlib.Path(
+        pypsa_earth_network_path=expand(pathlib.Path(
             "workflow",
             "pypsa-earth",
             "results",
             run_name,
             "networks",
             "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
-        ),
-        pypsa_earth_network_nonac_path=pathlib.Path(
+        ), **config["scenario"]),
+        pypsa_earth_network_nonac_path=expand(pathlib.Path(
             "analysis",
             "outputs",
             "map_network_to_gadm",
             "elec_s{simpl}_gadm_mapped.nc",
-        ),
+        ), **config["scenario"]),
     script:
         "analysis/scripts/installed_capacity_comparison.py"
 
@@ -200,17 +200,17 @@ rule map_network_to_gadm:
         gadm_shapes_path=pathlib.Path(
             "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
         ),
-        pypsa_earth_network_path=pathlib.Path(
+        pypsa_earth_network_path=expand(pathlib.Path(
             "workflow",
             "pypsa-earth",
             "networks",
             run_name,
             "elec_s{simpl}.nc",
-        ),
+        ), **config["scenario"]),
     output:
-        mapped_network_output_file_path=pathlib.Path(
+        mapped_network_output_file_path=expand(pathlib.Path(
             "analysis", "outputs", "map_network_to_gadm", "elec_s{simpl}_gadm_mapped.nc"
-        ),
+        ), **config["scenario"]),
     script:
         "analysis/scripts/map_network_to_gadm.py"
 
@@ -239,14 +239,14 @@ rule generation_comparison:
         gadm_shapes_path=pathlib.Path(
             "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
         ),
-        pypsa_earth_network_path=pathlib.Path(
+        pypsa_earth_network_path=expand(pathlib.Path(
             "workflow",
             "pypsa-earth",
             "results",
             run_name,
             "networks",
             "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
-        ),
+        ), **config["scenario"]),
     script:
         "analysis/scripts/generation_comparison.py"
 
@@ -298,3 +298,5 @@ rule preprocess_demand_data:
 
 # rule demand_modelling:
 #   script:
+
+rule summary:
