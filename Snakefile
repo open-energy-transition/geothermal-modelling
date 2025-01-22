@@ -13,17 +13,6 @@ configfile: "workflow/pypsa-earth/config.default.yaml"
 configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
 configfile: "configs/config.usa_baseline.yaml"
 
-
-wildcard_constraints:
-    simpl="[a-zA-Z0-9]*|all",
-    clusters="[0-9]+(m|flex)?|all|min",
-    ll="(v|c)([0-9\.]+|opt|all)|all",
-    opts="[-+a-zA-Z0-9\.]*",
-    unc="[-+a-zA-Z0-9\.]*",
-    planning_horizon="[0-9]{4}",
-    countries="[A-Z]{2}",
-
-
 module pypsa_earth:
     snakefile:
         "workflow/pypsa-earth/Snakefile"
@@ -33,7 +22,7 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants as pe_*
+use rule * from pypsa_earth exclude copy_custom_powerplants as *
 
 
 localrules:
@@ -81,18 +70,21 @@ rule build_custom_powerplants:
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
-
-rule retrieve_data:
-    params:
-        gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
-        cookies_path=pathlib.Path(".cache", "gdown"),
-        output_directory = pathlib.Path("analysis", "gdrive_data", "data/"),
-        delta_months=5,
-    output:
-        output_path=pathlib.Path("analysis", "gdrive_data", "data/{group}"),   
-    script:
-        "analysis/scripts/download_from_gdrive.py"
-
+if config["enable"].get("retrieve_geothermal_databundle", True):
+    rule retrieve_data:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory = pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        output:
+            expand("analysis/gdrive_data/data/powerplant_data/{filename}", filename=["EIA_generators/eia8602021/3_1_Generator_Y2021.xlsx", "EIA_generators/eia8602021/2___Plant_Y2021.xlsx","custom_powerplants_ror.csv", "capacities_eia.xlsx", "existcapacity_annual.xlsx", "custom_powerplants_eia_with_state.csv" ]),
+            expand("analysis/gdrive_data/data/transmission_grid_data/{filename}", filename=["US_electric_transmission_lines_original.geojson"]),
+            expand("analysis/gdrive_data/data/pypsa_usa/{filename}", filename=["lines_gis.csv","Reeds_Shapes/rb_and_ba_areas.shp"]),
+            expand("analysis/gdrive_data/data/shape_files/{filename}", filename=["gadm41_USA_1.json", "ipm_v6_regions/IPM_Regions_201770405.shp"]),
+            expand("analysis/gdrive_data/data/electricity_generation_data/{filename}", filename=["EIA_statewise_data/use_all_phy.xlsx", "generation_eia.csv"]),
+        script:
+            "analysis/scripts/download_from_gdrive.py"
 
 rule network_comparison:
     params:
@@ -223,7 +215,7 @@ rule map_network_to_gadm:
 
 rule generation_comparison:
     params:
-        year_for_comparison=2021,  #Should this be 2021?
+        year_for_comparison=2021,  
         plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
         plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
     input:
