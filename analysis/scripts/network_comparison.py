@@ -53,7 +53,7 @@ def plot_network_topology_comparison(
     ax1.set_aspect("equal")
     ax1.title.set_text(pypsa_title)
     ax2.set_aspect("equal")
-    ax2.title.set_text("EIA network")
+    ax2.title.set_text("EIA-HIFLD network")
     fig.savefig(fig_name)
 
 
