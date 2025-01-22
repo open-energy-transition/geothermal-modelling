@@ -52,7 +52,11 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
         dict(spatial_join_gadm_bus_gdf.values)
     )
 
-    pypsa_network.generators = pypsa_network.generators.groupby(["state", "carrier"]).agg(generators_aggregation_strategies_dict).reset_index()
+    pypsa_network.generators = (
+        pypsa_network.generators.groupby(["state", "carrier"])
+        .agg(generators_aggregation_strategies_dict)
+        .reset_index()
+    )
 
     return pypsa_network
 

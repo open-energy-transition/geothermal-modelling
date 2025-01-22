@@ -171,13 +171,21 @@ def plot_network_crossings(
     fig.update_traces(
         textfont_size=12, textangle=0, textposition="outside", cliponaxis=False
     )
-    new_names_dict = {"PyPSA": "PyPSA-Earth", "PyPSA_parallel": "PyPSA-Earth parallel", "EIA": "EIA/HIFLD"}
-    fig.for_each_trace(lambda t: t.update(name=new_names_dict[t.name],
-                                          legendgroup=new_names_dict[t.name]
-                                          )
-                       )
+    new_names_dict = {
+        "PyPSA": "PyPSA-Earth",
+        "PyPSA_parallel": "PyPSA-Earth parallel",
+        "EIA": "EIA/HIFLD",
+    }
+    fig.for_each_trace(
+        lambda t: t.update(
+            name=new_names_dict[t.name], legendgroup=new_names_dict[t.name]
+        )
+    )
     fig.write_image(
-        pathlib.Path(plot_base_path, "gadm_state_crossings_counts_by_voltage_with_pypsa_parallel.png")
+        pathlib.Path(
+            plot_base_path,
+            "gadm_state_crossings_counts_by_voltage_with_pypsa_parallel.png",
+        )
     )
 
     fig = px.bar(
@@ -196,10 +204,11 @@ def plot_network_crossings(
         textfont_size=12, textangle=0, textposition="outside", cliponaxis=False
     )
     new_names_dict = {"PyPSA": "PyPSA-Earth", "EIA": "EIA/HIFLD"}
-    fig.for_each_trace(lambda t: t.update(name=new_names_dict[t.name],
-                                          legendgroup=new_names_dict[t.name]
-                                          )
-                       )
+    fig.for_each_trace(
+        lambda t: t.update(
+            name=new_names_dict[t.name], legendgroup=new_names_dict[t.name]
+        )
+    )
     fig.write_image(
         pathlib.Path(plot_base_path, "gadm_state_crossings_counts_by_voltage.png")
     )
