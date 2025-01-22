@@ -53,7 +53,7 @@ def plot_network_topology_comparison(
     ax1.set_aspect("equal")
     ax1.title.set_text(pypsa_title)
     ax2.set_aspect("equal")
-    ax2.title.set_text("EIA network")
+    ax2.title.set_text("EIA-HIFLD network")
     fig.savefig(fig_name)
 
 
@@ -171,6 +171,35 @@ def plot_network_crossings(
     fig.update_traces(
         textfont_size=12, textangle=0, textposition="outside", cliponaxis=False
     )
+    new_names_dict = {"PyPSA": "PyPSA-Earth", "PyPSA_parallel": "PyPSA-Earth parallel", "EIA": "EIA/HIFLD"}
+    fig.for_each_trace(lambda t: t.update(name=new_names_dict[t.name],
+                                          legendgroup=new_names_dict[t.name]
+                                          )
+                       )
+    fig.write_image(
+        pathlib.Path(plot_base_path, "gadm_state_crossings_counts_by_voltage_with_pypsa_parallel.png")
+    )
+
+    fig = px.bar(
+        state_crossings_counts_voltage,
+        x="v_nom_class",
+        y=["PyPSA", "EIA"],
+        barmode="group",
+        color_discrete_map=color_dictionary,
+        text_auto=".2s",
+        title="Number of transmission line crossings per voltage class",
+    ).update_layout(
+        xaxis_title="Voltage class (kV)",
+        yaxis_title="Number of transmission line crossings",
+    )
+    fig.update_traces(
+        textfont_size=12, textangle=0, textposition="outside", cliponaxis=False
+    )
+    new_names_dict = {"PyPSA": "PyPSA-Earth", "EIA": "EIA/HIFLD"}
+    fig.for_each_trace(lambda t: t.update(name=new_names_dict[t.name],
+                                          legendgroup=new_names_dict[t.name]
+                                          )
+                       )
     fig.write_image(
         pathlib.Path(plot_base_path, "gadm_state_crossings_counts_by_voltage.png")
     )
