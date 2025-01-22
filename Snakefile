@@ -183,13 +183,13 @@ rule installed_capacity_comparison:
             "results",
             run_name,
             "networks",
-            "elec_s_50_ec_lcopt_Co2L-200H.nc",
+            "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
         ),
         pypsa_earth_network_nonac_path=pathlib.Path(
             "analysis",
             "outputs",
             "map_network_to_gadm",
-            "elec_s_gadm_mapped.nc",
+            "elec_s{simpl}_gadm_mapped.nc",
         ),
     script:
         "analysis/scripts/installed_capacity_comparison.py"
@@ -205,11 +205,11 @@ rule map_network_to_gadm:
             "pypsa-earth",
             "networks",
             run_name,
-            "elec_s.nc",
+            "elec_s{simpl}.nc",
         ),
     output:
         mapped_network_output_file_path=pathlib.Path(
-            "analysis", "outputs", "map_network_to_gadm", "elec_s_gadm_mapped.nc"
+            "analysis", "outputs", "map_network_to_gadm", "elec_s{simpl}_gadm_mapped.nc"
         ),
     script:
         "analysis/scripts/map_network_to_gadm.py"
@@ -245,7 +245,7 @@ rule generation_comparison:
             "results",
             run_name,
             "networks",
-            "elec_s_10_ec_lcopt_Co2L-25H.nc",
+            "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
         ),
     script:
         "analysis/scripts/generation_comparison.py"
