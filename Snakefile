@@ -24,6 +24,7 @@ module pypsa_earth:
 
 use rule * from pypsa_earth exclude copy_custom_powerplants as *
 
+demand_year = config['geothermal']['demand_year']
 
 localrules:
     all,
@@ -70,7 +71,7 @@ rule build_custom_powerplants:
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
-if config["enable"].get("retrieve_geothermal_databundle", True):
+if config["geothermal"].get("retrieve_geothermal_databundle", True):
     rule retrieve_data:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
@@ -149,7 +150,7 @@ rule network_comparison:
 
 rule installed_capacity_comparison:
     params:
-        year_for_comparison=2021,  #Should this be 2021?
+        year_for_comparison=demand_year,  
         plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
         plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
         plot_spatial_representation=True,  # Boolean: plot the map with the installed capacity per node
@@ -215,7 +216,7 @@ rule map_network_to_gadm:
 
 rule generation_comparison:
     params:
-        year_for_comparison=2021,  
+        year_for_comparison=demand_year,  
         plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
         plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
     input:

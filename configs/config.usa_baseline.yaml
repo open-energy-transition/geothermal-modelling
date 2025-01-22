@@ -13,9 +13,12 @@ logging:
 countries: ["US"]
 # Can be replaced by country ["NG", "BJ"], continent ["Africa"] or user-specific region, see more at https://pypsa-earth.readthedocs.io/en/latest/configuration.html#top-level-configuration
 
+geothermal:
+  retrieve_geothermal_databundle: true # Exclusive for geothermal repository
+  demand_year: 2021
+
 enable:
   retrieve_databundle: true  #  Recommended 'true', for the first run. Otherwise data might be missing.
-  retrieve_geothermal_databundle: true # Exclusive for geothermal repository
   retrieve_cost_data: true  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
   download_osm_data: true  # If 'true', OpenStreetMap data will be downloaded for the above given countries
   build_natura_raster: true  # If True, then an exclusion raster will be build
