@@ -145,6 +145,8 @@ rule network_comparison:
             "Reeds_Shapes",
             "rb_and_ba_areas.shp",
         ),
+    output:
+        output_directory = pathlib.Path("analysis","gdrive_data","plots","network_comparison"),
     script:
         "analysis/scripts/network_comparison.py"
 
@@ -191,6 +193,8 @@ rule installed_capacity_comparison:
             "map_network_to_gadm",
             "elec_s{simpl}_gadm_mapped.nc",
         ), **config["scenario"]),
+    output:
+        output_directory = pathlib.Path("analysis","gdrive_data","plots","installed_capacity_ac"),
     script:
         "analysis/scripts/installed_capacity_comparison.py"
 
@@ -247,6 +251,8 @@ rule generation_comparison:
             "networks",
             "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
         ), **config["scenario"]),
+    output:
+        output_directory = pathlib.Path("analysis","gdrive_data","plots","generation_comparison")
     script:
         "analysis/scripts/generation_comparison.py"
 
@@ -300,3 +306,5 @@ rule preprocess_demand_data:
 #   script:
 
 rule summary:
+    input:
+        expand(pathlib.Path("analysis","gdrive_data","plots","{filedir}"), filedir=["generation_comparison", "network_comparison", "installed_capacity_ac"])
