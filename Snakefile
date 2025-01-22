@@ -25,6 +25,7 @@ module pypsa_earth:
 use rule * from pypsa_earth exclude copy_custom_powerplants as *
 
 demand_year = config['geothermal']['demand_year']
+run_name = config['run']['name']
 
 localrules:
     all,
@@ -95,7 +96,7 @@ rule network_comparison:
         plot_network_capacity_reeds=True,  # Boolean: plot the network capacity for the PyPSA vs reeds case
     input:
         base_network_pypsa_earth_path=pathlib.Path(
-            "workflow", "pypsa-earth", "networks", "US_2021", "base.nc"
+            "workflow", "pypsa-earth", "networks", run_name, "base.nc"
         ),
         base_network_pypsa_usa_path=pathlib.Path(
             "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv"
@@ -122,7 +123,7 @@ rule network_comparison:
             "workflow",
             "pypsa-earth",
             "resources",
-            "US_2021",
+            run_name,
             "osm",
             "raw",
             "all_raw_lines.geojson",
@@ -131,7 +132,7 @@ rule network_comparison:
             "workflow",
             "pypsa-earth",
             "resources",
-            "US_2021",
+            run_name,
             "osm",
             "clean",
             "all_clean_lines.geojson",
@@ -180,7 +181,7 @@ rule installed_capacity_comparison:
             "workflow",
             "pypsa-earth",
             "results",
-            "US_2021",
+            run_name,
             "networks",
             "elec_s_50_ec_lcopt_Co2L-200H.nc",
         ),
@@ -203,7 +204,7 @@ rule map_network_to_gadm:
             "workflow",
             "pypsa-earth",
             "networks",
-            "US_2021",
+            run_name,
             "elec_s.nc",
         ),
     output:
@@ -242,7 +243,7 @@ rule generation_comparison:
             "workflow",
             "pypsa-earth",
             "results",
-            "US_2021",
+            run_name,
             "networks",
             "elec_s_10_ec_lcopt_Co2L-25H.nc",
         ),
@@ -268,7 +269,7 @@ rule preprocess_demand_data:
             "workflow",
             "pypsa-earth",
             "resources",
-            "US_2021",
+            run_name,
             "shapes",
             "country_shapes.geojson",
         ),
