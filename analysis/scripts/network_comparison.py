@@ -494,7 +494,7 @@ def plot_network_capacity_ipm(
         pathlib.Path(output_base_path, f"{model}_ipm_capacities.csv"), index=False
     )
 
-    log_output_file.write("====")
+    log_output_file.write("==== \n")
     log_output_file.write(
         "{}: median error wrt IPM: {} \n".format(
             model, np.round(capacity_df["Error wrt IPM (%)"].median(), 2)
@@ -515,8 +515,28 @@ def plot_network_capacity_ipm(
             model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)
         )
     )
-    log_output_file.write("====")
-    logger.info("====")
+    log_output_file.write(
+        "{}: minimum IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].min(), 2)
+        )
+    )
+    log_output_file.write(
+        "{}: median IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].median(), 2)
+        )
+    )
+    log_output_file.write(
+        "{}: mean IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].mean(), 2)
+        )
+    )
+    log_output_file.write(
+        "{}: maximum IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].max(), 2)
+        )
+    )
+    log_output_file.write("==== \n")
+    logger.info("==== \n")
     logger.info(
         "{}: median error wrt IPM: {} \n".format(
             model, np.round(capacity_df["Error wrt IPM (%)"].median(), 2)
@@ -537,7 +557,27 @@ def plot_network_capacity_ipm(
             model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)
         )
     )
-    logger.info("====")
+    logger.info(
+        "{}: minimum IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].min(), 2)
+        )
+    )
+    logger.info(
+        "{}: median IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].median(), 2)
+        )
+    )
+    logger.info(
+        "{}: mean IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].mean(), 2)
+        )
+    )
+    logger.info(
+        "{}: maximum IPM/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_IPM_over_PyPSA"].max(), 2)
+        )
+    )
+    logger.info("==== \n")
 
     fig = px.scatter(
         capacity_df,
@@ -703,7 +743,7 @@ def plot_network_capacity_reeds(
         pathlib.Path(output_base_path, f"{model}_reeds_capacities.csv"), index=False
     )
 
-    log_output_file.write("====")
+    log_output_file.write("==== \n")
     log_output_file.write(
         "{}: median error wrt reeds: {} \n".format(
             model, np.round(capacity_df["Error wrt reeds (%)"].median(), 2)
@@ -724,8 +764,28 @@ def plot_network_capacity_reeds(
             model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)
         )
     )
-    log_output_file.write("====")
-    logger.info("====")
+    log_output_file.write(
+        "{}: minimum reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].min(), 2)
+        )
+    )
+    log_output_file.write(
+        "{}: median reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].median(), 2)
+        )
+    )
+    log_output_file.write(
+        "{}: mean reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].mean(), 2)
+        )
+    )
+    log_output_file.write(
+        "{}: maximum reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].max(), 2)
+        )
+    )
+    log_output_file.write("==== \n")
+    logger.info("==== \n")
     logger.info(
         "{}: median error wrt reeds: {} \n".format(
             model, np.round(capacity_df["Error wrt reeds (%)"].median(), 2)
@@ -746,7 +806,27 @@ def plot_network_capacity_reeds(
             model, np.round(capacity_df["Error wrt PyPSA (%)"].mean(), 2)
         )
     )
-    logger.info("====")
+    logger.info(
+        "{}: minimum reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].min(), 2)
+        )
+    )
+    logger.info(
+        "{}: median reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].median(), 2)
+        )
+    )
+    logger.info(
+        "{}: mean reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].mean(), 2)
+        )
+    )
+    logger.info(
+        "{}: maximum reeds/PyPSA factor: {} \n".format(
+            model, np.round(capacity_df["factor_reeds_over_PyPSA"].max(), 2)
+        )
+    )
+    logger.info("==== \n")
 
     reeds_shapes_gdf = reeds_shapes_gdf.to_crs("3857")
     reeds_shapes_gdf["reeds_centroid"] = reeds_shapes_gdf.centroid
