@@ -12,22 +12,17 @@ import pypsa
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from matplotlib.patches import Patch
-from _helpers_usa import get_state_node, config, get_gadm_mapping, rename_carrier
+from _helpers_usa import get_state_node, get_gadm_mapping, rename_carrier
 import plotly.express as px
 
 
-def parse_inputs(base_path, alternative_clustering_flag):
+def parse_inputs(base_path):
     """
     The function parses the necessary inputs for the analysis
     """
-    if alternative_clustering_flag:
-        network_pypsa_earth_path = pathlib.Path(
-            base_path, snakemake.input.pypsa_earth_network_path
-        )
-    else:
-        network_pypsa_earth_path = pathlib.Path(
-            base_path, snakemake.input.pypsa_earth_network_nonac_path
-        )
+    network_pypsa_earth_path = pathlib.Path(
+        base_path, snakemake.input.pypsa_earth_network_path
+    )
     eia_installed_capacity_reference_path = pathlib.Path(
         base_path, snakemake.input.eia_installed_capacity_path
     )
@@ -577,17 +572,7 @@ if __name__ == "__main__":
     eia_name = "EIA"
     pypsa_name = "PyPSA"
     year_for_comparison = snakemake.params.year_for_comparison
-    config_dict = config(config_path)
-    alternative_clustering = config_dict["cluster_options"]["alternative_clustering"]
 
-    if alternative_clustering:
-        plot_path = pathlib.Path(
-            default_path, "analysis", "plots", "installed_capacity_ac"
-        )
-    else:
-        plot_path = pathlib.Path(
-            default_path, "analysis", "plots", "installed_capacity_nonac"
-        )
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
 
     (
@@ -596,7 +581,7 @@ if __name__ == "__main__":
         eia_raw_df,
         eia_state_temporal_installed_capacity_df,
         gadm_path,
-    ) = parse_inputs(default_path, alternative_clustering)
+    ) = parse_inputs(default_path)
 
     if snakemake.params.plot_country_comparison:
         plot_capacity_country_comparison(

@@ -166,6 +166,22 @@ rule network_comparison:
     script:
         "analysis/scripts/network_comparison.py"
 
+if config["cluster_options"].get("alternative_clustering", True):
+    network_path = expand(pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "results",
+            run_name,
+            "networks",
+            "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
+        ), **config["scenario"]),
+else:
+    network_path = expand(pathlib.Path(
+            "analysis",
+            "outputs",
+            "map_network_to_gadm",
+            "elec_s{simpl}_gadm_mapped.nc",
+        ), **config["scenario"]),
 
 rule installed_capacity_comparison:
     params:
@@ -195,20 +211,7 @@ rule installed_capacity_comparison:
         gadm_shapes_path=pathlib.Path(
             "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
         ),
-        pypsa_earth_network_path=expand(pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "results",
-            run_name,
-            "networks",
-            "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
-        ), **config["scenario"]),
-        pypsa_earth_network_nonac_path=expand(pathlib.Path(
-            "analysis",
-            "outputs",
-            "map_network_to_gadm",
-            "elec_s{simpl}_gadm_mapped.nc",
-        ), **config["scenario"]),
+        pypsa_earth_network_path=network_path
     output:
         output_directory = pathlib.Path("analysis","gdrive_data","plots","installed_capacity_ac"),
     script:
