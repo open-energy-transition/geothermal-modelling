@@ -145,6 +145,22 @@ rule network_comparison:
             "Reeds_Shapes",
             "rb_and_ba_areas.shp",
         ),
+        ipm_capacities_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "transmission_grid_data",
+            "transmission_single_epaipm.csv",
+        ),
+        reeds_capacities_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "pypsa_usa",
+            "transmission",
+            "transmission_capacity_init_AC_ba_NARIS2024.csv",
+        )
+
     output:
         output_directory = pathlib.Path("analysis","gdrive_data","plots","network_comparison"),
     script:
