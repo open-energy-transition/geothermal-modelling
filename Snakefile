@@ -81,8 +81,8 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
             delta_months=5,
         output:
             expand("analysis/gdrive_data/data/powerplant_data/{filename}", filename=["EIA_generators/eia8602021/3_1_Generator_Y2021.xlsx", "EIA_generators/eia8602021/2___Plant_Y2021.xlsx","custom_powerplants_ror.csv", "capacities_eia.xlsx", "existcapacity_annual.xlsx", "custom_powerplants_eia_with_state.csv" ]),
-            expand("analysis/gdrive_data/data/transmission_grid_data/{filename}", filename=["US_electric_transmission_lines_original.geojson"]),
-            expand("analysis/gdrive_data/data/pypsa_usa/{filename}", filename=["lines_gis.csv","Reeds_Shapes/rb_and_ba_areas.shp"]),
+            expand("analysis/gdrive_data/data/transmission_grid_data/{filename}", filename=["US_electric_transmission_lines_original.geojson","transmission_single_epaipm.csv"]),
+            expand("analysis/gdrive_data/data/pypsa_usa/{filename}", filename=["lines_gis.csv","Reeds_Shapes/rb_and_ba_areas.shp", "transmission/transmission_capacity_init_AC_ba_NARIS2024.csv"]),
             expand("analysis/gdrive_data/data/shape_files/{filename}", filename=["gadm41_USA_1.json", "ipm_v6_regions/IPM_Regions_201770405.shp"]),
             expand("analysis/gdrive_data/data/electricity_generation_data/{filename}", filename=["EIA_statewise_data/use_all_phy.xlsx", "generation_eia.csv"]),
         script:
