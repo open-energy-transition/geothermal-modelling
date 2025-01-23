@@ -33,7 +33,7 @@ The new commits of the submodule can be fetched and updated using the command:
 
 ## Solver options
 
-The model requires a solver to be installed to perform the optimisations. The following solvers can be used with PyPSA-Eur and can be set in the config files:
+The model requires a solver to be installed to perform the optimisations. The following solvers can be used with PyPSA-Earth and can be set in the config files:
 
 - [Gurobi](https://support.gurobi.com/hc/en-us/articles/14799677517585-Getting-Started-with-Gurobi-Optimizer)
 - [Cplex](https://www.ibm.com/products/ilog-cplex-optimization-studio)
@@ -64,6 +64,7 @@ geothermal -> demand_year                   |2021 (baseline run)            |202
 ## Running the workflow
 
 To run the workflow use the following snakemake rule
+        
         snakemake -call summary
 
 This rule triggers all the rules in the geothermal repository as well as PyPSA-Earth imported rules
