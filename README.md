@@ -47,26 +47,33 @@ Gurobi and Cplex are commercial solvers and will require licenses to run the mod
 
 ## Config settings
 
------------------------------------|-------------------------------|----------------------------|
-Config parameter                   | Initial run                   | Subsequent runs            | 
------------------------------------|-------------------------------|----------------------------|
-                                    PyPSA-Earth related parameters                              |
------------------------------------|-------------------------------|----------------------------|
-enable -> retrieve_databundle      |true                           |false                       |
-enable -> download_osm_data        |true                           |false                       |
-enable -> build_natura_raster      |false                          |false                       |
-enable -> retrieve_cost_data       |true                           |true                        |
-cluster_options -> alternative_clustering|true / false             |true / false                |
-electricity -> custom_powerplants  |replace                        |replace                     |
-costs -> version                   |>= 0.10.0 (esp for sector coupled model)|>= 0.10.0          |
------------------------------------|-------------------------------|----------------------------|
-                                    Geothermal exclusive parameters                             |
------------------------------------|-------------------------------|----------------------------|
-geothermal -> retrieve_geothermal_databundle |true                 |false                       |
-geothermal -> demand_year          |2021 (baseline run)            |2021 (baseline run)         |
------------------------------------|-------------------------------|----------------------------|
+Config parameter                            | Initial run                            | Subsequent runs           | 
+--------------------------------------------|----------------------------------------|---------------|
+PyPSA-Earth related parameters                                                                                    |
+--------------------------------------------|----------------------------------------|---------------|
+enable -> retrieve_databundle               |true                                    |false                       |
+enable -> download_osm_data                 |true                                    |false                       |
+enable -> build_natura_raster               |false                                   |false                       |
+enable -> retrieve_cost_data                |true                                    |true                        |
+cluster_options -> alternative_clustering   |true / false                            |true / false                |
+electricity -> custom_powerplants           |replace                                 |replace                     |
+costs -> version                            |>= 0.10.0 (esp for sector coupled model)|>= 0.10.0                   |
+--------------------------------------------|----------------------------------------|---------------|
+Geothermal exclusive parameters                                                                 |
+--------------------------------------------|----------------------------------------|---------------|
+geothermal -> retrieve_geothermal_databundle|true                                    |false                       |
+geothermal -> demand_year                   |2021 (baseline run)            |2021 (baseline run)                  |
+
+## Running the workflow
+
+To run the workflow use the following snakemake rule
+        snakemake -call summary
+
+This rule triggers all the rules in the geothermal repository as well as PyPSA-Earth imported rules
 
 ## Format the code
+
+Note: Use this only if something is being committed to the repository
 
 To format the code run the command:
 
