@@ -559,6 +559,7 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "installed_capacity")
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
         log_path, f"output_installed_capacity_comparison_{today_date[:10]}.txt"
