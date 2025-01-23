@@ -31,11 +31,40 @@ The new commits of the submodule can be fetched and updated using the command:
 
     git submodule update --remote
 
-## Downloading data
+## Solver options
 
-To download reference data specific to analysis and validation, the script download_from_gdrive.py in analysis/scripts folder can be run.
+The model requires a solver to be installed to perform the optimisations. The following solvers can be used with PyPSA-Eur and can be set in the config files:
 
-This particular script retrieves reference data such as transmission grid topology data, generator capacities, electricity demands and generation etc. 
+- [Gurobi](https://support.gurobi.com/hc/en-us/articles/14799677517585-Getting-Started-with-Gurobi-Optimizer)
+- [Cplex](https://www.ibm.com/products/ilog-cplex-optimization-studio)
+- [cbc](https://github.com/coin-or/Cbc#DownloadandInstall)
+- [HiGHs](https://highs.dev/)
+- [GLPK](https://www.gnu.org/software/glpk/)
+- [SCIP](https://scipopt.github.io/PySCIPOpt/docs/html/index.html)
+
+Gurobi and Cplex are commercial solvers and will require licenses to run the model.
+
+
+## Config settings
+
+-----------------------------------|-------------------------------|----------------------------|
+Config parameter                   | Initial run                   | Subsequent runs            | 
+-----------------------------------|-------------------------------|----------------------------|
+                                    PyPSA-Earth related parameters                              |
+-----------------------------------|-------------------------------|----------------------------|
+enable -> retrieve_databundle      |true                           |false                       |
+enable -> download_osm_data        |true                           |false                       |
+enable -> build_natura_raster      |false                          |false                       |
+enable -> retrieve_cost_data       |true                           |true                        |
+cluster_options -> alternative_clustering|true / false             |true / false                |
+electricity -> custom_powerplants  |replace                        |replace                     |
+costs -> version                   |>= 0.10.0 (esp for sector coupled model)|>= 0.10.0          |
+-----------------------------------|-------------------------------|----------------------------|
+                                    Geothermal exclusive parameters                             |
+-----------------------------------|-------------------------------|----------------------------|
+geothermal -> retrieve_geothermal_databundle |true                 |false                       |
+geothermal -> demand_year          |2021 (baseline run)            |2021 (baseline run)         |
+-----------------------------------|-------------------------------|----------------------------|
 
 ## Format the code
 
