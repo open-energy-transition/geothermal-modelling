@@ -50,7 +50,6 @@ Gurobi and Cplex are commercial solvers and will require licenses to run the mod
 Config parameter                            | Initial run                            | Subsequent runs           | 
 --------------------------------------------|----------------------------------------|---------------|
 PyPSA-Earth related parameters                                                                                    |
---------------------------------------------|----------------------------------------|---------------|
 enable -> retrieve_databundle               |true                                    |false                       |
 enable -> download_osm_data                 |true                                    |false                       |
 enable -> build_natura_raster               |false                                   |false                       |
@@ -58,9 +57,8 @@ enable -> retrieve_cost_data                |true                               
 cluster_options -> alternative_clustering   |true / false                            |true / false                |
 electricity -> custom_powerplants           |replace                                 |replace                     |
 costs -> version                            |>= 0.10.0 (esp for sector coupled model)|>= 0.10.0                   |
---------------------------------------------|----------------------------------------|---------------|
 Geothermal exclusive parameters                                                                 |
---------------------------------------------|----------------------------------------|---------------|
+
 geothermal -> retrieve_geothermal_databundle|true                                    |false                       |
 geothermal -> demand_year                   |2021 (baseline run)            |2021 (baseline run)                  |
 
