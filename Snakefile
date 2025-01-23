@@ -88,83 +88,84 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
         script:
             "analysis/scripts/download_from_gdrive.py"
 
-rule network_comparison:
-    params:
-        plot_network_topology=True,  # Boolean: plot the network topology
-        plot_network_crossings=True,  # Boolean: plot the network crossings
-        plot_network_capacity_ipm=True,  # Boolean: plot the network capacity for the PyPSA vs IPM case
-        plot_network_capacity_reeds=True,  # Boolean: plot the network capacity for the PyPSA vs reeds case
-    input:
-        base_network_pypsa_earth_path=pathlib.Path(
-            "workflow", "pypsa-earth", "networks", run_name, "base.nc"
-        ),
-        base_network_pypsa_usa_path=pathlib.Path(
-            "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv"
-        ),
-        eia_base_network_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "transmission_grid_data",
-            "US_electric_transmission_lines_original.geojson",
-        ),
-        gadm_shapes_path=pathlib.Path(
-            "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
-        ),
-        ipm_shapes_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "shape_files",
-            "ipm_v6_regions",
-            "IPM_Regions_201770405.shp",
-        ),
-        lines_osm_raw_path=pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            run_name,
-            "osm",
-            "raw",
-            "all_raw_lines.geojson",
-        ),
-        lines_osm_clean_path=pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            run_name,
-            "osm",
-            "clean",
-            "all_clean_lines.geojson",
-        ),
-        reeds_shapes_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "pypsa_usa",
-            "Reeds_Shapes",
-            "rb_and_ba_areas.shp",
-        ),
-        ipm_capacities_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "transmission_grid_data",
-            "transmission_single_epaipm.csv",
-        ),
-        reeds_capacities_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "pypsa_usa",
-            "transmission",
-            "transmission_capacity_init_AC_ba_NARIS2024.csv",
-        )
+if config["geothermal"].get("network_comparison", True):
+    rule network_comparison:
+        params:
+            plot_network_topology=True,  # Boolean: plot the network topology
+            plot_network_crossings=True,  # Boolean: plot the network crossings
+            plot_network_capacity_ipm=True,  # Boolean: plot the network capacity for the PyPSA vs IPM case
+            plot_network_capacity_reeds=True,  # Boolean: plot the network capacity for the PyPSA vs reeds case
+        input:
+            base_network_pypsa_earth_path=pathlib.Path(
+                "workflow", "pypsa-earth", "networks", run_name, "base.nc"
+            ),
+            base_network_pypsa_usa_path=pathlib.Path(
+                "analysis", "gdrive_data", "data", "pypsa_usa", "lines_gis.csv"
+            ),
+            eia_base_network_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "transmission_grid_data",
+                "US_electric_transmission_lines_original.geojson",
+            ),
+            gadm_shapes_path=pathlib.Path(
+                "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
+            ),
+            ipm_shapes_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "shape_files",
+                "ipm_v6_regions",
+                "IPM_Regions_201770405.shp",
+            ),
+            lines_osm_raw_path=pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                run_name,
+                "osm",
+                "raw",
+                "all_raw_lines.geojson",
+            ),
+            lines_osm_clean_path=pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                run_name,
+                "osm",
+                "clean",
+                "all_clean_lines.geojson",
+            ),
+            reeds_shapes_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "pypsa_usa",
+                "Reeds_Shapes",
+                "rb_and_ba_areas.shp",
+            ),
+            ipm_capacities_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "transmission_grid_data",
+                "transmission_single_epaipm.csv",
+            ),
+            reeds_capacities_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "pypsa_usa",
+                "transmission",
+                "transmission_capacity_init_AC_ba_NARIS2024.csv",
+            )
 
-    output:
-        output_directory = pathlib.Path("analysis","gdrive_data","outputs","network_comparison"),
-    script:
-        "analysis/scripts/network_comparison.py"
+        output:
+            output_directory = pathlib.Path("analysis","gdrive_data","outputs","network_comparison"),
+        script:
+            "analysis/scripts/network_comparison.py"
 
 if config["cluster_options"].get("alternative_clustering", True):
     network_path = expand(pathlib.Path(
@@ -183,39 +184,40 @@ else:
             "elec_s{simpl}_gadm_mapped.nc",
         ), **config["scenario"]),
 
-rule installed_capacity_comparison:
-    params:
-        year_for_comparison=demand_year,  
-        plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
-        plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
-        plot_spatial_representation=True,  # Boolean: plot the map with the installed capacity per node
-        state_to_omit=["AK", "HI"],
-    input:
-        eia_installed_capacity_path=pathlib.Path(
-            "analysis", "gdrive_data", "data", "powerplant_data", "capacities_eia.xlsx"
-        ),
-        eia_state_temporal_installed_capacity_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "powerplant_data",
-            "existcapacity_annual.xlsx",
-        ),
-        eia_raw_reference_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "powerplant_data",
-            "custom_powerplants_eia_with_state.csv",
-        ),
-        gadm_shapes_path=pathlib.Path(
-            "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
-        ),
-        pypsa_earth_network_path=network_path
-    output:
-        output_directory = pathlib.Path("analysis","gdrive_data","plots","installed_capacity_ac"),
-    script:
-        "analysis/scripts/installed_capacity_comparison.py"
+if config["geothermal"].get("installed_capacity_comparison", True):
+    rule installed_capacity_comparison:
+        params:
+            year_for_comparison=demand_year,  
+            plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
+            plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
+            plot_spatial_representation=True,  # Boolean: plot the map with the installed capacity per node
+            state_to_omit=["AK", "HI"],
+        input:
+            eia_installed_capacity_path=pathlib.Path(
+                "analysis", "gdrive_data", "data", "powerplant_data", "capacities_eia.xlsx"
+            ),
+            eia_state_temporal_installed_capacity_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "powerplant_data",
+                "existcapacity_annual.xlsx",
+            ),
+            eia_raw_reference_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "powerplant_data",
+                "custom_powerplants_eia_with_state.csv",
+            ),
+            gadm_shapes_path=pathlib.Path(
+                "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
+            ),
+            pypsa_earth_network_path=network_path
+        output:
+            output_directory = pathlib.Path("analysis","gdrive_data","plots","installed_capacity_ac"),
+        script:
+            "analysis/scripts/installed_capacity_comparison.py"
 
 
 if config["cluster_options"].get("alternative_clustering", False):
@@ -239,42 +241,43 @@ if config["cluster_options"].get("alternative_clustering", False):
             "analysis/scripts/map_network_to_gadm.py"
 
 
-rule generation_comparison:
-    params:
-        year_for_comparison=demand_year,  
-        plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
-        plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
-    input:
-        eia_country_generation_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "electricity_generation_data",
-            "generation_eia.csv",
-        ),
-        eia_state_generation_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "electricity_generation_data",
-            "EIA_statewise_data",
-            "use_all_phy.xlsx",
-        ),
-        gadm_shapes_path=pathlib.Path(
-            "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
-        ),
-        pypsa_earth_network_path=expand(pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "results",
-            run_name,
-            "networks",
-            "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
-        ), **config["scenario"]),
-    output:
-        output_directory = pathlib.Path("analysis","gdrive_data","plots","generation_comparison")
-    script:
-        "analysis/scripts/generation_comparison.py"
+if config["geothermal"].get("generation_comparison", True):
+    rule generation_comparison:
+        params:
+            year_for_comparison=demand_year,  
+            plot_country_comparison=True,  # Boolean: plot the countrywide generation comparison
+            plot_state_by_state_comparison=True,  # Boolean: plot the state-by-state generation comparison
+        input:
+            eia_country_generation_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "electricity_generation_data",
+                "generation_eia.csv",
+            ),
+            eia_state_generation_path=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "electricity_generation_data",
+                "EIA_statewise_data",
+                "use_all_phy.xlsx",
+            ),
+            gadm_shapes_path=pathlib.Path(
+                "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
+            ),
+            pypsa_earth_network_path=expand(pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "results",
+                run_name,
+                "networks",
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
+            ), **config["scenario"]),
+        output:
+            output_directory = pathlib.Path("analysis","gdrive_data","plots","generation_comparison")
+        script:
+            "analysis/scripts/generation_comparison.py"
 
 
 rule preprocess_demand_data:
@@ -327,6 +330,6 @@ rule preprocess_demand_data:
 
 rule summary:
     input:
-        expand(pathlib.Path("analysis","gdrive_data","plots","{filedir}"), filedir=["generation_comparison", "installed_capacity_ac"]),
-        expand(pathlib.Path("analysis","gdrive_data","outputs","{filedir}"), filedir=["network_comparison"])
+        expand(pathlib.Path("analysis","plots","{filedir}"), filedir=["generation_comparison", "installed_capacity_ac"]),
+        expand(pathlib.Path("analysis","outputs","{filedir}"), filedir=["network_comparison"])
 
