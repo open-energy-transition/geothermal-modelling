@@ -17,7 +17,7 @@ geothermal:
   retrieve_geothermal_databundle: true # Exclusive for geothermal repository
   demand_year: 2021
   summary:
-    installed_capacity_comparison: false
+    installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
 
