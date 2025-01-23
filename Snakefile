@@ -163,7 +163,7 @@ if config["geothermal"].get("network_comparison", True):
             )
 
         output:
-            output_directory = pathlib.Path("analysis","outputs","network_comparison"),
+            directory(pathlib.Path("analysis","outputs","network_comparison")),
         script:
             "analysis/scripts/network_comparison.py"
 
@@ -215,7 +215,7 @@ if config["geothermal"].get("installed_capacity_comparison", True):
             ),
             pypsa_earth_network_path=network_path
         output:
-            output_directory = pathlib.Path("analysis","plots","installed_capacity_ac"),
+            directory(pathlib.Path("analysis","plots","installed_capacity_ac")),
         script:
             "analysis/scripts/installed_capacity_comparison.py"
 
@@ -275,7 +275,7 @@ if config["geothermal"].get("generation_comparison", True):
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
             ), **config["scenario"]),
         output:
-            output_directory = pathlib.Path("analysis","plots","generation_comparison")
+            directory(pathlib.Path("analysis","plots","generation_comparison"))
         script:
             "analysis/scripts/generation_comparison.py"
 
