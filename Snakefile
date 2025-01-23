@@ -162,7 +162,7 @@ rule network_comparison:
         )
 
     output:
-        output_directory = pathlib.Path("analysis","gdrive_data","plots","network_comparison"),
+        output_directory = pathlib.Path("analysis","gdrive_data","outputs","network_comparison"),
     script:
         "analysis/scripts/network_comparison.py"
 
@@ -327,4 +327,6 @@ rule preprocess_demand_data:
 
 rule summary:
     input:
-        expand(pathlib.Path("analysis","gdrive_data","plots","{filedir}"), filedir=["generation_comparison", "network_comparison", "installed_capacity_ac"])
+        expand(pathlib.Path("analysis","gdrive_data","plots","{filedir}"), filedir=["generation_comparison", "installed_capacity_ac"]),
+        expand(pathlib.Path("analysis","gdrive_data","outputs","{filedir}"), filedir=["network_comparison"])
+
