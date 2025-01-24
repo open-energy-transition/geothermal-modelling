@@ -21,7 +21,7 @@ def parse_inputs(base_path):
     The function parses the necessary inputs for the analysis
     """
     network_pypsa_earth_path = pathlib.Path(
-        base_path, snakemake.input.pypsa_earth_network_path
+        base_path, snakemake.input.pypsa_earth_network_path[0]
     )
     eia_installed_capacity_reference_path = pathlib.Path(
         base_path, snakemake.input.eia_installed_capacity_path

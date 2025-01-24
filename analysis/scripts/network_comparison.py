@@ -1064,8 +1064,12 @@ def parse_inputs(base_path, log_file):
     gadm_shapes_path = pathlib.Path(base_path, snakemake.input.gadm_shapes_path)
     ipm_shapes_path = pathlib.Path(base_path, snakemake.input.ipm_shapes_path)
     reeds_shapes_path = pathlib.Path(base_path, snakemake.input.reeds_shapes_path)
-    reeds_transmission_capacities_path = pathlib.Path(base_path, snakemake.input.reeds_capacities_path)
-    ipm_transmission_capacities_path = pathlib.Path(base_path, snakemake.input.ipm_capacities_path)
+    reeds_transmission_capacities_path = pathlib.Path(
+        base_path, snakemake.input.reeds_capacities_path
+    )
+    ipm_transmission_capacities_path = pathlib.Path(
+        base_path, snakemake.input.ipm_capacities_path
+    )
 
     #############
     # Load data #
@@ -1509,9 +1513,9 @@ if __name__ == "__main__":
     ) = parse_inputs(default_path, log_output_file)
 
     # output dataframes after pre-processing
-    network_pypsa_earth_df.export_to_netcdf(
-        pathlib.Path(output_path, "modified_pypsa_earth_base.nc")
-    )
+    # network_pypsa_earth_df.export_to_netcdf(
+    #     pathlib.Path(output_path, "modified_pypsa_earth_base.nc")
+    # )
     network_pypsa_usa_df.to_csv(
         pathlib.Path(output_path, "modified_pypsa_usa_base.csv")
     )
