@@ -9,6 +9,7 @@ import pathlib
 import datetime as dt
 import pypsa
 import geopandas as gpd
+from _helpers_usa import generators_aggregation_strategies_dict
 
 
 def parse_inputs(base_path):
@@ -31,15 +32,11 @@ def parse_inputs(base_path):
 
 
 def cluster_and_map_network(pypsa_network, gadm_dataframe):
-    buses_gdf = (
-        gpd.GeoDataFrame(
-            pypsa_network.buses,
-            geometry=gpd.points_from_xy(pypsa_network.buses.x, pypsa_network.buses.y),
-            crs="EPSG:4326",
-        )
-        .to_crs(3857)
-        .reset_index()
-    )
+    buses_gdf = gpd.GeoDataFrame(
+        pypsa_network.buses,
+        geometry=gpd.points_from_xy(pypsa_network.buses.x, pypsa_network.buses.y),
+        crs="EPSG:4326",
+    ).reset_index()
 
     spatial_join_gadm_bus_gdf = (
         buses_gdf.sjoin(gadm_dataframe, how="left")
@@ -47,8 +44,18 @@ def cluster_and_map_network(pypsa_network, gadm_dataframe):
         .rename(columns={"ISO_1": "state_code"})
     )
 
-    pypsa_network.generators["state"] = pypsa_network.generators.index.map(
-        spatial_join_gadm_bus_gdf.to_dict()
+    spatial_join_gadm_bus_gdf["state_code"] = spatial_join_gadm_bus_gdf[
+        "state_code"
+    ].str.replace("US-", "")
+
+    pypsa_network.generators["state"] = pypsa_network.generators.bus.map(
+        dict(spatial_join_gadm_bus_gdf.values)
+    )
+
+    pypsa_network.generators = (
+        pypsa_network.generators.groupby(["state", "carrier"])
+        .agg(generators_aggregation_strategies_dict)
+        .reset_index()
     )
 
     return pypsa_network

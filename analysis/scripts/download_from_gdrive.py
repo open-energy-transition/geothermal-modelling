@@ -24,7 +24,7 @@ if __name__ == "__main__":
     cookies_file_path = pathlib.Path(cookies_path, "cookies.txt")
     cookies_file_path.touch(exist_ok=True)
     cookies_file = open(cookies_file_path, "w")
-    download_path = pathlib.Path(default_path, snakemake.params["output_path"])
+    download_path = pathlib.Path(default_path, snakemake.params["output_directory"])
 
     # get the cookies.txt file
 
