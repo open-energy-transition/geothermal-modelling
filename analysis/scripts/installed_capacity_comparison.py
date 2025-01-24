@@ -558,7 +558,7 @@ if __name__ == "__main__":
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "installed_capacity")
-    plot_path = pathlib.Path(default_path, snakemake.output.plot_directory)
+    plot_path = pathlib.Path(default_path, snakemake.output.plot_path)
 
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
