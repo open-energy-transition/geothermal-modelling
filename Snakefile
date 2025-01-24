@@ -22,7 +22,7 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants as *
+use rule * from pypsa_earth exclude copy_custom_powerplants as * # noqa
 
 demand_year = config['geothermal']['demand_year']
 run_name = config['run']['name']
@@ -176,6 +176,7 @@ if config["cluster_options"].get("alternative_clustering", True):
             "networks",
             "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
         ), **config["scenario"]),
+    installed_capacity_comparison_plot_folder_name = "installed_capacity_ac"
 else:
     network_path = expand(pathlib.Path(
             "analysis",
@@ -183,6 +184,8 @@ else:
             "map_network_to_gadm",
             "elec_s{simpl}_gadm_mapped.nc",
         ), **config["scenario"]),
+    installed_capacity_comparison_plot_folder_name = "installed_capacity_nonac"
+
 
 if config["geothermal"].get("installed_capacity_comparison", True):
     rule installed_capacity_comparison:
@@ -215,7 +218,7 @@ if config["geothermal"].get("installed_capacity_comparison", True):
             ),
             pypsa_earth_network_path=network_path
         output:
-            directory(pathlib.Path("analysis","plots","installed_capacity_ac")),
+            plot_path=directory(pathlib.Path("analysis","plots",installed_capacity_comparison_plot_folder_name)),
         script:
             "analysis/scripts/installed_capacity_comparison.py"
 
@@ -330,6 +333,6 @@ rule preprocess_demand_data:
 
 rule summary:
     input:
-        expand(pathlib.Path("analysis","plots","{filedir}"), filedir=["generation_comparison", "installed_capacity_ac"]),
+        expand(pathlib.Path("analysis","plots","{filedir}"), filedir=["generation_comparison", installed_capacity_comparison_plot_folder_name]),
         expand(pathlib.Path("analysis","outputs","{filedir}"), filedir=["network_comparison"])
 
