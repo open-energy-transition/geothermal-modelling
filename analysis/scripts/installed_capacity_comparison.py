@@ -12,22 +12,17 @@ import pypsa
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from matplotlib.patches import Patch
-from _helpers_usa import get_state_node, config, get_gadm_mapping, rename_carrier
+from _helpers_usa import get_state_node, get_gadm_mapping, rename_carrier
 import plotly.express as px
 
 
-def parse_inputs(base_path, alternative_clustering_flag):
+def parse_inputs(base_path):
     """
     The function parses the necessary inputs for the analysis
     """
-    if alternative_clustering_flag:
-        network_pypsa_earth_path = pathlib.Path(
-            base_path, snakemake.input.pypsa_earth_network_path
-        )
-    else:
-        network_pypsa_earth_path = pathlib.Path(
-            base_path, snakemake.input.pypsa_earth_network_nonac_path
-        )
+    network_pypsa_earth_path = pathlib.Path(
+        base_path, snakemake.input.pypsa_earth_network_path[0]
+    )
     eia_installed_capacity_reference_path = pathlib.Path(
         base_path, snakemake.input.eia_installed_capacity_path
     )
@@ -75,6 +70,7 @@ def plot_capacity_spatial_representation(
         "carrier == 'AC' and ~(index in @iso_code_to_omit)"
     )
     bus_index = buses.index.tolist()
+    fig = plt.figure(figsize=(15, 8), layout="constrained")  # noqa
     ax = plt.axes(projection=ccrs.EqualEarth())
     pypsa_network.lines.loc[
         pypsa_network.lines.bus0.isin(iso_code_to_omit), "s_nom"
@@ -562,9 +558,9 @@ if __name__ == "__main__":
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "installed_capacity")
-    plot_path = pathlib.Path(default_path, "analysis", "plots", "installed_capacity")
+    plot_path = pathlib.Path(default_path, snakemake.output.plot_path)
+
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
         log_path, f"output_installed_capacity_comparison_{today_date[:10]}.txt"
@@ -578,8 +574,8 @@ if __name__ == "__main__":
     eia_name = "EIA"
     pypsa_name = "PyPSA"
     year_for_comparison = snakemake.params.year_for_comparison
-    config_dict = config(config_path)
-    alternative_clustering = config_dict["cluster_options"]["alternative_clustering"]
+
+    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
 
     (
         network_pypsa_earth_df,
@@ -587,7 +583,7 @@ if __name__ == "__main__":
         eia_raw_df,
         eia_state_temporal_installed_capacity_df,
         gadm_path,
-    ) = parse_inputs(default_path, alternative_clustering)
+    ) = parse_inputs(default_path)
 
     if snakemake.params.plot_country_comparison:
         plot_capacity_country_comparison(

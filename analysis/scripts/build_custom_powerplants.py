@@ -3,6 +3,7 @@ import datetime as dt
 import pandas as pd
 from _helpers_usa import eia_to_pypsa_terminology
 import numpy as np
+from swifter import swifter  # noqa
 
 
 def parse_inputs(base_path, log_file):
@@ -29,13 +30,13 @@ def parse_inputs(base_path, log_file):
     return df_eia_generators, df_eia_plants, df_ror_custom_ppl
 
 
-def build_custom_pp(eia_generators_df, eia_plants_df, log_file):
+def build_custom_pp(df_eia_generators, df_eia_plants, log_file):
     log_file.write("        \n")
     log_file.write("        \n")
     log_file.write("Build custom powerplants file from EIA 860 database \n")
     eia_to_pypsa_dict = eia_to_pypsa_terminology()
-    df_eia_reqd = eia_generators_df.loc[
-        eia_generators_df.Technology.isin(eia_to_pypsa_dict.keys())
+    df_eia_reqd = df_eia_generators.loc[
+        df_eia_generators.Technology.isin(eia_to_pypsa_dict.keys())
     ]
     df_eia_reqd = df_eia_reqd[
         [
@@ -91,7 +92,7 @@ def build_custom_pp(eia_generators_df, eia_plants_df, log_file):
     df_ppl.loc[df_ppl.Fueltype == "PHS", "Fueltype"] = "hydro"
 
     df_ppl.loc[:, ["lat", "lon"]] = df_ppl.swifter.apply(
-        lambda x: eia_plants_df.query('`Plant Name` == @x["Name"]').iloc[0][
+        lambda x: df_eia_plants.query('`Plant Name` == @x["Name"]').iloc[0][
             ["Latitude", "Longitude"]
         ],
         axis=1,

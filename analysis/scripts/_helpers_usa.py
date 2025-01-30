@@ -17,6 +17,18 @@ from pypsa.descriptors import Dict
 from snakemake.script import Snakemake
 import random
 
+generators_aggregation_strategies_dict = {
+    "p_nom": "sum",
+    "p_nom_max": "sum",
+    "p_nom_min": "sum",
+    "p_min_pu": "mean",
+    "marginal_cost": "mean",
+    "committable": "any",
+    "ramp_limit_up": "max",
+    "ramp_limit_down": "max",
+    "efficiency": "mean",
+}
+
 
 def get_colors(n):
     return ["#%06x" % random.randint(0, 0xFFFFFF) for _ in range(n)]
