@@ -14,7 +14,7 @@ def parse_inputs(default_path):
     df_ba_demand = df_ba_demand.replace(0, np.nan)
     df_ba_demand = df_ba_demand.dropna(axis=1)
 
-    balancing_authority_shapefile = pathlib.Path(default_path, snakemake.input.BA_shape_file)
+    balancing_authority_shapefile = pathlib.Path(default_path, snakemake.input.BA_shape_path)
     gdf_ba_shape = gpd.read_file(balancing_authority_shapefile)
     gdf_ba_shape = gdf_ba_shape.to_crs(3857)
 
