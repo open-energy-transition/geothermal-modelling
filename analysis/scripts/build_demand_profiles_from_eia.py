@@ -18,7 +18,7 @@ def parse_inputs(default_path):
     gdf_ba_shape = gpd.read_file(balancing_authority_shapefile)
     gdf_ba_shape = gdf_ba_shape.to_crs(3857)
 
-    utility_demand_path = pathlib.Path(default_path, snakemake.inputs.Utiltiy_demand_path)
+    utility_demand_path = pathlib.Path(default_path, snakemake.input.Utiltiy_demand_path)
     df_utility_demand = gpd.read_file(utility_demand_path)
     df_utility_demand.rename(columns={"index_right": "index_right_1"}, inplace=True)
 
