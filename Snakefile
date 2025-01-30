@@ -416,39 +416,37 @@ rule build_demand_profiles_from_eia:
         BA_demand_path1 = pathlib.Path(
             "analysis",
             "gdrive_data",
-            "data"
+            "data",
             "electricity_demand_data",
-            "demand_data",
             "EIA930_2021_Jan_Jun_opt.csv",
-        )
+        ),
         BA_demand_path2 = pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "electricity_demand_data",
-            "demand_data",
             "EIA930_2021_Jul_Dec_opt.csv",
-        )
+        ),
         BA_shape_path = pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "shape_files",
             "Balancing_Authorities.geojson",
-        )
+        ),
         utility_demand_path = pathlib.Path(
             "analysis",
             "output",
             "demand_modelling",
-            "ERST_mapped_demand_centroids.geojson"
-        )
+            "ERST_mapped_demand_centroids.geojson",
+        ),
 
     output:
         demand_profile_path = pathlib.Path(
             "workflow",
             "resources",
             run_name,
-            "demand_profiles.csv
+            "demand_profiles.csv"
         )
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
