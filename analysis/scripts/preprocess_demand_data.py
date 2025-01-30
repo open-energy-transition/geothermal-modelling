@@ -374,4 +374,4 @@ if __name__ == "__main__":
     missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
     log_output_file.write(f"Missing sales (%) : {missing_demand_percentage} \n")
 
-    # # df_final.to_file(f"Demand_mapped.geojson",driver="GeoJSON")
+    df_final.to_file(snakemake.output.utility_demand_path,driver="GeoJSON")
