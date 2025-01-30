@@ -18,15 +18,18 @@ def parse_inputs(default_path):
     gdf_ba_shape = gpd.read_file(balancing_authority_shapefile)
     gdf_ba_shape = gdf_ba_shape.to_crs(3857)
 
-    utility_demand_path = pathlib.Path(default_path, snakemake.input.Utiltiy_demand_path)
+    utility_demand_path = pathlib.Path(default_path, snakemake.input.utility_demand_path)
     df_utility_demand = gpd.read_file(utility_demand_path)
     df_utility_demand.rename(columns={"index_right": "index_right_1"}, inplace=True)
 
     df_utility_demand = df_utility_demand.to_crs(3857)
 
-    return df_ba_demand, gdf_ba_shape, df_utility_demand
+    pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_network_path)
+    pypsa_network = pypsa.Network(pypsa_network_path)
 
-def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape):
+    return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network
+
+def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network):
     # Obtaining the centroids of the Utility demands
     df_utility_centroid = df_utility_demand.copy()
     df_utility_centroid.geometry = df_utility_centroid.geometry.centroid
@@ -53,7 +56,7 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape):
     )
 
     # Mapping demand utilities to nearest PyPSA bus
-    df_reqd = df_n.buses.query('carrier == "AC"')
+    df_reqd = pypsa_network.buses.query('carrier == "AC"')
     pypsa_gpd = gpd.GeoDataFrame(
         df_reqd, geometry=gpd.points_from_xy(df_reqd.x, df_reqd.y), crs=4326
     )
@@ -107,11 +110,11 @@ if __name__ == "__main__":
     (
         df_ba_demand, 
         gdf_ba_shape, 
-        df_utility_demand 
-
+        df_utility_demand,
+        pypsa_network
     ) = parse_inputs(default_path)
 
-    df_demand_profiles = build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape)
+    df_demand_profiles = build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network)
 
     df_demand_profiles.to_csv(output_path)
 
