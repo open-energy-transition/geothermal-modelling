@@ -440,7 +440,7 @@ rule build_demand_profiles_from_eia:
             "demand_modelling",
             "ERST_mapped_demand_centroids.geojson",
         ),
-        pypsa_network_path =        
+        pypsa_network_path = pathlib.Path(       
             "workflow",
             "pypsa-earth",
             "networks",
