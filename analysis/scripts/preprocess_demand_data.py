@@ -349,9 +349,9 @@ if __name__ == "__main__":
     geo_df_final = gpd.GeoDataFrame(df_final, geometry="geometry")
     geo_df_final["Sales (TWh)"] = geo_df_final["Sales (Megawatthours)"] / 1e6
 
-    geo_df_final["per capita"] = (
-        geo_df_final["Sales (Megawatthours)"] / geo_df_final["population"]
-    )
+    # geo_df_final["per capita"] = (
+    #     geo_df_final["Sales (Megawatthours)"] / geo_df_final["population"]
+    # )
     # Plot the GeoDataFrames
     save_map(
         geo_df_final,
