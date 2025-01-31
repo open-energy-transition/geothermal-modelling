@@ -451,6 +451,7 @@ rule build_demand_profiles_from_eia:
     output:
         demand_profile_path = pathlib.Path(
             "workflow",
+            "pypsa-earth",
             "resources",
             run_name,
             "demand_profiles.csv"

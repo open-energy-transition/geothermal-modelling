@@ -4,6 +4,7 @@ import pandas as pd
 import geopandas as gpd
 from _helpers_usa import get_colors
 import numpy as np
+import pypsa
 
 def parse_inputs(default_path):
     BA_demand_path1 = pathlib.Path(default_path, snakemake.input.BA_demand_path1)
