@@ -454,7 +454,7 @@ rule build_demand_profiles_from_eia:
             "pypsa-earth",
             "resources",
             run_name,
-            "demand_profiles.csv"
+            "demand_profiles_eia.csv"
         )
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"

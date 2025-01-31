@@ -96,10 +96,11 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "demand_modelling")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
+    # output_path = pathlib.Path(default_path, "analysis", "output", "demand_modelling")
     output_path = pathlib.Path(default_path, snakemake.output.demand_profile_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
