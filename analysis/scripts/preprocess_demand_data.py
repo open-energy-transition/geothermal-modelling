@@ -7,8 +7,31 @@ from shapely.validation import make_valid
 import numpy as np
 import plotly.express as px
 import sys
-
 from _helpers_usa import get_colors
+
+def parse_inputs(default_path, demand_year):
+    # Load data
+    demand_utility_path = pathlib.Path(default_path, snakemake.input.demand_utility_path)
+    erst_gpd_path = pathlib.Path(default_path, snakemake.input.erst_path)
+    country_gadm_path = pathlib.Path(default_path, snakemake.input.country_gadm_path)
+    gadm_shape_usa_path = pathlib.Path(default_path, snakemake.input.gadm_usa_path)
+    eia_per_capita_filepath = pathlib.Path(default_path, snakemake.input.eia_per_capita_path)
+
+    df_demand_utility = pd.read_excel(demand_utility_path, skiprows=2)
+    df_erst_gpd = gpd.read_file(erst_gpd_path)
+    df_country = gpd.read_file(country_gadm_path)
+    df_gadm_usa = gpd.read_file(gadm_shape_usa_path)
+    df_eia_per_capita = pd.read_excel(
+        eia_per_capita_path,
+        sheet_name="Total per capita",
+        skiprows=2,
+        index_col="State",
+    )
+    df_eia_per_capita = df_eia_per_capita[demand_year]
+    log_output_file.write("Reading input files completed \n")
+    log_output_file.write("-------------------------------------------------\n")
+
+    return df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita
 
 
 def compute_demand_disaggregation(
@@ -127,48 +150,8 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
     m.save(os.path.join(plot_path, filename))
 
 
-if __name__ == "__main__":
-    if "snakemake" not in globals():
-        from _helpers_usa import mock_snakemake
+def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita):
 
-        snakemake = mock_snakemake("preprocess_demand_data")
-
-    # set relevant paths
-    default_path = pathlib.Path(__file__).parent.parent.parent
-    log_path = pathlib.Path(default_path, "analysis", "logs")
-    plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
-    os.makedirs(log_path, exist_ok=True)
-    os.makedirs(plot_path, exist_ok=True)
-    today_date = str(dt.datetime.now())
-    log_output_file_path = pathlib.Path(
-        log_path, f"output_preprocess_demand_{today_date[:10]}.txt"
-    )
-    log_output_file_path.touch(exist_ok=True)
-    log_output_file = open(log_output_file_path, "w")
-
-    # Load snakemake params
-    demand_year = snakemake.params.demand_year
-    holes_area_threshold = snakemake.params.holes_area_threshold
-    nprocesses = snakemake.params.nprocesses
-    log_output_file.write("Loading snakemake parameters \n")
-    log_output_file.write(f"demand_year = {demand_year} \n")
-    log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
-    log_output_file.write("-------------------------------------------------\n")
-
-    # Load data
-    df_demand_utility = pd.read_excel(snakemake.input.demand_utility_path, skiprows=2)
-    df_erst_gpd = gpd.read_file(snakemake.input.erst_path)
-    df_country = gpd.read_file(snakemake.input.country_gadm_path)
-    df_gadm_usa = gpd.read_file(snakemake.input.gadm_usa_path)
-    df_eia_per_capita = pd.read_excel(
-        snakemake.input.eia_per_capita_path,
-        sheet_name="Total per capita",
-        skiprows=2,
-        index_col="State",
-    )
-    df_eia_per_capita = df_eia_per_capita[demand_year]
-    log_output_file.write("Reading input files completed \n")
-    log_output_file.write("-------------------------------------------------\n")
     total_demand = df_demand_utility["Sales (Megawatthours)"].sum() / 1e6
     log_output_file.write(f"Total sales (TWh) as in EIA sales data: {total_demand} \n")
 
@@ -373,5 +356,44 @@ if __name__ == "__main__":
     )
     missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
     log_output_file.write(f"Missing sales (%) : {missing_demand_percentage} \n")
+
+    return df_final
+
+
+if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("preprocess_demand_data")
+
+    # set relevant paths
+    default_path = pathlib.Path(__file__).parent.parent.parent
+    log_path = pathlib.Path(default_path, "analysis", "logs")
+    plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
+    os.makedirs(log_path, exist_ok=True)
+    os.makedirs(plot_path, exist_ok=True)
+    today_date = str(dt.datetime.now())
+    log_output_file_path = pathlib.Path(
+        log_path, f"output_preprocess_demand_{today_date[:10]}.txt"
+    )
+    log_output_file_path.touch(exist_ok=True)
+    log_output_file = open(log_output_file_path, "w")
+
+    # Load snakemake params
+    demand_year = snakemake.params.demand_year
+    holes_area_threshold = snakemake.params.holes_area_threshold
+    nprocesses = snakemake.params.nprocesses
+    log_output_file.write("Loading snakemake parameters \n")
+    log_output_file.write(f"demand_year = {demand_year} \n")
+    log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
+    log_output_file.write("-------------------------------------------------\n")
+
+    (df_demand_utility, 
+    df_erst_gpd, 
+    df_country, 
+    df_gadm_usa, 
+    df_eia_per_capita) = parse_inputs(default_path, demand_year)
+
+    df_final = map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita)
 
     df_final.to_file(snakemake.output.utility_demand_path,driver="GeoJSON")
