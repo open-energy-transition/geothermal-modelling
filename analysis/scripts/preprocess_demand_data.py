@@ -150,7 +150,7 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
     m.save(os.path.join(plot_path, filename))
 
 
-def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita):
+def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, log_output_file):
 
     total_demand = df_demand_utility["Sales (Megawatthours)"].sum() / 1e6
     log_output_file.write(f"Total sales (TWh) as in EIA sales data: {total_demand} \n")
@@ -232,7 +232,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     holes_mapped_intersect_filter = holes_mapped_intersect.loc[
         holes_mapped_intersect["area"] > 1e-3
     ]
-    
+
     holes_mapped_intersect_filter["GADM_ID"] = np.arange(
         0, len(holes_mapped_intersect_filter), 1
     )
