@@ -48,7 +48,7 @@ def compute_demand_disaggregation(
             "State == @s", local_dict={"s": state}
         )
         full_state_pop = df_gadm_usa.query("State == @state")["pop"].values[0]
-        state_demand = df_demand_utility.query("STATE == @state")[
+        state_demand = df_demand_utility.query("State == @state")[
             "Sales (Megawatthours)"
         ].sum()
         avg_per_capita_demand = state_demand / full_state_pop
@@ -63,15 +63,15 @@ def compute_demand_disaggregation(
 
 
 def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text):
-    df_calc_state = df_calc.groupby("STATE")["Sales (Megawatthours)"].sum()
-    df_ref_state = df_ref.groupby("STATE")["Sales (Megawatthours)"].sum()
+    df_calc_state = df_calc.groupby("State")["Sales (Megawatthours)"].sum()
+    df_ref_state = df_ref.groupby("State")["Sales (Megawatthours)"].sum()
     df_error[text] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
     return df_error
 
 
 def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
     df_calc_per_capita = (
-        df_calc.groupby("STATE")["Sales (Megawatthours)"].sum()
+        df_calc.groupby("State")["Sales (Megawatthours)"].sum()
         * 1000
         / df_gadm.groupby("State")["pop"].sum()
     )
@@ -80,9 +80,7 @@ def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
 
 
 def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
-    df_demand_statewise = df_demand_utility.groupby("STATE")[
-        "Sales (Megawatthours)"
-    ].sum()
+    df_demand_statewise = df_demand_utility.groupby("State")["Sales (Megawatthours)"].sum()
     for state in df_utilities_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         missing_demand = df_utilities_grouped_state.loc[state]
@@ -201,7 +199,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     log_output_file.write("Generated holes exploded map \n")
     # holes_exploded = holes_exploded.to_crs(6372)
     # holes_exploded["Area"] = holes_exploded.area / 1e6
-    holes_exploded["Area"] = holes.exploded.area
+    holes_exploded["Area"] = holes_exploded.area
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query("Area > @holes_area_threshold")
     save_map(
@@ -274,6 +272,8 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         "Sales (Megawatthours)"
     ].sum()
 
+    df_demand_utility.rename(columns={'STATE':'State'}, inplace=True)
+
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
     holes_centroid.geometry = holes_mapped_intersect_filter.geometry.centroid
@@ -320,7 +320,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     # Per-capita consumption
     df_per_capita = pd.DataFrame()
     df_per_capita["Calculated"] = (
-        df_final.groupby("STATE")["Sales (Megawatthours)"].sum()
+        df_final.groupby("State")["Sales (Megawatthours)"].sum()
         * 1000
         / df_gadm_usa.groupby("State")["pop"].sum()
     )  # Per capita consumption in kWh
