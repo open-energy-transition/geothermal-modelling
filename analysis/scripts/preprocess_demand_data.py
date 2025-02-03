@@ -69,9 +69,9 @@ def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text, state
     return df_error
 
 
-def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text):
+def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text, state_kwd):
     df_calc_per_capita = (
-        df_calc.groupby("State")["Sales (Megawatthours)"].sum()
+        df_calc.groupby(state_kwd)["Sales (Megawatthours)"].sum()
         * 1000
         / df_gadm.groupby("State")["pop"].sum()
     )
@@ -262,7 +262,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         df_erst_gpd, df_demand_utility, df_error, "Initial", "STATE"
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
-        df_erst_gpd, df_gadm_usa, df_per_capita_cons, "Initial"
+        df_erst_gpd, df_gadm_usa, df_per_capita_cons, "Initial", "STATE"
     )
 
     # Missing utilities in ERST shape files
@@ -273,6 +273,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     ].sum()
 
     df_demand_utility.rename(columns={'STATE':'State'}, inplace=True)
+    df_utilities_grouped_state.rename(columns={'STATE':'State'}, inplace=True)
 
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
@@ -296,7 +297,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         df_final, df_demand_utility, df_error, "Mid-way", "State"
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
-        df_final, df_gadm_usa, df_per_capita_cons, "Mid-way"
+        df_final, df_gadm_usa, df_per_capita_cons, "Mid-way", "State"
     )
 
     df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
@@ -306,7 +307,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         df_final, df_demand_utility, df_error, "Final", "State"
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
-        df_final, df_gadm_usa, df_per_capita_cons, "Final"
+        df_final, df_gadm_usa, df_per_capita_cons, "Final", "State"
     )
 
     fig = px.bar(df_error, barmode="group")
