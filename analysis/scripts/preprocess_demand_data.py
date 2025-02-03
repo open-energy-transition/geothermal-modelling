@@ -81,6 +81,7 @@ def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text, state_
 
 def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
     df_demand_statewise = df_demand_utility.groupby("State")["Sales (Megawatthours)"].sum()
+    df_final['rescaling_factor'] = 0
     for state in df_utilities_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         missing_demand = df_utilities_grouped_state.loc[state]
@@ -88,13 +89,14 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
         assigned_utility_demand = df_filter_final["Sales (Megawatthours)"].sum()
         if assigned_utility_demand != 0:
             rescaling_factor = actual_state_demand / assigned_utility_demand
-        elif assigned_utility_demand == 0:
-            rescaling_factor = actual_state_demand / missing_demand
+        # elif assigned_utility_demand == 0:
+        #     rescaling_factor = actual_state_demand / missing_demand
         else:
             rescaling_factor = 1
         df_final.loc[df_final["State"] == state, "Sales (Megawatthours)"] *= (
             rescaling_factor
         )
+        df_final.loc[df_final["State"] == state, "rescaling_factor"] = rescaling_factor
 
     return df_final
 
@@ -197,16 +199,16 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(), crs=df_erst_gpd.crs)
     save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)
     log_output_file.write("Generated holes exploded map \n")
-    # holes_exploded = holes_exploded.to_crs(6372)
-    # holes_exploded["Area"] = holes_exploded.area / 1e6
-    holes_exploded["Area"] = holes_exploded.area
+    holes_exploded = holes_exploded.to_crs(6372)
+    holes_exploded["Area"] = holes_exploded.area / 1e6
+    # holes_exploded["Area"] = holes_exploded.area
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query("Area > @holes_area_threshold")
     save_map(
         holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False
     )
     log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
-    # holes_exploded_filter = holes_exploded_filter.to_crs(4326)
+    holes_exploded_filter = holes_exploded_filter.to_crs(4326)
 
     df_gadm_usa["color"] = get_colors(len(df_gadm_usa))
     holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
@@ -226,10 +228,10 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         ),
         axis=1,
     )
-    holes_mapped_intersect["area"] = holes_mapped_intersect.area
-    holes_mapped_intersect_filter = holes_mapped_intersect.loc[
-        holes_mapped_intersect["area"] > 1e-3
-    ]
+    # holes_mapped_intersect["area"] = holes_mapped_intersect.area
+    # holes_mapped_intersect_filter = holes_mapped_intersect.loc[
+    #     holes_mapped_intersect["area"] > 1e-3
+    # ]
 
     holes_mapped_intersect_filter["GADM_ID"] = np.arange(
         0, len(holes_mapped_intersect_filter), 1
@@ -289,7 +291,8 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         df_gadm_usa,
     )
 
-    df_final = df_final._append(df_erst_gpd)
+    df_final = df_final._append(df_erst_gpd.rename(columns={"STATE": "State"}))
+
 
     # error percentages of unmet demand after assigning average demand to states
     df_error = calc_percentage_unmet_demand_by_state(
