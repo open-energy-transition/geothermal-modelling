@@ -268,12 +268,13 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     # Missing utilities in ERST shape files
     missing_utilities = list(set(df_demand_utility.NAME) - set(df_erst_gpd.NAME))
     df_missing_utilities = df_demand_utility.query("NAME in @missing_utilities")
-    df_utilities_grouped_state = df_missing_utilities.groupby("STATE")[
+
+
+    df_demand_utility = df_demand_utility.reset_index()
+    df_demand_utility.rename(columns={'STATE':'State'}, inplace=True)
+    df_utilities_grouped_state = df_missing_utilities.groupby("State")[
         "Sales (Megawatthours)"
     ].sum()
-
-    df_demand_utility.rename(columns={'STATE':'State'}, inplace=True)
-    df_utilities_grouped_state.rename(columns={'STATE':'State'}, inplace=True)
 
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
