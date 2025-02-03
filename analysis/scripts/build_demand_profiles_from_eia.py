@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
-        log_path, f"output_demand_modelling_{today_date[:10]}.txt"
+        log_path, f"output_build_demand_profiles_{today_date[:10]}.txt"
     )
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")

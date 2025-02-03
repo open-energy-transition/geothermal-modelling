@@ -22,7 +22,7 @@ def parse_inputs(default_path, demand_year):
     df_country = gpd.read_file(country_gadm_path)
     df_gadm_usa = gpd.read_file(gadm_shape_usa_path)
     df_eia_per_capita = pd.read_excel(
-        eia_per_capita_path,
+        eia_per_capita_filepath,
         sheet_name="Total per capita",
         skiprows=2,
         index_col="State",
@@ -199,15 +199,16 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(), crs=df_erst_gpd.crs)
     save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)
     log_output_file.write("Generated holes exploded map \n")
-    holes_exploded = holes_exploded.to_crs(6372)
-    holes_exploded["Area"] = holes_exploded.area / 1e6
+    # holes_exploded = holes_exploded.to_crs(6372)
+    # holes_exploded["Area"] = holes_exploded.area / 1e6
+    holes_exploded["Area"] = holes.exploded.area
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query("Area > @holes_area_threshold")
     save_map(
         holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False
     )
     log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
-    holes_exploded_filter = holes_exploded_filter.to_crs(4326)
+    # holes_exploded_filter = holes_exploded_filter.to_crs(4326)
 
     df_gadm_usa["color"] = get_colors(len(df_gadm_usa))
     holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
@@ -216,10 +217,22 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
 
     # # Compute intersecting areas of holes and states
     # # To filter out sjoin mapping to states where a tiny area of the hole is present in the GADM shape
-    holes_mapped_intersect_filter = holes_mapped.copy()
+    # holes_mapped_intersect_filter = holes_mapped.copy()
     # holes_mapped_intersect['geometry'] = holes_mapped.apply(lambda x: x.geometry.intersection(df_gadm_usa.loc[df_gadm_usa['GID_1'] == x['GID_1']].iloc[0].geometry), axis=1)
     # holes_mapped_intersect['area'] = holes_mapped_intersect.to_crs(6372).area
     # holes_mapped_intersect_filter = holes_mapped_intersect.loc[holes_mapped_intersect['area'] > 200]
+    holes_mapped_intersect = holes_mapped.copy()
+    holes_mapped_intersect["geometry"] = holes_mapped.apply(
+        lambda x: x.geometry.intersection(
+            df_gadm_usa.loc[df_gadm_usa["GID_1"] == x["GID_1"]].iloc[0].geometry
+        ),
+        axis=1,
+    )
+    holes_mapped_intersect["area"] = holes_mapped_intersect.area
+    holes_mapped_intersect_filter = holes_mapped_intersect.loc[
+        holes_mapped_intersect["area"] > 1e-3
+    ]
+    
     holes_mapped_intersect_filter["GADM_ID"] = np.arange(
         0, len(holes_mapped_intersect_filter), 1
     )
@@ -368,7 +381,7 @@ if __name__ == "__main__":
 
     # set relevant paths
     default_path = pathlib.Path(__file__).parent.parent.parent
-    log_path = pathlib.Path(default_path, "analysis", "logs")
+    log_path = pathlib.Path(default_path, "analysis", "logs", "demand_modelling")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
     os.makedirs(log_path, exist_ok=True)
     os.makedirs(plot_path, exist_ok=True)
@@ -394,6 +407,8 @@ if __name__ == "__main__":
     df_gadm_usa, 
     df_eia_per_capita) = parse_inputs(default_path, demand_year)
 
-    df_final = map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita)
+    df_final = map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, log_output_file)
 
     df_final.to_file(snakemake.output.utility_demand_path,driver="GeoJSON")
+
+    log_output_file.close()
