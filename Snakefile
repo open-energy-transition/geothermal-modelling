@@ -362,8 +362,7 @@ if config["geothermal"].get("generation_comparison", True):
 rule preprocess_demand_data:
     params:
         demand_year=2021,
-        #holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
-        holes_area_threshold=0.05,  # the hole threshold area in radial area terms (CRS 4326)
+        holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
         nprocesses=1,
     input:
         demand_utility_path=pathlib.Path(

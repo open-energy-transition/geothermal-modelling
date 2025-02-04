@@ -84,13 +84,10 @@ def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
     df_final['rescaling_factor'] = 0
     for state in df_utilities_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
-        missing_demand = df_utilities_grouped_state.loc[state]
         df_filter_final = df_final.query("State == @state")
         assigned_utility_demand = df_filter_final["Sales (Megawatthours)"].sum()
         if assigned_utility_demand != 0:
             rescaling_factor = actual_state_demand / assigned_utility_demand
-        # elif assigned_utility_demand == 0:
-        #     rescaling_factor = actual_state_demand / missing_demand
         else:
             rescaling_factor = 1
         df_final.loc[df_final["State"] == state, "Sales (Megawatthours)"] *= (
@@ -228,10 +225,8 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         ),
         axis=1,
     )
-    # holes_mapped_intersect["area"] = holes_mapped_intersect.area
-    # holes_mapped_intersect_filter = holes_mapped_intersect.loc[
-    #     holes_mapped_intersect["area"] > 1e-3
-    # ]
+    holes_mapped_intersect["area"] = holes_mapped_intersect.area
+    holes_mapped_intersect_filter = holes_mapped_intersect.copy()
 
     holes_mapped_intersect_filter["GADM_ID"] = np.arange(
         0, len(holes_mapped_intersect_filter), 1
@@ -360,10 +355,6 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
         cmap_col="Sales (TWh)",
     )
     log_output_file.write("Plotted demand_filled_TWh_USA \n ")
-
-    # df_erst_gpd['Sales (TWh)'] = df_erst_gpd['Sales (Megawatthours)'] / 1e6
-    # save_map(df_erst_gpd, filename="demand_with_holes_TWh_USA.html", color=False, cmap=True, cmap_col='Sales (TWh)')
-    # log_output_file.write("Plotted demand_with_holes_TWh_USA\n ")
 
     # Final error in demand mapping
     demand_mapped = geo_df_final["Sales (TWh)"].sum()
