@@ -470,6 +470,7 @@ rule build_demand_profiles_from_eia:
 
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
+    
 
 
 rule summary:
@@ -483,5 +484,14 @@ rule summary:
         ),
         expand(
             pathlib.Path("analysis", "outputs", "{filedir}"),
-            filedir=["network_comparison"],
+            filedir=[
+                "network_comparison",
+                "demand_modelling/ERST_mapped_demand_centroids.geojson"],
         ),
+        pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "demand_profiles_eia.csv"
+        )
