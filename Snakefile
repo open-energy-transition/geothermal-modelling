@@ -23,7 +23,7 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants as * # noqa
+use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles as * # noqa
 
 demand_year = config["geothermal"]["demand_year"]
 run_name = config["run"]["name"]
@@ -363,7 +363,7 @@ rule preprocess_demand_data:
     params:
         demand_year=2021,
         holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
-        nprocesses=1,
+        nprocesses=4,
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
@@ -381,7 +381,6 @@ rule preprocess_demand_data:
             "shapes",
             "country_shapes.geojson",
         ),
-        #erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson"),
         erst_path=pathlib.Path(
             "analysis",
             "gdrive_data",
@@ -403,7 +402,7 @@ rule preprocess_demand_data:
     output:
         utility_demand_path = pathlib.Path(
             "analysis",
-            "output",
+            "outputs",
             "demand_modelling",
             "ERST_mapped_demand_centroids.geojson"
         )
@@ -436,25 +435,27 @@ rule build_demand_profiles_from_eia:
         ),
         utility_demand_path = pathlib.Path(
             "analysis",
-            "output",
+            "outputs",
             "demand_modelling",
             "ERST_mapped_demand_centroids.geojson",
         ),
-        pypsa_network_path = pathlib.Path(       
-            "workflow",
-            "pypsa-earth",
-            "networks",
-            run_name,
-            "elec_s_100flex_ec_lcopt_Co2L-1H.nc"
+        pypsa_network_path = expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
+            ),
+            **config["scenario"],
         )
-
     output:
         demand_profile_path = pathlib.Path(
             "workflow",
             "pypsa-earth",
             "resources",
             run_name,
-            "demand_profiles_eia.csv"
+            "demand_profiles.csv"
         )
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
