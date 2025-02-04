@@ -23,7 +23,7 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles as * # noqa
+use rule * from pypsa_earth exclude copy_custom_powerplants as * # noqa
 
 demand_year = config["geothermal"]["demand_year"]
 run_name = config["run"]["name"]
@@ -455,8 +455,19 @@ rule build_demand_profiles_from_eia:
             "pypsa-earth",
             "resources",
             run_name,
-            "demand_profiles.csv"
+            "demand_profiles_eia.csv"
+        ),
+        pypsa_network_path = expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
+            ),
+            **config["scenario"],
         )
+
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
 

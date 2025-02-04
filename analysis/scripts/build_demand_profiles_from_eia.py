@@ -91,6 +91,10 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
 
     return df_demand_bus
 
+def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network_path):
+    pypsa_network.loads_t.p_set = df_demand_profiles
+    pypsa_network.loads_t.export_to_netcdf(pypsa_network_path)
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -103,10 +107,11 @@ if __name__ == "__main__":
     log_path = pathlib.Path(default_path, "analysis", "logs", "demand_modelling")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
     # output_path = pathlib.Path(default_path, "analysis", "output", "demand_modelling")
-    output_path = pathlib.Path(default_path, snakemake.output.demand_profile_path)
+    output_demand_profile_path = pathlib.Path(default_path, snakemake.output.demand_profile_path)
+    pypsa_network_path = pathlib.Path(default_path, snakemake.output.pypsa_network_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
-    pathlib.Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_demand_profile_path).parent.mkdir(parents=True, exist_ok=True)
 
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
@@ -123,6 +128,8 @@ if __name__ == "__main__":
         df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network
     )
 
-    df_demand_profiles.to_csv(output_path)
+    df_demand_profiles.to_csv(output_demand_profile_path)
+
+    modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network_path)
 
     log_output_file.close()
