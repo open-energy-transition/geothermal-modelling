@@ -9,13 +9,18 @@ import plotly.express as px
 import sys
 from _helpers_usa import get_colors
 
+
 def parse_inputs(default_path, demand_year):
     # Load data
-    demand_utility_path = pathlib.Path(default_path, snakemake.input.demand_utility_path)
+    demand_utility_path = pathlib.Path(
+        default_path, snakemake.input.demand_utility_path
+    )
     erst_gpd_path = pathlib.Path(default_path, snakemake.input.erst_path)
     country_gadm_path = pathlib.Path(default_path, snakemake.input.country_gadm_path)
     gadm_shape_usa_path = pathlib.Path(default_path, snakemake.input.gadm_usa_path)
-    eia_per_capita_filepath = pathlib.Path(default_path, snakemake.input.eia_per_capita_path)
+    eia_per_capita_filepath = pathlib.Path(
+        default_path, snakemake.input.eia_per_capita_path
+    )
 
     df_demand_utility = pd.read_excel(demand_utility_path, skiprows=2)
     df_erst_gpd = gpd.read_file(erst_gpd_path)
@@ -80,8 +85,10 @@ def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text, state_
 
 
 def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
-    df_demand_statewise = df_demand_utility.groupby("State")["Sales (Megawatthours)"].sum()
-    df_final['rescaling_factor'] = 0
+    df_demand_statewise = df_demand_utility.groupby("State")[
+        "Sales (Megawatthours)"
+    ].sum()
+    df_final["rescaling_factor"] = 0
     for state in df_utilities_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         df_filter_final = df_final.query("State == @state")
@@ -147,8 +154,14 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
     m.save(os.path.join(plot_path, filename))
 
 
-def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, log_output_file):
-
+def map_demands_utilitywise(
+    df_demand_utility,
+    df_erst_gpd,
+    df_country,
+    df_gadm_usa,
+    df_eia_per_capita,
+    log_output_file,
+):
     total_demand = df_demand_utility["Sales (Megawatthours)"].sum() / 1e6
     log_output_file.write(f"Total sales (TWh) as in EIA sales data: {total_demand} \n")
 
@@ -264,7 +277,7 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
 
     # Missing utilities in ERST shape files
     df_demand_utility = df_demand_utility.reset_index()
-    df_demand_utility.rename(columns={'STATE':'State'}, inplace=True)
+    df_demand_utility.rename(columns={"STATE": "State"}, inplace=True)
     missing_utilities = list(set(df_demand_utility.NAME) - set(df_erst_gpd.NAME))
     df_missing_utilities = df_demand_utility.query("NAME in @missing_utilities")
     df_utilities_grouped_state = df_missing_utilities.groupby("State")[
@@ -287,7 +300,6 @@ def map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_
     )
 
     df_final = df_final._append(df_erst_gpd.rename(columns={"STATE": "State"}))
-
 
     # error percentages of unmet demand after assigning average demand to states
     df_error = calc_percentage_unmet_demand_by_state(
@@ -395,14 +407,19 @@ if __name__ == "__main__":
     log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
     log_output_file.write("-------------------------------------------------\n")
 
-    (df_demand_utility, 
-    df_erst_gpd, 
-    df_country, 
-    df_gadm_usa, 
-    df_eia_per_capita) = parse_inputs(default_path, demand_year)
+    (df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita) = (
+        parse_inputs(default_path, demand_year)
+    )
 
-    df_final = map_demands_utilitywise(df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, log_output_file)
+    df_final = map_demands_utilitywise(
+        df_demand_utility,
+        df_erst_gpd,
+        df_country,
+        df_gadm_usa,
+        df_eia_per_capita,
+        log_output_file,
+    )
 
-    df_final.to_file(snakemake.output.utility_demand_path,driver="GeoJSON")
+    df_final.to_file(snakemake.output.utility_demand_path, driver="GeoJSON")
 
     log_output_file.close()

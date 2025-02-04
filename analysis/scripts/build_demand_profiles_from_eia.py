@@ -6,6 +6,7 @@ from _helpers_usa import get_colors
 import numpy as np
 import pypsa
 
+
 def parse_inputs(default_path):
     BA_demand_path1 = pathlib.Path(default_path, snakemake.input.BA_demand_path1)
     BA_demand_path2 = pathlib.Path(default_path, snakemake.input.BA_demand_path2)
@@ -15,11 +16,15 @@ def parse_inputs(default_path):
     df_ba_demand = df_ba_demand.replace(0, np.nan)
     df_ba_demand = df_ba_demand.dropna(axis=1)
 
-    balancing_authority_shapefile = pathlib.Path(default_path, snakemake.input.BA_shape_path)
+    balancing_authority_shapefile = pathlib.Path(
+        default_path, snakemake.input.BA_shape_path
+    )
     gdf_ba_shape = gpd.read_file(balancing_authority_shapefile)
     gdf_ba_shape = gdf_ba_shape.to_crs(3857)
 
-    utility_demand_path = pathlib.Path(default_path, snakemake.input.utility_demand_path)
+    utility_demand_path = pathlib.Path(
+        default_path, snakemake.input.utility_demand_path
+    )
     df_utility_demand = gpd.read_file(utility_demand_path)
     df_utility_demand.rename(columns={"index_right": "index_right_1"}, inplace=True)
 
@@ -29,6 +34,7 @@ def parse_inputs(default_path):
     pypsa_network = pypsa.Network(pypsa_network_path)
 
     return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network
+
 
 def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network):
     # Obtaining the centroids of the Utility demands
@@ -109,14 +115,13 @@ if __name__ == "__main__":
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
 
-    (
-        df_ba_demand, 
-        gdf_ba_shape, 
-        df_utility_demand,
-        pypsa_network
-    ) = parse_inputs(default_path)
+    (df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network) = parse_inputs(
+        default_path
+    )
 
-    df_demand_profiles = build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network)
+    df_demand_profiles = build_demand_profiles(
+        df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network
+    )
 
     df_demand_profiles.to_csv(output_path)
 
