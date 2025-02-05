@@ -496,7 +496,7 @@ rule copy_pypsa_network:
             **config["scenario"],
         )
     shell:
-        "cp {output} {input}"
+        "cp {input} {output}"
 
 
 rule summary:

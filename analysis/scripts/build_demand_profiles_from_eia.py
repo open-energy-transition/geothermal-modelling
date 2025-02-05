@@ -30,7 +30,7 @@ def parse_inputs(default_path):
 
     df_utility_demand = df_utility_demand.to_crs(3857)
 
-    pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_network_path)
+    pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_network_path[0])
     pypsa_network = pypsa.Network(pypsa_network_path)
 
     return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network
@@ -93,7 +93,7 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
 
 def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network_path):
     pypsa_network.loads_t.p_set = df_demand_profiles
-    pypsa_network.loads_t.export_to_netcdf(pypsa_network_path)
+    pypsa_network.export_to_netcdf(pypsa_network_path)
 
 
 if __name__ == "__main__":
