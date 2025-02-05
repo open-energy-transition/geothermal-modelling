@@ -115,11 +115,16 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
                 filename=[
                     "gadm41_USA_1.json",
                     "ipm_v6_regions/IPM_Regions_201770405.shp",
+                    "Balancing_Authorities.geojson",
                 ],
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_generation_data/{filename}",
                 filename=["EIA_statewise_data/use_all_phy.xlsx", "generation_eia.csv"],
+            ),
+            expand(
+                "analysis/gdrive_data/data/electricity_demand_data/{filename}",
+                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv" ],
             ),
         script:
             "analysis/scripts/download_from_gdrive.py"
@@ -357,8 +362,8 @@ if config["geothermal"].get("generation_comparison", True):
 rule preprocess_demand_data:
     params:
         demand_year=2021,
-        holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km
-        nprocesses=1,
+        holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
+        nprocesses=4,
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
@@ -376,7 +381,6 @@ rule preprocess_demand_data:
             "shapes",
             "country_shapes.geojson",
         ),
-        #erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson"),
         erst_path=pathlib.Path(
             "analysis",
             "gdrive_data",
@@ -395,12 +399,104 @@ rule preprocess_demand_data:
             "electricity_demand_data",
             "use_es_capita.xlsx",
         ),
+    output:
+        utility_demand_path = pathlib.Path(
+            "analysis",
+            "outputs",
+            "demand_modelling",
+            "ERST_mapped_demand_centroids.geojson"
+        )
     script:
         "analysis/scripts/preprocess_demand_data.py"
 
 
-# rule demand_modelling:
-#   script:
+rule build_demand_profiles_from_eia:
+    input:
+        BA_demand_path1 = pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "electricity_demand_data",
+            "EIA930_2021_Jan_Jun_opt.csv",
+        ),
+        BA_demand_path2 = pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "electricity_demand_data",
+            "EIA930_2021_Jul_Dec_opt.csv",
+        ),
+        BA_shape_path = pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "shape_files",
+            "Balancing_Authorities.geojson",
+        ),
+        utility_demand_path = pathlib.Path(
+            "analysis",
+            "outputs",
+            "demand_modelling",
+            "ERST_mapped_demand_centroids.geojson",
+        ),
+        pypsa_network_path = expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
+            ),
+            **config["scenario"],
+        )
+    output:
+        demand_profile_path = pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "demand_profiles_eia.csv"
+        ),
+        pypsa_network_path = expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_demand.nc"
+            ),
+            **config["scenario"],
+        )
+
+    script:
+        "analysis/scripts/build_demand_profiles_from_eia.py"
+    
+
+rule copy_pypsa_network:
+    input:
+        expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_demand.nc"
+            ),
+            **config["scenario"],
+        )
+    output:
+        expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
+            ),
+            **config["scenario"],
+        )
+    shell:
+        "cp {input} {output}"
 
 
 rule summary:
@@ -414,5 +510,14 @@ rule summary:
         ),
         expand(
             pathlib.Path("analysis", "outputs", "{filedir}"),
-            filedir=["network_comparison"],
+            filedir=[
+                "network_comparison",
+                "demand_modelling/ERST_mapped_demand_centroids.geojson"],
         ),
+        pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "demand_profiles_eia.csv"
+        )
