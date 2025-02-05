@@ -463,7 +463,7 @@ rule build_demand_profiles_from_eia:
                 "pypsa-earth",
                 "networks",
                 run_name,
-                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_demand.nc"
             ),
             **config["scenario"],
         )
@@ -471,6 +471,32 @@ rule build_demand_profiles_from_eia:
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
     
+
+rule copy_pypsa_network:
+    input:
+        expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_demand.nc"
+            ),
+            **config["scenario"],
+        )
+    output:
+        expand(
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
+            ),
+            **config["scenario"],
+        )
+    shell:
+        "cp {output} {input}"
 
 
 rule summary:
