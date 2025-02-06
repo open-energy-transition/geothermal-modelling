@@ -92,10 +92,11 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     return df_demand_bus
 
 def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network_path):
-    time_resolution = (8760 / len(pypsa_network.snapshots)) * 24
+    time_resolution = (8760 / len(pypsa_network.snapshots)) 
     # Groupby time resolution and then convert from kWh -> kW
-    df_demand_profiles.index = np.arange(0,len(df_demand_profiles))
-    df_demand_profiles_agg = df_demand_profiles.groupby(df_demand_profiles.index // time_resolution).sum() / time_resolution
+    df_demand_profiles.index = np.arange(0,len(df_demand_profiles.index))
+    df_demand_profiles_agg = df_demand_profiles.groupby(df_demand_profiles.index // int(time_resolution)).sum() / time_resolution
+    df_demand_profiles_agg = df_demand_profiles_agg[0:len(pypsa_network.snapshots)]
     df_demand_profiles_agg.index = pypsa_network.snapshots
     pypsa_network.loads_t.p_set = df_demand_profiles_agg
     pypsa_network.export_to_netcdf(pypsa_network_path)
