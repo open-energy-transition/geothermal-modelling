@@ -90,7 +90,7 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
                 df_demand_bus[col] += demand_data.tolist()
 
     # The EIA profiles start at 6:00:00 hours on 1/1 instead of 00:00:00 hours - rolling over the time series to start at 00:00 hours
-    df_demand_bus_timeshifted = df_demand_bus[-9:-3].concat(df_demand_bus[:-9])
+    df_demand_bus_timeshifted = df_demand_bus[-9:-3]._append(df_demand_bus[:-9])
     df_demand_bus_timeshifted = df_demand_bus_timeshifted[:8760]
 
     return df_demand_bus_timeshifted
