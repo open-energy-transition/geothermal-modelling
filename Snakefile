@@ -124,7 +124,7 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
-                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv" ],
+                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv", "HS861 2010-.xlsx" ],
             ),
         script:
             "analysis/scripts/download_from_gdrive.py"
@@ -400,6 +400,13 @@ rule preprocess_demand_data:
             "electricity_demand_data",
             "use_es_capita.xlsx",
         ),
+        additional_demand_data_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "electricity_demand_data",
+            "HS861 2010-.xlsx",
+        )
     output:
         utility_demand_path = pathlib.Path(
             "analysis",
