@@ -161,6 +161,7 @@ def map_demands_utilitywise(
     df_gadm_usa,
     df_eia_per_capita,
     log_output_file,
+    plotting,
 ):
     total_demand = df_demand_utility["Sales (Megawatthours)"].sum() / 1e6
     log_output_file.write(f"Total sales (TWh) as in EIA sales data: {total_demand} \n")
@@ -173,9 +174,10 @@ def map_demands_utilitywise(
     # Make geometry valid
     df_erst_gpd["geometry"] = df_erst_gpd["geometry"].apply(make_valid)
 
-    # Plot initial ERST shapefile
-    save_map(df_erst_gpd, filename="ERST_initial.html", color=False, cmap=False)
-    log_output_file.write("Generated initial ERST shapes file \n")
+    if plotting:
+        # Plot initial ERST shapefile
+        save_map(df_erst_gpd, filename="ERST_initial.html", color=False, cmap=False)
+        log_output_file.write("Generated initial ERST shapes file \n")
 
     # Map demands to ERST shapefile
     df_erst_gpd = overlay_demands(df_erst_gpd, df_gadm_usa, df_demand_utility)
@@ -186,16 +188,15 @@ def map_demands_utilitywise(
     missing_demand_percentage = compute_missing_percentage(total_demand, demand_mapped)
     log_output_file.write(f"Missing sales (%) : {missing_demand_percentage} \n")
 
-    # df_erst_gpd_centroid = df_erst_gpd.copy()
-    # df_erst_gpd_centroid.geometry = df_erst_gpd_centroid.geometry
-    save_map(
-        df_erst_gpd,
-        filename="ERST_overlay.html",
-        color=False,
-        cmap=True,
-        cmap_col="Sales (Megawatthours)",
-    )
-    log_output_file.write("Generated ERST shapes file with mapped demands \n")
+    if plotting:
+        save_map(
+            df_erst_gpd,
+            filename="ERST_overlay.html",
+            color=False,
+            cmap=True,
+            cmap_col="Sales (Megawatthours)",
+        )
+        log_output_file.write("Generated ERST shapes file with mapped demands \n")
 
     ## Obtain holes in ERST shape files
 
@@ -207,30 +208,31 @@ def map_demands_utilitywise(
     # Convert holes geometry : multipolygons into polygons to create a separate row for each hole
     holes_exploded = holes.explode()
     holes_exploded = gpd.GeoDataFrame(geometry=holes.explode(), crs=df_erst_gpd.crs)
-    save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)
-    log_output_file.write("Generated holes exploded map \n")
+
+    if plotting:
+        save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)
+        log_output_file.write("Generated holes exploded map \n")
     holes_exploded = holes_exploded.to_crs(6372)
     holes_exploded["Area"] = holes_exploded.area / 1e6
-    # holes_exploded["Area"] = holes_exploded.area
+
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query("Area > @holes_area_threshold")
-    save_map(
-        holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False
-    )
-    log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
+    
+    if plotting:
+        save_map(
+            holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False
+        )
+        log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
     holes_exploded_filter = holes_exploded_filter.to_crs(4326)
 
     df_gadm_usa["color"] = get_colors(len(df_gadm_usa))
     holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
-    save_map(holes_mapped, filename="Holes_mapped_GADM.html", color=True, cmap=False)
-    log_output_file.write("Generated holes mapped to GADM \n")
+    
+    if plotting:
+        save_map(holes_mapped, filename="Holes_mapped_GADM.html", color=True, cmap=False)
+        log_output_file.write("Generated holes mapped to GADM \n")
 
     # # Compute intersecting areas of holes and states
-    # # To filter out sjoin mapping to states where a tiny area of the hole is present in the GADM shape
-    # holes_mapped_intersect_filter = holes_mapped.copy()
-    # holes_mapped_intersect['geometry'] = holes_mapped.apply(lambda x: x.geometry.intersection(df_gadm_usa.loc[df_gadm_usa['GID_1'] == x['GID_1']].iloc[0].geometry), axis=1)
-    # holes_mapped_intersect['area'] = holes_mapped_intersect.to_crs(6372).area
-    # holes_mapped_intersect_filter = holes_mapped_intersect.loc[holes_mapped_intersect['area'] > 200]
     holes_mapped_intersect = holes_mapped.copy()
     holes_mapped_intersect["geometry"] = holes_mapped.apply(
         lambda x: x.geometry.intersection(
@@ -251,7 +253,8 @@ def map_demands_utilitywise(
     holes_mapped_intersect_filter["State"] = holes_mapped_intersect_filter.apply(
         lambda x: x["HASC_1"].split(".")[1], axis=1
     )
-    save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
+    if plotting:
+        save_map(holes_mapped, filename="Holes_intersect.html", color=False, cmap=False)
 
     build_shapes.add_population_data(
         holes_mapped_intersect_filter, ["US"], "standard", nprocesses=nprocesses
@@ -355,18 +358,16 @@ def map_demands_utilitywise(
     geo_df_final = gpd.GeoDataFrame(df_final, geometry="geometry")
     geo_df_final["Sales (TWh)"] = geo_df_final["Sales (Megawatthours)"] / 1e6
 
-    # geo_df_final["per capita"] = (
-    #     geo_df_final["Sales (Megawatthours)"] / geo_df_final["population"]
-    # )
     # Plot the GeoDataFrames
-    save_map(
-        geo_df_final,
-        filename="demand_filled_TWh_USA.html",
-        color=False,
-        cmap=True,
-        cmap_col="Sales (TWh)",
-    )
-    log_output_file.write("Plotted demand_filled_TWh_USA \n ")
+    if plotting:
+        save_map(
+            geo_df_final,
+            filename="demand_filled_TWh_USA.html",
+            color=False,
+            cmap=True,
+            cmap_col="Sales (TWh)",
+        )
+        log_output_file.write("Plotted demand_filled_TWh_USA \n ")
 
     # Final error in demand mapping
     demand_mapped = geo_df_final["Sales (TWh)"].sum()
@@ -402,6 +403,7 @@ if __name__ == "__main__":
     demand_year = snakemake.params.demand_year
     holes_area_threshold = snakemake.params.holes_area_threshold
     nprocesses = snakemake.params.nprocesses
+    plotting = snakemake.params.plotting
     log_output_file.write("Loading snakemake parameters \n")
     log_output_file.write(f"demand_year = {demand_year} \n")
     log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
@@ -418,6 +420,7 @@ if __name__ == "__main__":
         df_gadm_usa,
         df_eia_per_capita,
         log_output_file,
+        plotting
     )
 
     df_final.to_file(snakemake.output.utility_demand_path, driver="GeoJSON")

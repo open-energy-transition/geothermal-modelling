@@ -364,6 +364,7 @@ rule preprocess_demand_data:
         demand_year=2021,
         holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
         nprocesses=4,
+        plotting=False
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
