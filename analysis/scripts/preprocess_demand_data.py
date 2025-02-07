@@ -21,6 +21,7 @@ def parse_inputs(default_path, demand_year):
     eia_per_capita_filepath = pathlib.Path(
         default_path, snakemake.input.eia_per_capita_path
     )
+    additional_demand_filepath = pathlib.Path(default_path, snakemake.input.additional_demand_data_path)
 
     df_demand_utility = pd.read_excel(demand_utility_path, skiprows=2)
     df_erst_gpd = gpd.read_file(erst_gpd_path)
@@ -33,22 +34,34 @@ def parse_inputs(default_path, demand_year):
         index_col="State",
     )
     df_eia_per_capita = df_eia_per_capita[demand_year]
+
+    # The utility level data adds upto 3294 TWh of sales in 2021 whilst at the state level data adds upto 3800 TWh
+    # The function is used to add data from another EIA table containing sales at the state level
+    df_additional_demand = pd.read_excel(additional_demand_filepath, skiprows=2)
+    df_additional_demand = df_additional_demand.query("Year == 2023")
+    df_additional_demand.rename(columns={'STATE':'State'}, inplace=True)
+    df_additional_demand.set_index('State',inplace=True)
+    df_additional_demand_data = df_additional_demand['Megawatthours.4'] #Refers to total sales (residential+commercial+industrial+transport)
+    df_additional_demand_data = df_additional_demand_data.drop('US')
+    df_demand_grouped = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
+    df_additional_demand_data = df_additional_demand_data - df_demand_grouped
+
     log_output_file.write("Reading input files completed \n")
     log_output_file.write("-------------------------------------------------\n")
 
-    return df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita
+    return df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, df_additional_demand_data
 
 
 def compute_demand_disaggregation(
     holes_mapped_intersect_filter,
     holes_centroid,
-    df_utilities_grouped_state,
+    df_missing_data_state,
     df_demand_utility,
     df_gadm_usa,
 ):
     holes_mapped_intersect_filter["Sales (Megawatthours)"] = 0
     df_final = pd.DataFrame()
-    for state in df_utilities_grouped_state.index:
+    for state in df_missing_data_state.index:
         holes_state = holes_mapped_intersect_filter.query(
             "State == @s", local_dict={"s": state}
         )
@@ -84,12 +97,12 @@ def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text, state_
     return df_per_capita_cons
 
 
-def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state):
+def rescale_demands(df_final, df_demand_utility, df_missing_data_state):
     df_demand_statewise = df_demand_utility.groupby("State")[
         "Sales (Megawatthours)"
     ].sum()
     df_final["rescaling_factor"] = 0
-    for state in df_utilities_grouped_state.index:
+    for state in df_missing_data_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         df_filter_final = df_final.query("State == @state")
         assigned_utility_demand = df_filter_final["Sales (Megawatthours)"].sum()
@@ -153,13 +166,13 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
         m = df_map.explore(column=cmap_col, cmap="jet")
     m.save(os.path.join(plot_path, filename))
 
-
 def map_demands_utilitywise(
     df_demand_utility,
     df_erst_gpd,
     df_country,
     df_gadm_usa,
     df_eia_per_capita,
+    df_additional_demand_data,
     log_output_file,
     plotting,
 ):
@@ -286,6 +299,7 @@ def map_demands_utilitywise(
     df_utilities_grouped_state = df_missing_utilities.groupby("State")[
         "Sales (Megawatthours)"
     ].sum()
+    df_missing_data_state = df_utilities_grouped_state + df_additional_demand_data
 
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
@@ -297,7 +311,7 @@ def map_demands_utilitywise(
     df_final = compute_demand_disaggregation(
         holes_mapped_intersect_filter,
         holes_centroid,
-        df_utilities_grouped_state,
+        df_missing_data_state,
         df_demand_utility,
         df_gadm_usa,
     )
@@ -312,7 +326,7 @@ def map_demands_utilitywise(
         df_final, df_gadm_usa, df_per_capita_cons, "Mid-way", "State"
     )
 
-    df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state)
+    df_final = rescale_demands(df_final, df_demand_utility, df_missing_data_state)
 
     # Final error percentages of unmet demand after rescaling
     df_error = calc_percentage_unmet_demand_by_state(
@@ -409,7 +423,7 @@ if __name__ == "__main__":
     log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
     log_output_file.write("-------------------------------------------------\n")
 
-    (df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita) = (
+    (df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, df_additional_demand_data) = (
         parse_inputs(default_path, demand_year)
     )
 
@@ -419,6 +433,7 @@ if __name__ == "__main__":
         df_country,
         df_gadm_usa,
         df_eia_per_capita,
+        df_additional_demand_data,
         log_output_file,
         plotting
     )
