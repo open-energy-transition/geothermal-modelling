@@ -97,12 +97,12 @@ def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, text, state_
     return df_per_capita_cons
 
 
-def rescale_demands(df_final, df_demand_utility, df_missing_data_state):
+def rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state, df_additional_sales_data):
     df_demand_statewise = df_demand_utility.groupby("State")[
         "Sales (Megawatthours)"
-    ].sum()
+    ].sum() + df_additional_sales_data
     df_final["rescaling_factor"] = 0
-    for state in df_missing_data_state.index:
+    for state in df_utilties_grouped_state.index:
         actual_state_demand = df_demand_statewise.loc[state]
         df_filter_final = df_final.query("State == @state")
         assigned_utility_demand = df_filter_final["Sales (Megawatthours)"].sum()
@@ -299,7 +299,6 @@ def map_demands_utilitywise(
     df_utilities_grouped_state = df_missing_utilities.groupby("State")[
         "Sales (Megawatthours)"
     ].sum()
-    df_missing_data_state = df_utilities_grouped_state + df_additional_demand_data
 
     # Compute centroid of the holes
     holes_centroid = holes_mapped_intersect_filter.copy()
@@ -311,7 +310,7 @@ def map_demands_utilitywise(
     df_final = compute_demand_disaggregation(
         holes_mapped_intersect_filter,
         holes_centroid,
-        df_missing_data_state,
+        df_utilities_grouped_state,
         df_demand_utility,
         df_gadm_usa,
     )
@@ -326,7 +325,7 @@ def map_demands_utilitywise(
         df_final, df_gadm_usa, df_per_capita_cons, "Mid-way", "State"
     )
 
-    df_final = rescale_demands(df_final, df_demand_utility, df_missing_data_state)
+    df_final = rescale_demands(df_final, df_demand_utility, df_utilities_grouped_state, df_additional_demand_data)
 
     # Final error percentages of unmet demand after rescaling
     df_error = calc_percentage_unmet_demand_by_state(
