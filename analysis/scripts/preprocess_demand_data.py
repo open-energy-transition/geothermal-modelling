@@ -80,9 +80,9 @@ def compute_demand_disaggregation(
     return df_final
 
 
-def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_error, text, state_kwd):
+def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_ref_additional, df_error, text, state_kwd):
     df_calc_state = df_calc.groupby(state_kwd)["Sales (Megawatthours)"].sum()
-    df_ref_state = df_ref.groupby(state_kwd)["Sales (Megawatthours)"].sum()
+    df_ref_state = df_ref.groupby(state_kwd)["Sales (Megawatthours)"].sum() + df_ref_additional
     df_error[text] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
     return df_error
 
@@ -285,7 +285,7 @@ def map_demands_utilitywise(
     df_erst_gpd = df_erst_gpd.reset_index()
     df_demand_utility = df_demand_utility.reset_index()
     df_error = calc_percentage_unmet_demand_by_state(
-        df_erst_gpd, df_demand_utility, df_error, "Initial", "STATE"
+        df_erst_gpd, df_demand_utility, df_additional_demand_data, df_error, "Initial", "STATE"
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
         df_erst_gpd, df_gadm_usa, df_per_capita_cons, "Initial", "STATE"
@@ -319,7 +319,7 @@ def map_demands_utilitywise(
 
     # error percentages of unmet demand after assigning average demand to states
     df_error = calc_percentage_unmet_demand_by_state(
-        df_final, df_demand_utility, df_error, "Mid-way", "State"
+        df_final, df_demand_utility, df_additional_demand_data, df_error, "Mid-way", "State"
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
         df_final, df_gadm_usa, df_per_capita_cons, "Mid-way", "State"
@@ -329,7 +329,7 @@ def map_demands_utilitywise(
 
     # Final error percentages of unmet demand after rescaling
     df_error = calc_percentage_unmet_demand_by_state(
-        df_final, df_demand_utility, df_error, "Final", "State"
+        df_final, df_demand_utility, df_additional_demand_data, df_error, "Final", "State"
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
         df_final, df_gadm_usa, df_per_capita_cons, "Final", "State"
