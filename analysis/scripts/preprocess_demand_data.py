@@ -226,7 +226,7 @@ def map_demands_utilitywise(
     holes_exploded_filter = holes_exploded_filter.to_crs(4326)
 
     df_gadm_usa["color"] = get_colors(len(df_gadm_usa))
-    holes_mapped = holes_exploded_filter.sjoin(df_gadm_usa)
+    holes_mapped = gpd.overlay(holes_exploded_filter, df_gadm_usa, how="intersection")
     
     if plotting:
         save_map(holes_mapped, filename="Holes_mapped_GADM.html", color=True, cmap=False)
