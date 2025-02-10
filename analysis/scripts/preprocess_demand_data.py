@@ -356,9 +356,9 @@ def map_demands_utilitywise(
         / df_gadm_usa.groupby("State")["pop"].sum()
     )  # Per capita consumption in kWh
     df_per_capita = df_per_capita.join(df_eia_per_capita)
-    try:
+    if demand_year in df_per_capita.columns:
         df_per_capita.rename(columns={demand_year: "EIA"}, inplace=True)
-    except:
+    else:
         df_per_capita.rename(columns={2022: "EIA"}, inplace=True)
 
     fig = px.bar(df_per_capita, barmode="group")
