@@ -33,12 +33,16 @@ def parse_inputs(default_path, demand_year):
         skiprows=2,
         index_col="State",
     )
-    df_eia_per_capita = df_eia_per_capita[demand_year]
+    # Per capita data available only until 2022
+    try:
+        df_eia_per_capita = df_eia_per_capita[demand_year]
+    except:
+        df_eia_per_capita = df_eia_per_capita[2022]
 
     # The utility level data adds upto 3294 TWh of sales in 2021 whilst at the state level data adds upto 3800 TWh
     # The function is used to add data from another EIA table containing sales at the state level
     df_additional_demand = pd.read_excel(additional_demand_filepath, skiprows=2)
-    df_additional_demand = df_additional_demand.query("Year == 2023")
+    df_additional_demand = df_additional_demand.query("Year == @demand_year")
     df_additional_demand.rename(columns={'STATE':'State'}, inplace=True)
     df_additional_demand.set_index('State',inplace=True)
     df_additional_demand_data = df_additional_demand['Megawatthours.4'] #Refers to total sales (residential+commercial+industrial+transport)
@@ -174,6 +178,7 @@ def map_demands_utilitywise(
     df_eia_per_capita,
     df_additional_demand_data,
     log_output_file,
+    demand_year,
     plotting,
 ):
     total_demand = df_demand_utility["Sales (Megawatthours)"].sum() / 1e6
@@ -351,7 +356,7 @@ def map_demands_utilitywise(
         / df_gadm_usa.groupby("State")["pop"].sum()
     )  # Per capita consumption in kWh
     df_per_capita = df_per_capita.join(df_eia_per_capita)
-    df_per_capita.rename(columns={2021: "EIA"}, inplace=True)
+    df_per_capita.rename(columns={demand_year: "EIA"}, inplace=True)
 
     fig = px.bar(df_per_capita, barmode="group")
     fig.update_layout(yaxis_title="Per capita consumption (kWh)", xaxis_title="State")
@@ -434,6 +439,7 @@ if __name__ == "__main__":
         df_eia_per_capita,
         df_additional_demand_data,
         log_output_file,
+        demand_year,
         plotting
     )
 
