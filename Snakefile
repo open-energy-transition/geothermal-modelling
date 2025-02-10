@@ -358,10 +358,10 @@ if config["geothermal"].get("generation_comparison", True):
         script:
             "analysis/scripts/generation_comparison.py"
 
-
+config_demand_year = config["geothermal"]["demand_year"]
 rule preprocess_demand_data:
     params:
-        demand_year=2023,
+        demand_year=config_demand_year,
         holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
         nprocesses=4,
         plotting=False
@@ -419,22 +419,20 @@ rule preprocess_demand_data:
 
 
 rule build_demand_profiles_from_eia:
-    params:
-        demand_year = 2023
     input:
         BA_demand_path1 = pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "electricity_demand_data",
-            "EIA930_{params.demand_year}_Jan_Jun_opt.csv",
+            "EIA930_{config_demand_year}_Jan_Jun_opt.csv",
         ),
         BA_demand_path2 = pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "electricity_demand_data",
-            "EIA930_{params.demand_year}_Jul_Dec_opt.csv",
+            "EIA930_{config_demand_year}_Jul_Dec_opt.csv",
         ),
         BA_shape_path = pathlib.Path(
             "analysis",

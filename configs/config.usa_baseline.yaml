@@ -15,7 +15,7 @@ countries: ["US"]
 
 geothermal:
   retrieve_geothermal_databundle: true # Exclusive for geothermal repository
-  demand_year: 2021
+  demand_year: 2023
   summary:
     installed_capacity_comparison: true
     generation_comparison: true
