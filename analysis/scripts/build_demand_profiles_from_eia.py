@@ -8,8 +8,8 @@ import pypsa
 
 
 def parse_inputs(default_path):
-    BA_demand_path1 = pathlib.Path(default_path, snakemake.input.BA_demand_path1)
-    BA_demand_path2 = pathlib.Path(default_path, snakemake.input.BA_demand_path2)
+    BA_demand_path1 = pathlib.Path(default_path, snakemake.input.BA_demand_path1[0])
+    BA_demand_path2 = pathlib.Path(default_path, snakemake.input.BA_demand_path2[0])
     df_ba_demand1 = pd.read_csv(BA_demand_path1, index_col="period")
     df_ba_demand2 = pd.read_csv(BA_demand_path2, index_col="period")
     df_ba_demand = df_ba_demand1._append(df_ba_demand2)
