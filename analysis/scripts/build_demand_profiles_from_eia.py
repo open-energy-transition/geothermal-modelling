@@ -12,7 +12,7 @@ Relevant Settings
 
 
 .. seealso::
-    Documentation of the configuration file ``config.usa_baseline.yaml`` 
+    Documentation of the configuration file ``config.usa_baseline.yaml``
 
 
 Inputs
@@ -40,6 +40,7 @@ Outputs
 Description
 -----------
 """
+
 import pathlib
 import datetime as dt
 import pandas as pd
@@ -51,7 +52,7 @@ import pypsa
 
 def parse_inputs(default_path, distance_crs):
     """
-    Load all input data  
+    Load all input data
 
     Parameters
     ----------
@@ -89,20 +90,24 @@ def parse_inputs(default_path, distance_crs):
         default_path, snakemake.input.utility_demand_path
     )
     df_utility_demand = gpd.read_file(utility_demand_path)
-    # Todo: index_right no longer an available in the upstream packages - needs to be modified 
+    # Todo: index_right no longer an available in the upstream packages - needs to be modified
     df_utility_demand.rename(columns={"index_right": "index_right_1"}, inplace=True)
 
     df_utility_demand = df_utility_demand.to_crs(distance_crs)
 
-    pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_network_path[0])
+    pypsa_network_path = pathlib.Path(
+        default_path, snakemake.input.pypsa_network_path[0]
+    )
     pypsa_network = pypsa.Network(pypsa_network_path)
 
     return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network
 
 
-def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network, geo_crs, distance_crs):
+def build_demand_profiles(
+    df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network, geo_crs, distance_crs
+):
     """
-    Build spatiotemporal demand profiles 
+    Build spatiotemporal demand profiles
 
     Parameters
     ----------
@@ -139,7 +144,7 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     df_utility_centroid = gpd.sjoin_nearest(
         df_utility_centroid, gdf_ba_shape_filtered, how="left"
     )
-    # Todo: index_right no longer an available in the upstream packages - needs to be modified 
+    # Todo: index_right no longer an available in the upstream packages - needs to be modified
     df_utility_centroid.rename(columns={"index_right": "index_right_2"}, inplace=True)
 
     # temporal scaling factor
@@ -159,7 +164,7 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     pypsa_gpd["color"] = get_colors(len(pypsa_gpd))
 
     df_utility_centroid = gpd.sjoin_nearest(df_utility_centroid, pypsa_gpd, how="left")
-    # Todo: index_right no longer an available in the upstream packages - needs to be modified 
+    # Todo: index_right no longer an available in the upstream packages - needs to be modified
     df_utility_centroid.rename(columns={"index_right": "PyPSA_bus"}, inplace=True)
 
     df_demand_bus = pd.DataFrame(
@@ -182,18 +187,26 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     df_demand_bus_timeshifted = df_demand_bus[-9:-3]._append(df_demand_bus[:-9])
     df_demand_bus_timeshifted = df_demand_bus_timeshifted[:8760]
 
-    df_demand_bus_timeshifted = df_demand_bus_timeshifted.reset_index().rename(columns={'period':'time'})
-    df_demand_bus_timeshifted.set_index('time',inplace=True)
+    df_demand_bus_timeshifted = df_demand_bus_timeshifted.reset_index().rename(
+        columns={"period": "time"}
+    )
+    df_demand_bus_timeshifted.set_index("time", inplace=True)
     df_demand_bus_timeshifted.index = pypsa_network.snapshots
 
     return df_demand_bus_timeshifted
 
+
 def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network_path):
-    time_resolution = (8760 / len(pypsa_network.snapshots)) 
+    time_resolution = 8760 / len(pypsa_network.snapshots)
     # Groupby time resolution and then convert from kWh -> kW
-    df_demand_profiles.index = np.arange(0,len(df_demand_profiles.index))
-    df_demand_profiles_agg = df_demand_profiles.groupby(df_demand_profiles.index // int(time_resolution)).sum() / time_resolution
-    df_demand_profiles_agg = df_demand_profiles_agg[0:len(pypsa_network.snapshots)]
+    df_demand_profiles.index = np.arange(0, len(df_demand_profiles.index))
+    df_demand_profiles_agg = (
+        df_demand_profiles.groupby(
+            df_demand_profiles.index // int(time_resolution)
+        ).sum()
+        / time_resolution
+    )
+    df_demand_profiles_agg = df_demand_profiles_agg[0 : len(pypsa_network.snapshots)]
     df_demand_profiles_agg.index = pypsa_network.snapshots
     pypsa_network.loads_t.p_set = df_demand_profiles_agg
     pypsa_network.export_to_netcdf(pypsa_network_path)
@@ -209,7 +222,9 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "demand_modelling")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
-    output_demand_profile_path = pathlib.Path(default_path, snakemake.output.demand_profile_path)
+    output_demand_profile_path = pathlib.Path(
+        default_path, snakemake.output.demand_profile_path
+    )
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(output_demand_profile_path).parent.mkdir(parents=True, exist_ok=True)
@@ -229,7 +244,12 @@ if __name__ == "__main__":
     )
 
     df_demand_profiles = build_demand_profiles(
-        df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network, geo_crs, distance_crs
+        df_utility_demand,
+        df_ba_demand,
+        gdf_ba_shape,
+        pypsa_network,
+        geo_crs,
+        distance_crs,
     )
 
     df_demand_profiles.to_csv(output_demand_profile_path)

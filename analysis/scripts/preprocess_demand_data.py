@@ -1,5 +1,5 @@
 """
-Preprocesses utility level demand data from EIA 
+Preprocesses utility level demand data from EIA
 
 Relevant Settings
 -----------------
@@ -14,7 +14,7 @@ Relevant Settings
             plotting:
 
 .. seealso::
-    Documentation of the configuration file ``config.usa_baseline.yaml`` 
+    Documentation of the configuration file ``config.usa_baseline.yaml``
 
 
 Inputs
@@ -41,6 +41,7 @@ Outputs
 Description
 -----------
 """
+
 import pathlib
 import datetime as dt
 import geopandas as gpd
@@ -89,7 +90,9 @@ def parse_inputs(default_path, demand_year):
     eia_per_capita_filepath = pathlib.Path(
         default_path, snakemake.input.eia_per_capita_path
     )
-    additional_demand_filepath = pathlib.Path(default_path, snakemake.input.additional_demand_data_path)
+    additional_demand_filepath = pathlib.Path(
+        default_path, snakemake.input.additional_demand_data_path
+    )
 
     df_demand_utility = pd.read_excel(demand_utility_path, skiprows=2)
     df_erst_gpd = gpd.read_file(erst_gpd_path)
@@ -111,17 +114,28 @@ def parse_inputs(default_path, demand_year):
     # The function is used to add data from another EIA table containing sales at the state level
     df_additional_demand = pd.read_excel(additional_demand_filepath, skiprows=2)
     df_additional_demand = df_additional_demand.query("Year == @demand_year")
-    df_additional_demand.rename(columns={'STATE':'State'}, inplace=True)
-    df_additional_demand.set_index('State',inplace=True)
-    df_additional_demand_data = df_additional_demand['Megawatthours.4'] #Refers to total sales (residential+commercial+industrial+transport)
-    df_additional_demand_data = df_additional_demand_data.drop('US')
-    df_demand_grouped = df_demand_utility.groupby('State')['Sales (Megawatthours)'].sum()
+    df_additional_demand.rename(columns={"STATE": "State"}, inplace=True)
+    df_additional_demand.set_index("State", inplace=True)
+    df_additional_demand_data = df_additional_demand[
+        "Megawatthours.4"
+    ]  # Refers to total sales (residential+commercial+industrial+transport)
+    df_additional_demand_data = df_additional_demand_data.drop("US")
+    df_demand_grouped = df_demand_utility.groupby("State")[
+        "Sales (Megawatthours)"
+    ].sum()
     df_additional_demand_data = df_additional_demand_data - df_demand_grouped
 
     log_output_file.write("Reading input files completed \n")
     log_output_file.write("-------------------------------------------------\n")
 
-    return df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, df_additional_demand_data
+    return (
+        df_demand_utility,
+        df_erst_gpd,
+        df_country,
+        df_gadm_usa,
+        df_eia_per_capita,
+        df_additional_demand_data,
+    )
 
 
 def compute_demand_disaggregation(
@@ -172,7 +186,9 @@ def compute_demand_disaggregation(
     return df_final
 
 
-def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_ref_additional, df_error, error_column, state_kwd):
+def calc_percentage_unmet_demand_by_state(
+    df_calc, df_ref, df_ref_additional, df_error, error_column, state_kwd
+):
     """
     Calculate percentage unmet demand at various stages of the algorithm
     Parameters
@@ -195,12 +211,16 @@ def calc_percentage_unmet_demand_by_state(df_calc, df_ref, df_ref_additional, df
         Error values in percentage at different stages of algorithm
     """
     df_calc_state = df_calc.groupby(state_kwd)["Sales (Megawatthours)"].sum()
-    df_ref_state = df_ref.groupby(state_kwd)["Sales (Megawatthours)"].sum() + df_ref_additional
+    df_ref_state = (
+        df_ref.groupby(state_kwd)["Sales (Megawatthours)"].sum() + df_ref_additional
+    )
     df_error[error_column] = (df_ref_state - df_calc_state) * 100 / (df_ref_state)
     return df_error
 
 
-def calc_per_capita_kWh_state(df_calc, df_gadm, df_per_capita_cons, column_name, state_kwd):
+def calc_per_capita_kWh_state(
+    df_calc, df_gadm, df_per_capita_cons, column_name, state_kwd
+):
     """
     Calculate per capita statewise electrical demand at various stages of the algorithm
     Parameters
@@ -246,9 +266,10 @@ def rescale_demands(df_final, df_demand_utility, df_additional_sales_data):
     df_final: pandas dataframe
         Final rescaled demand values for all utilities and holes
     """
-    df_demand_statewise = df_demand_utility.groupby("State")[
-        "Sales (Megawatthours)"
-    ].sum() + df_additional_sales_data
+    df_demand_statewise = (
+        df_demand_utility.groupby("State")["Sales (Megawatthours)"].sum()
+        + df_additional_sales_data
+    )
     df_final["rescaling_factor"] = 0
     for state in df_demand_statewise.index:
         actual_state_demand = df_demand_statewise.loc[state]
@@ -314,15 +335,15 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
     Save US map as html file
     Parameters
     ----------
-    df_map : geopandas 
+    df_map : geopandas
         geopandas file that is to be plotted on the map
-    filename : str 
+    filename : str
         Name to be given to the saved plot (HTML file)
-    color : boolean 
+    color : boolean
         If True, each row of geometry is coloured based on the color assigned to it the gpd dataframe
-    cmap : boolean 
+    cmap : boolean
         If True, each row of geometry is coloured based on the magnitude of the value in the cmap_col specified
-    cmap_col : str 
+    cmap_col : str
         Column on which a color map is used to plot the geometry
 
     """
@@ -338,6 +359,7 @@ def save_map(df_map, filename, color, cmap, cmap_col=""):
         m = df_map.explore(column=cmap_col, cmap="jet")
     m.save(os.path.join(plot_path, filename))
 
+
 def map_demands_utilitywise(
     df_demand_utility,
     df_erst_gpd,
@@ -349,10 +371,10 @@ def map_demands_utilitywise(
     demand_year,
     plotting,
     geo_crs,
-    area_crs
+    area_crs,
 ):
     """
-    Map ERST utility shapes to utility level demand (sales) data 
+    Map ERST utility shapes to utility level demand (sales) data
     Identify holes in the country geometry
     Calculate population at utility level
     Map portion of missing demands to holes based on per capita electricity consumption
@@ -387,7 +409,7 @@ def map_demands_utilitywise(
     df_final: geopandas dataframe
         Utility shapes and holes mapped to their respective demands and rescaled to match reference values
     """
-    
+
     total_demand = df_demand_utility["Sales (Megawatthours)"].sum() / 1e6
     log_output_file.write(f"Total sales (TWh) as in EIA sales data: {total_demand} \n")
 
@@ -442,19 +464,24 @@ def map_demands_utilitywise(
 
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
     holes_exploded_filter = holes_exploded.query("Area > @holes_area_threshold")
-    
+
     if plotting:
         save_map(
-            holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False
+            holes_exploded_filter,
+            filename="Holes_considered.html",
+            color=False,
+            cmap=False,
         )
         log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
     holes_exploded_filter = holes_exploded_filter.to_crs(geo_crs)
 
     df_gadm_usa["color"] = get_colors(len(df_gadm_usa))
     holes_mapped = gpd.overlay(holes_exploded_filter, df_gadm_usa, how="intersection")
-    
+
     if plotting:
-        save_map(holes_mapped, filename="Holes_mapped_GADM.html", color=True, cmap=False)
+        save_map(
+            holes_mapped, filename="Holes_mapped_GADM.html", color=True, cmap=False
+        )
         log_output_file.write("Generated holes mapped to GADM \n")
 
     # # Compute intersecting areas of holes and states
@@ -497,7 +524,12 @@ def map_demands_utilitywise(
     df_erst_gpd = df_erst_gpd.reset_index()
     df_demand_utility = df_demand_utility.reset_index()
     df_error = calc_percentage_unmet_demand_by_state(
-        df_erst_gpd, df_demand_utility, df_additional_demand_data, df_error, "Initial", "STATE"
+        df_erst_gpd,
+        df_demand_utility,
+        df_additional_demand_data,
+        df_error,
+        "Initial",
+        "STATE",
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
         df_erst_gpd, df_gadm_usa, df_per_capita_cons, "Initial", "STATE"
@@ -531,7 +563,12 @@ def map_demands_utilitywise(
 
     # error percentages of unmet demand after assigning average demand to states
     df_error = calc_percentage_unmet_demand_by_state(
-        df_final, df_demand_utility, df_additional_demand_data, df_error, "Mid-way", "State"
+        df_final,
+        df_demand_utility,
+        df_additional_demand_data,
+        df_error,
+        "Mid-way",
+        "State",
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
         df_final, df_gadm_usa, df_per_capita_cons, "Mid-way", "State"
@@ -541,7 +578,12 @@ def map_demands_utilitywise(
 
     # Final error percentages of unmet demand after rescaling
     df_error = calc_percentage_unmet_demand_by_state(
-        df_final, df_demand_utility, df_additional_demand_data, df_error, "Final", "State"
+        df_final,
+        df_demand_utility,
+        df_additional_demand_data,
+        df_error,
+        "Final",
+        "State",
     )
     df_per_capita_cons = calc_per_capita_kWh_state(
         df_final, df_gadm_usa, df_per_capita_cons, "Final", "State"
@@ -640,9 +682,14 @@ if __name__ == "__main__":
     log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
     log_output_file.write("-------------------------------------------------\n")
 
-    (df_demand_utility, df_erst_gpd, df_country, df_gadm_usa, df_eia_per_capita, df_additional_demand_data) = (
-        parse_inputs(default_path, demand_year)
-    )
+    (
+        df_demand_utility,
+        df_erst_gpd,
+        df_country,
+        df_gadm_usa,
+        df_eia_per_capita,
+        df_additional_demand_data,
+    ) = parse_inputs(default_path, demand_year)
 
     df_final = map_demands_utilitywise(
         df_demand_utility,
@@ -655,7 +702,7 @@ if __name__ == "__main__":
         demand_year,
         plotting,
         geo_crs,
-        area_crs
+        area_crs,
     )
 
     df_final.to_file(snakemake.output.utility_demand_path, driver="GeoJSON")

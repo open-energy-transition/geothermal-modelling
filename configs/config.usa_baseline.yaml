@@ -19,7 +19,7 @@ geothermal:
   demand_modelling:
     holes_area_threshold: 100 # to ignore holes smaller than this area in sq.km (CRS 6372)
     nprocesses: 4
-    plotting: False
+    plotting: false
   summary:
     installed_capacity_comparison: true
     generation_comparison: true
