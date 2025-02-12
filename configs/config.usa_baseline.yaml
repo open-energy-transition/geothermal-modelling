@@ -16,10 +16,15 @@ countries: ["US"]
 geothermal:
   retrieve_geothermal_databundle: true # Exclusive for geothermal repository
   demand_year: 2023
+  demand_modelling:
+    holes_area_threshold: 100 # to ignore holes smaller than this area in sq.km (CRS 6372)
+    nprocesses: 4
+    plotting: false
   summary:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
+  area_crs: 6372
 
 
 enable:
@@ -80,7 +85,7 @@ cluster_options:
     exclude_carriers: []
     remove_stubs: true
     remove_stubs_across_borders: true
-    p_threshold_drop_isolated: 20 # [MW] isolated buses are being discarded if bus mean power is below the specified threshold
+    p_threshold_drop_isolated: 0 # [MW] isolated buses are being discarded if bus mean power is below the specified threshold
     p_threshold_merge_isolated: 300 # [MW] isolated buses are being merged into a single isolated bus if a bus mean power is below the specified threshold
     s_threshold_fetch_isolated: 0.05 # [-] a share of the national load for merging an isolated network into a backbone network
   cluster_network:
