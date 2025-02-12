@@ -240,7 +240,7 @@ if __name__ == "__main__":
     log_output_file = open(log_output_file_path, "w")
 
     (df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network) = parse_inputs(
-        default_path
+        default_path, distance_crs
     )
 
     df_demand_profiles = build_demand_profiles(
@@ -253,7 +253,5 @@ if __name__ == "__main__":
     )
 
     df_demand_profiles.to_csv(output_demand_profile_path)
-
-    # modify_pypsa_network_demand(df_demand_profiles, pypsa_network, output_pypsa_network_path)
 
     log_output_file.close()
