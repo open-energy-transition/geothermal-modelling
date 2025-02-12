@@ -362,9 +362,9 @@ if config["geothermal"].get("generation_comparison", True):
 rule preprocess_demand_data:
     params:
         demand_year=config["geothermal"]["demand_year"],
-        holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
-        nprocesses=4,
-        plotting=False,
+        holes_area_threshold=config["geothermal"]["demand_modelling"]["holes_area_threshold"],  # to ignore holes smaller than this area in sq.km (CRS 6372)
+        nprocesses=config["geothermal"]["demand_modelling"]["nprocesses"],
+        plotting=config["geothermal"]["demand_modelling"]["plotting"],
         geo_crs: config['crs']['geo_crs']
         distance_crs: config['crs']['distance_crs']
         area_crs: config['geothermal']['area_crs']
