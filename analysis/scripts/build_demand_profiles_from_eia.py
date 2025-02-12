@@ -12,7 +12,7 @@ def parse_inputs(default_path):
     BA_demand_path2 = pathlib.Path(default_path, snakemake.input.BA_demand_path2[0])
     df_ba_demand1 = pd.read_csv(BA_demand_path1, index_col="period")
     df_ba_demand2 = pd.read_csv(BA_demand_path2, index_col="period")
-    df_ba_demand = df_ba_demand1._append(df_ba_demand2)
+    df_ba_demand = df_ba_demand1._append(df_ba_demand2[3:])
     df_ba_demand = df_ba_demand.replace(0, np.nan)
     df_ba_demand = df_ba_demand.dropna(axis=1)
 
@@ -92,6 +92,10 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     # The EIA profiles start at 6:00:00 hours on 1/1 instead of 00:00:00 hours - rolling over the time series to start at 00:00 hours
     df_demand_bus_timeshifted = df_demand_bus[-9:-3]._append(df_demand_bus[:-9])
     df_demand_bus_timeshifted = df_demand_bus_timeshifted[:8760]
+
+    df_demand_bus_timeshifted = df_demand_bus_timeshifted.reset_index().rename(columns={'period':'time'})
+    df_demand_bus_timeshifted.set_index('time',inplace=True)
+    df_demand_bus_timeshifted.index = pypsa_network.snapshots
 
     return df_demand_bus_timeshifted
 
