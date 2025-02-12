@@ -364,7 +364,10 @@ rule preprocess_demand_data:
         demand_year=config["geothermal"]["demand_year"],
         holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km (CRS 6372)
         nprocesses=4,
-        plotting=False
+        plotting=False,
+        geo_crs: config['crs']['geo_crs']
+        distance_crs: config['crs']['distance_crs']
+        area_crs: config['geothermal']['area_crs']
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
@@ -419,6 +422,9 @@ rule preprocess_demand_data:
 
 
 rule build_demand_profiles_from_eia:
+    params:
+        geo_crs: config['crs']['geo_crs']
+        distance_crs: config['crs']['distance_crs']
     input:
         BA_demand_path1 = expand(
             pathlib.Path(

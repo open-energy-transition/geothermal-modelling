@@ -266,9 +266,6 @@ def rescale_demands(df_final, df_demand_utility, df_additional_sales_data):
     return df_final
 
 
-# df_erst_gpd: geopandas dataframe -> ERST shape file
-# df_gadm_usa: geopandas dataframe -> GADM shape file
-# df_demand_utility: pandas dataframe -> Demand data from EIA
 def overlay_demands(df_erst_gpd, df_gadm_usa, df_demand_utility):
     """
     Map ERST utility shapes to utility level demand (sales) data
@@ -351,6 +348,8 @@ def map_demands_utilitywise(
     log_output_file,
     demand_year,
     plotting,
+    geo_crs,
+    area_crs
 ):
     """
     Map ERST utility shapes to utility level demand (sales) data 
@@ -379,6 +378,10 @@ def map_demands_utilitywise(
         year for which electrical demand is modelled
     plotting: boolean
         If set to true - html plots are generated else no
+    distance_crs: CRS code
+        Co-ordinate reference system to retrieve coordinate in 'm'
+    area_crs: CRS code
+        Co-ordinate reference system to retrieve coordinates in 'sq.m'
     Returns
     -------
     df_final: geopandas dataframe
@@ -434,7 +437,7 @@ def map_demands_utilitywise(
     if plotting:
         save_map(holes_exploded, filename="Holes.html", color=False, cmap=False)
         log_output_file.write("Generated holes exploded map \n")
-    holes_exploded = holes_exploded.to_crs(6372)
+    holes_exploded = holes_exploded.to_crs(area_crs)
     holes_exploded["Area"] = holes_exploded.area / 1e6
 
     # Filtering out holes with very small areas (only hole areas larger than area_threshold considered)
@@ -445,7 +448,7 @@ def map_demands_utilitywise(
             holes_exploded_filter, filename="Holes_considered.html", color=False, cmap=False
         )
         log_output_file.write(f"Generated holes greater than {holes_area_threshold} \n")
-    holes_exploded_filter = holes_exploded_filter.to_crs(4326)
+    holes_exploded_filter = holes_exploded_filter.to_crs(geo_crs)
 
     df_gadm_usa["color"] = get_colors(len(df_gadm_usa))
     holes_mapped = gpd.overlay(holes_exploded_filter, df_gadm_usa, how="intersection")
@@ -629,6 +632,9 @@ if __name__ == "__main__":
     holes_area_threshold = snakemake.params.holes_area_threshold
     nprocesses = snakemake.params.nprocesses
     plotting = snakemake.params.plotting
+    geo_crs = snakemake.params.geo_crs
+    area_crs = snakemake.params.area_crs
+
     log_output_file.write("Loading snakemake parameters \n")
     log_output_file.write(f"demand_year = {demand_year} \n")
     log_output_file.write(f"holes_area_threshold = {holes_area_threshold} \n")
@@ -647,7 +653,9 @@ if __name__ == "__main__":
         df_additional_demand_data,
         log_output_file,
         demand_year,
-        plotting
+        plotting,
+        geo_crs,
+        area_crs
     )
 
     df_final.to_file(snakemake.output.utility_demand_path, driver="GeoJSON")

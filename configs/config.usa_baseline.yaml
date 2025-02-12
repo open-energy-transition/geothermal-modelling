@@ -20,6 +20,7 @@ geothermal:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
+  area_crs: 6372
 
 
 enable:

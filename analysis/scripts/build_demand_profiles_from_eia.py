@@ -49,7 +49,7 @@ import numpy as np
 import pypsa
 
 
-def parse_inputs(default_path):
+def parse_inputs(default_path, distance_crs):
     """
     Load all input data  
 
@@ -57,6 +57,8 @@ def parse_inputs(default_path):
     ----------
     default_path: str
         current total directory path
+    distance_crs: CRS code
+        Co-ordinate reference system to retrieve coordinate in 'm'
 
     Returns
     -------
@@ -81,15 +83,16 @@ def parse_inputs(default_path):
         default_path, snakemake.input.BA_shape_path
     )
     gdf_ba_shape = gpd.read_file(balancing_authority_shapefile)
-    gdf_ba_shape = gdf_ba_shape.to_crs(3857)
+    gdf_ba_shape = gdf_ba_shape.to_crs(distance_crs)
 
     utility_demand_path = pathlib.Path(
         default_path, snakemake.input.utility_demand_path
     )
     df_utility_demand = gpd.read_file(utility_demand_path)
+    # Todo: index_right no longer an available in the upstream packages - needs to be modified 
     df_utility_demand.rename(columns={"index_right": "index_right_1"}, inplace=True)
 
-    df_utility_demand = df_utility_demand.to_crs(3857)
+    df_utility_demand = df_utility_demand.to_crs(distance_crs)
 
     pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_network_path[0])
     pypsa_network = pypsa.Network(pypsa_network_path)
@@ -97,7 +100,7 @@ def parse_inputs(default_path):
     return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network
 
 
-def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network):
+def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network, geo_crs, distance_crs):
     """
     Build spatiotemporal demand profiles 
 
@@ -111,6 +114,10 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
         Balancing Authority shapes
     pypsa_network: pypsa
         network to obtain pypsa bus information
+    geo_crs: CRS code
+        Co-ordinate reference system to retrieve coordinates in 'geometrical degrees'
+    distance_crs: CRS code
+        Co-ordinate reference system to retrieve coordinate in 'm'
 
     Returns
     -------
@@ -132,6 +139,7 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     df_utility_centroid = gpd.sjoin_nearest(
         df_utility_centroid, gdf_ba_shape_filtered, how="left"
     )
+    # Todo: index_right no longer an available in the upstream packages - needs to be modified 
     df_utility_centroid.rename(columns={"index_right": "index_right_2"}, inplace=True)
 
     # temporal scaling factor
@@ -145,12 +153,13 @@ def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_n
     # Mapping demand utilities to nearest PyPSA bus
     df_reqd = pypsa_network.buses.query('carrier == "AC"')
     pypsa_gpd = gpd.GeoDataFrame(
-        df_reqd, geometry=gpd.points_from_xy(df_reqd.x, df_reqd.y), crs=4326
+        df_reqd, geometry=gpd.points_from_xy(df_reqd.x, df_reqd.y), crs=geo_crs
     )
-    pypsa_gpd = pypsa_gpd.to_crs(3857)
+    pypsa_gpd = pypsa_gpd.to_crs(distance_crs)
     pypsa_gpd["color"] = get_colors(len(pypsa_gpd))
 
     df_utility_centroid = gpd.sjoin_nearest(df_utility_centroid, pypsa_gpd, how="left")
+    # Todo: index_right no longer an available in the upstream packages - needs to be modified 
     df_utility_centroid.rename(columns={"index_right": "PyPSA_bus"}, inplace=True)
 
     df_demand_bus = pd.DataFrame(
@@ -200,12 +209,13 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "demand_modelling")
     plot_path = pathlib.Path(default_path, "analysis", "plots", "demand_modelling")
-    # output_path = pathlib.Path(default_path, "analysis", "output", "demand_modelling")
     output_demand_profile_path = pathlib.Path(default_path, snakemake.output.demand_profile_path)
-    # output_pypsa_network_path = pathlib.Path(default_path, snakemake.output.pypsa_network_path[0])
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
     pathlib.Path(output_demand_profile_path).parent.mkdir(parents=True, exist_ok=True)
+
+    geo_crs = snakemake.params.geo_crs
+    distance_crs = snakemake.params.distance_crs
 
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
@@ -219,7 +229,7 @@ if __name__ == "__main__":
     )
 
     df_demand_profiles = build_demand_profiles(
-        df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network
+        df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network, geo_crs, distance_crs
     )
 
     df_demand_profiles.to_csv(output_demand_profile_path)
