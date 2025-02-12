@@ -1,3 +1,45 @@
+"""
+Converts annual spatial utility demand data into time series profiles
+
+Relevant Settings
+-----------------
+
+.. code:: yaml
+
+    geothermal:
+        demand_modelling:
+            demand_year:
+
+
+.. seealso::
+    Documentation of the configuration file ``config.usa_baseline.yaml`` 
+
+
+Inputs
+------
+
+- ``shapes/country_shapes.geojson``
+
+- ``analysis/gdrive_data/data/electricity_demand_data/demand_data/table_10_EIA_utility_sales.xlsx``
+
+- ``analysis/gdrive_data/data/electricity_demand_data/demand_data/Electric_Retail_Service_Territories.geojson``
+
+- ``analysis/gdrive_data/data/shape_files/gadm41_USA_1.json``
+
+- ``analysis/gdrive_data/data/electricity_demand_data/use_es_capita.xlsx``
+
+- ``analysis/gdrive_data/data/electricity_demand_data/HS861 2010-.xlsx``
+
+
+Outputs
+-------
+
+- ``resources/demand_profiles.csv``
+
+
+Description
+-----------
+"""
 import pathlib
 import datetime as dt
 import pandas as pd
@@ -8,6 +50,25 @@ import pypsa
 
 
 def parse_inputs(default_path):
+    """
+    Load all input data  
+
+    Parameters
+    ----------
+    default_path: str
+        current total directory path
+
+    Returns
+    -------
+    df_ba_demand: pandas dataframe
+        Balancing Authority demand profiles
+    gdf_ba_shape: geopandas dataframe
+        Balancing Authority shapes
+    df_utility_demand: geopandas dataframe
+        Output of preprocess_demand_data - demand mapped to utility level shapes and holes
+    pypsa_network: pypsa
+        network to obtain pypsa bus information
+    """
     BA_demand_path1 = pathlib.Path(default_path, snakemake.input.BA_demand_path1[0])
     BA_demand_path2 = pathlib.Path(default_path, snakemake.input.BA_demand_path2[0])
     df_ba_demand1 = pd.read_csv(BA_demand_path1, index_col="period")
@@ -37,6 +98,25 @@ def parse_inputs(default_path):
 
 
 def build_demand_profiles(df_utility_demand, df_ba_demand, gdf_ba_shape, pypsa_network):
+    """
+    Build spatiotemporal demand profiles 
+
+    Parameters
+    ----------
+    df_utility_demand: geopandas dataframe
+        Output of preprocess_demand_data - demand mapped to utility level shapes and holes
+    df_ba_demand: pandas dataframe
+        Balancing Authority demand profiles
+    gdf_ba_shape: geopandas dataframe
+        Balancing Authority shapes
+    pypsa_network: pypsa
+        network to obtain pypsa bus information
+
+    Returns
+    -------
+    df_demand_bus_timeshifted: pandas dataframe
+        bus-wise demand profiles
+    """
     # Obtaining the centroids of the Utility demands
     df_utility_centroid = df_utility_demand.copy()
     df_utility_centroid.geometry = df_utility_centroid.geometry.centroid
