@@ -76,8 +76,8 @@ def parse_inputs(default_path, distance_crs):
     df_ba_demand1 = pd.read_csv(BA_demand_path1, index_col="period")
     df_ba_demand2 = pd.read_csv(BA_demand_path2, index_col="period")
     df_ba_demand = df_ba_demand1._append(df_ba_demand2[3:])
-    df_ba_demand = df_ba_demand.replace(0, np.nan)
-    df_ba_demand = df_ba_demand.dropna(axis=1)
+    # df_ba_demand = df_ba_demand.replace(0, np.nan)
+    # df_ba_demand = df_ba_demand.dropna(axis=1)
 
     balancing_authority_shapefile = pathlib.Path(
         default_path, snakemake.input.BA_shape_path
