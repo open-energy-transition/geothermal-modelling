@@ -337,7 +337,7 @@ if config["geothermal"].get("generation_comparison", True):
                 "data",
                 "electricity_generation_data",
                 "EIA_statewise_data",
-                "use_all_phy.xlsx",
+                "use_all_phy_update.xlsx",
             ),
             gadm_shapes_path=pathlib.Path(
                 "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
@@ -453,16 +453,6 @@ rule build_demand_profiles_from_eia:
             "demand_modelling",
             "ERST_mapped_demand_centroids.geojson",
         ),
-        #pypsa_network_path = expand(
-        #    pathlib.Path(       
-        #        "workflow",
-        #        "pypsa-earth",
-        #        "networks",
-        #        run_name,
-        #        "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
-        #    ),
-        #    **config["scenario"],
-        #)
         pypsa_network_path = (
             pathlib.Path(       
                 "workflow",
@@ -484,33 +474,6 @@ rule build_demand_profiles_from_eia:
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
     
-
-rule copy_pypsa_network:
-    input:
-        expand(
-            pathlib.Path(       
-                "workflow",
-                "pypsa-earth",
-                "networks",
-                run_name,
-                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_demand.nc"
-            ),
-            **config["scenario"],
-        )
-    output:
-        expand(
-            pathlib.Path(       
-                "workflow",
-                "pypsa-earth",
-                "networks",
-                run_name,
-                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc"
-            ),
-            **config["scenario"],
-        )
-    shell:
-        "cp {input} {output}"
-
 
 rule summary:
     input:
