@@ -483,17 +483,12 @@ rule build_demand_profiles_from_eia:
 
 rule summary:
     input:
-        expand(
-            pathlib.Path("analysis", "plots", "{filedir}"),
-            filedir=[
-                "generation_comparison",
-                installed_capacity_comparison_plot_folder_name,
-            ],
-        ),
+        pathlib.Path("analysis","plots","generation_comparison") if config["US"]["summary"]["generation_comparison"] else [],
+        pathlib.Path("analysis","plots",installed_capacity_comparison_plot_folder_name) if config["US"]["summary"]["installed_capacity_comparison"] else [],
+        pathlib.Path("analysis","outputs","network_comparison") if config["US"]["summary"]["network_comparison"] else [],
         expand(
             pathlib.Path("analysis", "outputs", "{filedir}"),
             filedir=[
-                "network_comparison",
                 "demand_modelling/ERST_mapped_demand_centroids.geojson"],
         ),
         pathlib.Path(
@@ -502,4 +497,17 @@ rule summary:
             "resources",
             run_name,
             "demand_profiles.csv"
-        )
+        ),
+        expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "results",
+                "postnetworks",
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            ),
+            **config["scenario"],
+            **config["costs"],
+            **config["export"],
+        ),
+
