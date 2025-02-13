@@ -13,8 +13,8 @@ logging:
 countries: ["US"]
 # Can be replaced by country ["NG", "BJ"], continent ["Africa"] or user-specific region, see more at https://pypsa-earth.readthedocs.io/en/latest/configuration.html#top-level-configuration
 
-geothermal:
-  retrieve_geothermal_databundle: true # Exclusive for geothermal repository
+US:
+  retrieve_US_databundle: true # Exclusive for US data
   demand_year: 2023
   demand_modelling:
     holes_area_threshold: 100 # to ignore holes smaller than this area in sq.km (CRS 6372)

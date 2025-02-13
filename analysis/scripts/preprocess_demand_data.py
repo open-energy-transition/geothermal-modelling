@@ -6,7 +6,7 @@ Relevant Settings
 
 .. code:: yaml
 
-    geothermal:
+    US:
         demand_modelling:
             demand_year:
             holes_area_threshold:

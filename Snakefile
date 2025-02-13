@@ -25,7 +25,7 @@ module pypsa_earth:
 
 use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles as * # noqa
 
-demand_year = config["geothermal"]["demand_year"]
+demand_year = config["US"]["demand_year"]
 run_name = config["run"]["name"]
 
 
@@ -75,7 +75,7 @@ rule build_custom_powerplants:
         "analysis/scripts/build_custom_powerplants.py"
 
 
-if config["geothermal"].get("retrieve_geothermal_databundle", True):
+if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_data:
         params:
@@ -120,7 +120,7 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_generation_data/{filename}",
-                filename=["EIA_statewise_data/use_all_phy.xlsx", "generation_eia.csv"],
+                filename=["EIA_statewise_data/use_all_phy_update.xlsx", "generation_eia.csv"],
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
@@ -130,7 +130,7 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
             "analysis/scripts/download_from_gdrive.py"
 
 
-if config["geothermal"].get("network_comparison", True):
+if config["US"].get("network_comparison", True):
 
     rule network_comparison:
         params:
@@ -240,7 +240,7 @@ else:
     installed_capacity_comparison_plot_folder_name = "installed_capacity_nonac"
 
 
-if config["geothermal"].get("installed_capacity_comparison", True):
+if config["US"].get("installed_capacity_comparison", True):
 
     rule installed_capacity_comparison:
         params:
@@ -316,7 +316,7 @@ if config["cluster_options"].get("alternative_clustering", False):
             "analysis/scripts/map_network_to_gadm.py"
 
 
-if config["geothermal"].get("generation_comparison", True):
+if config["US"].get("generation_comparison", True):
 
     rule generation_comparison:
         params:
@@ -361,13 +361,13 @@ if config["geothermal"].get("generation_comparison", True):
 
 rule preprocess_demand_data:
     params:
-        demand_year=config["geothermal"]["demand_year"],
-        holes_area_threshold=config["geothermal"]["demand_modelling"]["holes_area_threshold"],  # to ignore holes smaller than this area in sq.km (CRS 6372)
-        nprocesses=config["geothermal"]["demand_modelling"]["nprocesses"],
-        plotting=config["geothermal"]["demand_modelling"]["plotting"],
-        geo_crs= config['crs']['geo_crs'],
-        distance_crs= config['crs']['distance_crs'],
-        area_crs= config['geothermal']['area_crs']
+        demand_year=config["US"]["demand_year"],
+        holes_area_threshold=config["US"]["demand_modelling"]["holes_area_threshold"],  # to ignore holes smaller than this area in sq.km (CRS 6372)
+        nprocesses=config["US"]["demand_modelling"]["nprocesses"],
+        plotting=config["US"]["demand_modelling"]["plotting"],
+        geo_crs= config["crs"]["geo_crs"],
+        distance_crs= config["crs"]["distance_crs"],
+        area_crs= config["US"]["area_crs"]
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
@@ -434,7 +434,7 @@ rule build_demand_profiles_from_eia:
                 "electricity_demand_data",
                 "EIA930_{demand_year}_Jan_Jun_opt.csv",
             ), 
-            **config["geothermal"],
+            **config["US"],
         ),
         BA_demand_path2 = expand(
                 pathlib.Path(
@@ -444,7 +444,7 @@ rule build_demand_profiles_from_eia:
                 "electricity_demand_data",
                 "EIA930_{demand_year}_Jul_Dec_opt.csv",
             ),
-            **config["geothermal"],
+            **config["US"],
         ),
         BA_shape_path = pathlib.Path(
             "analysis",
