@@ -23,9 +23,9 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants as * # noqa
+use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles as * # noqa
 
-demand_year = config["geothermal"]["demand_year"]
+demand_year = config["US"]["demand_year"]
 run_name = config["run"]["name"]
 
 
@@ -75,7 +75,7 @@ rule build_custom_powerplants:
         "analysis/scripts/build_custom_powerplants.py"
 
 
-if config["geothermal"].get("retrieve_geothermal_databundle", True):
+if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_data:
         params:
@@ -115,17 +115,22 @@ if config["geothermal"].get("retrieve_geothermal_databundle", True):
                 filename=[
                     "gadm41_USA_1.json",
                     "ipm_v6_regions/IPM_Regions_201770405.shp",
+                    "Balancing_Authorities.geojson",
                 ],
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_generation_data/{filename}",
-                filename=["EIA_statewise_data/use_all_phy.xlsx", "generation_eia.csv"],
+                filename=["EIA_statewise_data/use_all_phy_update.xlsx", "generation_eia.csv"],
+            ),
+            expand(
+                "analysis/gdrive_data/data/electricity_demand_data/{filename}",
+                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv", "HS861 2010-.xlsx" ],
             ),
         script:
             "analysis/scripts/download_from_gdrive.py"
 
 
-if config["geothermal"].get("network_comparison", True):
+if config["US"].get("network_comparison", True):
 
     rule network_comparison:
         params:
@@ -235,7 +240,7 @@ else:
     installed_capacity_comparison_plot_folder_name = "installed_capacity_nonac"
 
 
-if config["geothermal"].get("installed_capacity_comparison", True):
+if config["US"].get("installed_capacity_comparison", True):
 
     rule installed_capacity_comparison:
         params:
@@ -311,7 +316,7 @@ if config["cluster_options"].get("alternative_clustering", False):
             "analysis/scripts/map_network_to_gadm.py"
 
 
-if config["geothermal"].get("generation_comparison", True):
+if config["US"].get("generation_comparison", True):
 
     rule generation_comparison:
         params:
@@ -332,7 +337,7 @@ if config["geothermal"].get("generation_comparison", True):
                 "data",
                 "electricity_generation_data",
                 "EIA_statewise_data",
-                "use_all_phy.xlsx",
+                "use_all_phy_update.xlsx",
             ),
             gadm_shapes_path=pathlib.Path(
                 "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
@@ -356,9 +361,13 @@ if config["geothermal"].get("generation_comparison", True):
 
 rule preprocess_demand_data:
     params:
-        demand_year=2021,
-        holes_area_threshold=100,  # to ignore holes smaller than this area in sq.km
-        nprocesses=1,
+        demand_year=config["US"]["demand_year"],
+        holes_area_threshold=config["US"]["demand_modelling"]["holes_area_threshold"],  # to ignore holes smaller than this area in sq.km (CRS 6372)
+        nprocesses=config["US"]["demand_modelling"]["nprocesses"],
+        plotting=config["US"]["demand_modelling"]["plotting"],
+        geo_crs= config["crs"]["geo_crs"],
+        distance_crs= config["crs"]["distance_crs"],
+        area_crs= config["US"]["area_crs"]
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
@@ -376,7 +385,6 @@ rule preprocess_demand_data:
             "shapes",
             "country_shapes.geojson",
         ),
-        #erst_path = pathlib.Path("analysis", "gdrive_data", "data", "electricity_demand_data", "demand_data", "ERST_overlay_demand.geojson"),
         erst_path=pathlib.Path(
             "analysis",
             "gdrive_data",
@@ -395,13 +403,83 @@ rule preprocess_demand_data:
             "electricity_demand_data",
             "use_es_capita.xlsx",
         ),
+        additional_demand_data_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "electricity_demand_data",
+            "HS861 2010-.xlsx",
+        )
+    output:
+        utility_demand_path = pathlib.Path(
+            "analysis",
+            "outputs",
+            "demand_modelling",
+            "ERST_mapped_demand_centroids.geojson"
+        )
     script:
         "analysis/scripts/preprocess_demand_data.py"
 
 
-# rule demand_modelling:
-#   script:
+rule build_demand_profiles_from_eia:
+    params:
+        geo_crs= config['crs']['geo_crs'],
+        distance_crs= config['crs']['distance_crs']
+    input:
+        BA_demand_path1 = expand(
+            pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "electricity_demand_data",
+                "EIA930_{demand_year}_Jan_Jun_opt.csv",
+            ), 
+            **config["US"],
+        ),
+        BA_demand_path2 = expand(
+                pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "electricity_demand_data",
+                "EIA930_{demand_year}_Jul_Dec_opt.csv",
+            ),
+            **config["US"],
+        ),
+        BA_shape_path = pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "shape_files",
+            "Balancing_Authorities.geojson",
+        ),
+        utility_demand_path = pathlib.Path(
+            "analysis",
+            "outputs",
+            "demand_modelling",
+            "ERST_mapped_demand_centroids.geojson",
+        ),
+        pypsa_network_path = (
+            pathlib.Path(       
+                "workflow",
+                "pypsa-earth",
+                "networks",
+                run_name,
+                "base.nc"
+            ),
+        )
+    output:
+        demand_profile_path = pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "demand_profiles.csv"
+        ),
 
+    script:
+        "analysis/scripts/build_demand_profiles_from_eia.py"
+    
 
 rule summary:
     input:
@@ -414,5 +492,14 @@ rule summary:
         ),
         expand(
             pathlib.Path("analysis", "outputs", "{filedir}"),
-            filedir=["network_comparison"],
+            filedir=[
+                "network_comparison",
+                "demand_modelling/ERST_mapped_demand_centroids.geojson"],
         ),
+        pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "demand_profiles.csv"
+        )
