@@ -2,6 +2,7 @@ import pypsa
 import matplotlib.pyplot as plt
 import pathlib
 import pandas as pd
+import plotly.express as px
 
 def get_component(network, component):
     if component == 'generators':
@@ -41,23 +42,33 @@ def get_capacities(pypsa_network, sector_array):
     return installed_capacities
 
 def get_generations(pypsa_network, sector_array):
-    energy_generations = pd.DataFrame()
+    energy_generations = pd.DataFrame(index=pypsa_network.snapshots)
     for sector in sector_array:
         sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
-        components = ['generators_t', 'links_t', 'storage_units_t']
-        sector_generations = pd.DataFrame()
+        components = ['generators', 'links', 'storage_units']
+        sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
         for comp in components:
             df = get_component(pypsa_network, comp)
             if comp != 'links':
-                capacities = (df.query('bus in @sec', local_dict={'sec':sector_buses}).groupby('carrier').p_nom_opt.sum().div(1e3))
-                sector_generations = pd.concat([sector_generations,capacities])
+                generators = (df.query('bus in @sec', local_dict={'sec':sector_buses}))
+                indices = generators.index
+                reqd_carriers = generators.carrier.unique()
+                generators_ts = get_component(pypsa_network, comp+'_t')
+                generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3)
+                sector_generations = sector_generations.join(generations)
             else:
-                capacities = (df.query('bus1 in @sec', local_dict={'sec':sector_buses}).groupby('carrier').p_nom_opt.sum() * df.query('bus1 in @sec', local_dict={'sec':sector_buses}).groupby('carrier').efficiency.mean()).div(1e3)
-                capacities.name = 'p_nom_opt'
-                sector_generations = pd.concat([sector_generations,capacities])
-        sector_generations['sector'] = sector
-        energy_generations = pd.concat([energy_generations,sector_generations])
+                generators = (df.query('bus1 in @sec', local_dict={'sec':sector_buses}))
+                indices = generators.index
+                reqd_carriers = generators.carrier.unique()
+                generators_ts = get_component(pypsa_network, comp+'_t')
+                generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1
+                sector_generations = sector_generations.join(generations)
+
+        discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
+        sector_generations = sector_generations.drop(discharge_indices, axis=1)
+        energy_generations = energy_generations.join(sector_generations, how='left',lsuffix='_x', rsuffix='_y')
     return energy_generations
+
 
 def plot_electricity_balance(pypsa_network, renewable_carriers, conventional_carriers, storage_unit_carriers):
     # ac_buses = pypsa_network.buses.query("carrier == 'AC'")
@@ -109,11 +120,20 @@ def installed_capacity_plots(pypsa_network, plot_base_path):
 
     fig = px.bar(installed_capacities, y='p_nom_opt', color='sector', barmode='group', height=800)
     fig.write_image(
-        f"{plot_base_path}/installed_capacity_eia_statewise.png", scale=1.5
+        f"{plot_base_path}/installed_capacity_sectorwise_GW.png", scale=1.5
     )
 
-def energy_generation_by_sector():
-    pass
+def energy_generation_plots(pypsa_network, plot_base_path):
+    energy_generations = get_generations(pypsa_network,['AC','heat','water','H2','oil','gas','biomass'])
+    time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
+    energy_generations_agg = energy_generations.sum() * time_granularity / 1e3 #in TWh
+    energy_generations_agg.name = 'energy_gen'
+
+    fig = px.bar(energy_generations_agg, y='energy_gen', barmode='group', height=800)
+    fig.write_image(
+        f"{plot_base_path}/energy_generation_sectorwise_TWh.png", scale=1.5
+    )
+
 
 pypsa_network_path = pathlib.Path("workflow","pypsa-earth","results","postnetworks","elec_s_100_ec_lcopt_Co2L-24H_144H_2030_0.071_AB_10export.nc")
 pypsa_network = pypsa.Network(pypsa_network_path)
