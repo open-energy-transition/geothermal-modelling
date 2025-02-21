@@ -70,14 +70,53 @@ def get_generations(pypsa_network, sector_array):
     return energy_generations
 
 def get_loads(pypsa_network, sector_array):
-    loads = pd.DataFrame(index=pypsa_network.snapshots)
+    loads_ts = pd.DataFrame(index=pypsa_network.snapshots)
+    loads_grouped_ts = pd.DataFrame(index=pypsa_network.snapshots)
     for sector in sector_array:
         sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
         load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':sector_buses}).index
         load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
+        
+        loads_grouped_ts[sector] = load_sector_ts.sum(axis=1)
+        loads_ts = loads_ts.join(load_sector_ts, how='left', lsuffix='_x', rsuffix='_y')
 
-        loads = loads.join(load_sector_ts, how='left', lsuffix='_x', rsuffix='_y')
-    return loads
+    return loads_ts, loads_grouped_ts
+
+def get_generation_loads_by_sector(pypsa_network, load_sector, gen_sector):
+    load_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(load_sector)]
+    load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':load_sector_buses}).index
+    load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
+    
+    loads_grouped_ts = load_sector_ts.sum(axis=1)
+
+    components = ['generators', 'links', 'storage_units']
+    sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
+    gen_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(gen_sector)]
+
+    for comp in components:
+        df = get_component(pypsa_network, comp)
+        if comp != 'links':
+            generators = (df.query('bus in @sec', local_dict={'sec':gen_sector_buses}))
+            indices = generators.index
+            reqd_carriers = generators.carrier.unique()
+            generators_ts = get_component(pypsa_network, comp+'_t')
+            generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3)
+            sector_generations = sector_generations.join(generations)
+        else:
+            generators = (df.query('bus1 in @sec', local_dict={'sec':gen_sector_buses}))
+            indices = generators.index
+            reqd_carriers = generators.carrier.unique()
+            generators_ts = get_component(pypsa_network, comp+'_t')
+            generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1
+            sector_generations = sector_generations.join(generations)
+
+    discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
+    sector_generations = sector_generations.drop(discharge_indices, axis=1)
+
+    return loads_grouped_ts, sector_generations
+
+
+
 
 # def plot_electricity_balance(pypsa_network, renewable_carriers, conventional_carriers, storage_unit_carriers):
 #     # ac_buses = pypsa_network.buses.query("carrier == 'AC'")
@@ -142,6 +181,7 @@ def energy_generation_plots(pypsa_network, plot_base_path):
     fig.write_image(
         f"{plot_base_path}/energy_generation_sectorwise_TWh.png", scale=1.5
     )
+    return energy_generations, energy_generations_agg
 
 def load_plots(pypsa_network, plot_base_path):
     loads = get_loads(pypsa_network,['low voltage','heat','water','H2','oil','gas','biomass'])
@@ -153,6 +193,8 @@ def load_plots(pypsa_network, plot_base_path):
     fig.write_image(
         f"{plot_base_path}/loads_sectorwise_TWh.png", scale=1.5
     )
+
+    return loads, loads_agg
 
 pypsa_network_path = pathlib.Path("workflow","pypsa-earth","results","postnetworks","elec_s_100_ec_lcopt_Co2L-24H_144H_2030_0.071_AB_10export.nc")
 pypsa_network = pypsa.Network(pypsa_network_path)
