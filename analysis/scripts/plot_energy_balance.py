@@ -4,6 +4,13 @@ import pathlib
 import pandas as pd
 import plotly.express as px
 
+def parse_inputs(default_path):
+    pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_earth_results_path[0])
+    pypsa_network = pypsa.Network(pypsa_network_path)
+
+    return pypsa_network
+
+
 def get_component(network, component):
     if component == 'generators':
         return network.generators
@@ -69,25 +76,25 @@ def get_generations(pypsa_network, sector_array):
         energy_generations = energy_generations.join(sector_generations, how='left',lsuffix='_x', rsuffix='_y')
     return energy_generations
 
-def get_loads(pypsa_network, sector_array):
-    loads_ts = pd.DataFrame(index=pypsa_network.snapshots)
-    loads_grouped_ts = pd.DataFrame(index=pypsa_network.snapshots)
+def get_demands(pypsa_network, sector_array):
+    demands_ts = pd.DataFrame(index=pypsa_network.snapshots)
+    demands_grouped_ts = pd.DataFrame(index=pypsa_network.snapshots)
     for sector in sector_array:
         sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
-        load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':sector_buses}).index
-        load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
+        load_sector_columns = pypsa_network.demands.query('bus in @sec', local_dict={'sec':sector_buses}).index
+        load_sector_ts = pypsa_network.demands_t.p[load_sector_columns].groupby(pypsa_network.demands.carrier, axis=1).sum().div(1e3)
         
-        loads_grouped_ts[sector] = load_sector_ts.sum(axis=1)
-        loads_ts = loads_ts.join(load_sector_ts, how='left', lsuffix='_x', rsuffix='_y')
+        demands_grouped_ts[sector] = load_sector_ts.sum(axis=1)
+        demands_ts = demands_ts.join(load_sector_ts, how='left', lsuffix='_x', rsuffix='_y')
 
-    return loads_ts, loads_grouped_ts
+    return demands_ts, demands_grouped_ts
 
-def get_generation_loads_by_sector(pypsa_network, load_sector, gen_sector):
+def get_generation_demands_by_sector(pypsa_network, load_sector, gen_sector):
     load_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(load_sector)]
-    load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':load_sector_buses}).index
-    load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
+    load_sector_columns = pypsa_network.demands.query('bus in @sec', local_dict={'sec':load_sector_buses}).index
+    load_sector_ts = pypsa_network.demands_t.p[load_sector_columns].groupby(pypsa_network.demands.carrier, axis=1).sum().div(1e3)
     
-    loads_grouped_ts = load_sector_ts.sum(axis=1)
+    demands_grouped_ts = load_sector_ts.sum(axis=1)
 
     components = ['generators', 'links', 'storage_units']
     sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
@@ -100,20 +107,20 @@ def get_generation_loads_by_sector(pypsa_network, load_sector, gen_sector):
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
             generators_ts = get_component(pypsa_network, comp+'_t')
-            generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3)
+            generations = generators_ts[indices].groupby(generators.query('carrier in @car', local_dict={'car':reqd_carriers}).carrier, axis=1).sum().div(1e3)
             sector_generations = sector_generations.join(generations)
         else:
             generators = (df.query('bus1 in @sec', local_dict={'sec':gen_sector_buses}))
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
             generators_ts = get_component(pypsa_network, comp+'_t')
-            generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1
+            generations = generators_ts[indices].groupby(generators.query('carrier in @car', local_dict={'car':reqd_carriers}).carrier, axis=1).sum().div(1e3) * -1
             sector_generations = sector_generations.join(generations)
 
     discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
     sector_generations = sector_generations.drop(discharge_indices, axis=1)
 
-    return loads_grouped_ts, sector_generations
+    return demands_grouped_ts, sector_generations
 
 
 
@@ -183,19 +190,49 @@ def energy_generation_plots(pypsa_network, plot_base_path):
     )
     return energy_generations, energy_generations_agg
 
-def load_plots(pypsa_network, plot_base_path):
-    loads = get_loads(pypsa_network,['low voltage','heat','water','H2','oil','gas','biomass'])
+def demand_plots(pypsa_network, plot_base_path):
+    demands = get_demands(pypsa_network,['low voltage','heat','water','H2','oil','gas','biomass'])
     time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
-    loads_agg = loads.sum() * time_granularity / 1e3 #in TWh
-    loads_agg.name = 'load in TWh'
+    demands_agg = demands.sum() * time_granularity / 1e3 #in TWh
+    demands_agg.name = 'load in TWh'
 
-    fig = px.bar(loads_agg, y='load in TWh', barmode='group', height=800)
+    fig = px.bar(demands_agg, y='load in TWh', barmode='group', height=800)
     fig.write_image(
-        f"{plot_base_path}/loads_sectorwise_TWh.png", scale=1.5
+        f"{plot_base_path}/demands_sectorwise_TWh.png", scale=1.5
     )
 
-    return loads, loads_agg
+    return demands, demands_agg
 
-pypsa_network_path = pathlib.Path("workflow","pypsa-earth","results","postnetworks","elec_s_100_ec_lcopt_Co2L-24H_144H_2030_0.071_AB_10export.nc")
-pypsa_network = pypsa.Network(pypsa_network_path)
-plot_base_path = pathlib.Path("analysis", "outputs", "summary")
+
+if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("plot_summaries")
+
+    # set relevant paths
+    default_path = pathlib.Path(__file__).parent.parent.parent
+    log_path = pathlib.Path(default_path, "analysis", "logs", "plot_summaries")
+    plot_path = pathlib.Path(default_path, snakemake.output.plot_path)
+
+    pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
+    today_date = str(dt.datetime.now())
+    log_output_file_path = pathlib.Path(
+        log_path, f"output_plot_summaries_{today_date[:10]}.txt"
+    )
+    log_output_file_path.touch(exist_ok=True)
+    log_output_file = open(log_output_file_path, "w")
+
+    config_path = pathlib.Path(default_path, "configs", "config.usa_baseline.yaml")
+
+    pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
+
+    pypsa_network = parse_inputs(default_path)
+
+    installed_capacity_plots(pypsa_network, plot_path)
+
+    energy_generations, energy_generations_agg = energy_generation_plots(pypsa_network, plot_path)
+
+    demands, demands_agg = demand_plots(pypsa_network, plot_path)
+    
+    log_output_file.close()

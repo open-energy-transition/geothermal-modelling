@@ -480,6 +480,28 @@ rule build_demand_profiles_from_eia:
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
     
+rule plot_summaries:
+    input:
+        pypsa_earth_results_path = expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "results",
+                "postnetworks",
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+            ),
+            **config["scenario"],
+            **config["costs"],
+            **config["export"],
+        ),
+    output:
+        plot_path = pathlib.Path(
+            "analysis",
+            "plots",
+            "summary_plots"
+        ),
+    script:
+        "analysis/scripts/plot_energy_balance.py"
 
 rule summary:
     input:
@@ -509,5 +531,10 @@ rule summary:
             **config["scenario"],
             **config["costs"],
             **config["export"],
+        ),
+        pathlib.Path(
+            "analysis",
+            "plots",
+            "summary_plots"
         ),
 
