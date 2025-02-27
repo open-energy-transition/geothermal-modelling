@@ -497,10 +497,12 @@ rule plot_summaries:
             **config["export"],
         ),
     output:
-        plot_path = pathlib.Path(
+        plot_path = directory(
+            pathlib.Path(
             "analysis",
             "plots",
             "summary_plots"
+            )
         ),
     script:
         "analysis/scripts/plot_summaries.py"
