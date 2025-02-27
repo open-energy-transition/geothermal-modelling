@@ -24,7 +24,7 @@ def get_component(network, component):
     elif component == 'generators_t':
         return network.generators_t.p
     elif component == 'links_t':
-        return network.links_t.p1
+        return network.links_t
     elif component == 'stores_t':
         return network.stores_t.p
     elif component == 'storage_units_t':
@@ -42,10 +42,23 @@ def get_component_list(sector):
     }
     return sector_component_dict[sector]
 
+def get_sector_key(sector):
+    if sector == 'electricity':
+        return 'AC|low voltage'
+    elif sector == 'heat':
+        return 'heat|water'
+    else:
+        return sector
+
+def drop_carriers(df):
+    drop_carriers_list = ['electricity distribution grid','H2 pipeline','H2 pipeline repurposed']
+    return df.drop(drop_carriers_list)
+
 def get_capacities(pypsa_network, sector_array):
     installed_capacities = pd.DataFrame()
     for sector in sector_array:
-        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
+        sector_key = get_sector_key(sector)
+        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector_key)]
         components = get_component_list(sector)
         # Removing stores as they contain only the nominal storage capacity in MWh and not the power capacity in MW
         components.remove('stores')
@@ -61,12 +74,14 @@ def get_capacities(pypsa_network, sector_array):
                 sector_capacities = pd.concat([sector_capacities,capacities])
         sector_capacities['sector'] = sector
         installed_capacities = pd.concat([installed_capacities,sector_capacities])
+    installed_capacities = drop_carriers(installed_capacities)
     return installed_capacities
 
 def get_generations(pypsa_network, sector_array):
     energy_generations = pd.DataFrame()
     for sector in sector_array:
-        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
+        sector_key = get_sector_key(sector)
+        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector_key)]
         components = get_component_list(sector)
         sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
         for comp in components:
@@ -77,15 +92,25 @@ def get_generations(pypsa_network, sector_array):
                 reqd_carriers = generators.carrier.unique()
                 generators_ts = get_component(pypsa_network, comp+'_t')
                 generations = generators_ts.p[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3)
-                sector_generations = sector_generations.join(generations)
+                sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+sector)
             else:
                 generators = (df.query('bus1 in @sec', local_dict={'sec':sector_buses}))
                 indices = generators.index
                 reqd_carriers = generators.carrier.unique()
                 generators_ts = get_component(pypsa_network, comp+'_t')
-                generations = (generators_ts.p1[indices]).groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1 
+                for car in reqd_carriers:
+                    if ('CHP' in car or 'Fuel cell' in car) and sector != 'electricity':
+                        intersecting_columns = indices.intersection(generators_ts.p2.columns)
+                        generations = (generators_ts.p2[intersecting_columns]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
+                    elif 'Fischer-Tropsch' in car:
+                        intersecting_columns = indices.intersection(generators_ts.p3.columns)
+                        generations = (generators_ts.p3[intersecting_columns]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
+                    else:
+                        generations = (generators_ts.p1[indices]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
 
-                sector_generations = sector_generations.join(generations)
+                # generations = (generators_ts.p1[indices]).groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1 
+
+                sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+sector)
 
         # discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
         # sector_generations = sector_generations.drop(discharge_indices, axis=1)
@@ -97,18 +122,16 @@ def get_generations(pypsa_network, sector_array):
         sector_generations['sector'] = sector
         
         energy_generations = energy_generations._append(sector_generations)
-        
+    
+    energy_generations = drop_carriers(energy_generations)
     return energy_generations
 
 def get_demands(pypsa_network, sector_array):
     demands_ts = pd.DataFrame(index=pypsa_network.snapshots)
     demands_grouped_ts = pd.DataFrame(index=pypsa_network.snapshots)
     for sector in sector_array:
-        if sector == 'AC':
-            key = 'low voltage'
-        else:
-            key = sector
-        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(key)]
+        sector_key = get_sector_key(sector)
+        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector_key)]
         load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':sector_buses}).index
         load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
         
@@ -117,8 +140,9 @@ def get_demands(pypsa_network, sector_array):
 
     return demands_ts, demands_grouped_ts
 
-def get_generation_demands_by_sector(pypsa_network, load_sector, gen_sector):
-    load_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(load_sector)]
+def get_generation_demands_by_sector(pypsa_network, sector):
+    sector_key = get_sector_key(sector)
+    load_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector_key)]
     load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':load_sector_buses}).index
     load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
     
@@ -126,7 +150,7 @@ def get_generation_demands_by_sector(pypsa_network, load_sector, gen_sector):
 
     components = get_component_list(sector)
     sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
-    gen_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(gen_sector)]
+    gen_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector_key)]
 
     for comp in components:
         df = get_component(pypsa_network, comp)
@@ -142,24 +166,44 @@ def get_generation_demands_by_sector(pypsa_network, load_sector, gen_sector):
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
             generators_ts = get_component(pypsa_network, comp+'_t')
-            generations = generators_ts[indices].groupby(generators.query('carrier in @car', local_dict={'car':reqd_carriers}).carrier, axis=1).sum().div(1e3) * -1
-            sector_generations = sector_generations.join(generations)
+            for car in reqd_carriers:
+                if ('CHP' in car or 'Fuel cell' in car) and sector != 'electricity':
+                    intersecting_columns = indices.intersection(generators_ts.p2.columns)
+                    generations = (generators_ts.p2[intersecting_columns]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
+                elif 'Fischer-Tropsch' in car:
+                    intersecting_columns = indices.intersection(generators_ts.p3.columns)
+                    generations = (generators_ts.p3[intersecting_columns]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
+                else:
+                    generations = (generators_ts.p1[indices]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
+
+            # generations = generators_ts[indices].groupby(generators.query('carrier in @car', local_dict={'car':reqd_carriers}).carrier, axis=1).sum().div(1e3) * -1
+            sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+sector)
 
     # discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
     # sector_generations = sector_generations.drop(discharge_indices, axis=1)
-
+    sector_generations = drop_carriers(sector_generations)
     return demands_grouped_ts, sector_generations
 
 def installed_capacity_plots(pypsa_network, sector_array, plot_base_path):
     installed_capacities = get_capacities(pypsa_network,sector_array)
 
     fig = px.bar(installed_capacities, y='p_nom_opt', color='sector', barmode='stack', height=800)
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+    )
+    fig.update_traces(textposition='outside')
     fig.write_image(
         f"{plot_base_path}/installed_capacity_GW.png"
     )
 
     px.bar(installed_capacities,y='p_nom_opt',facet_row='sector', color='sector',barmode='stack', height=1500)
     fig.update_yaxes(matches=None)
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+    )
+    fig.update_traces(textposition='outside')
     fig.write_image(
         f"{plot_base_path}/installed_capacity_facet_sector_GW.png"
     )
@@ -170,12 +214,22 @@ def energy_generation_plots(pypsa_network, sector_array, plot_base_path):
     energy_generations = get_generations(pypsa_network,sector_array)
     
     fig = px.bar(energy_generations, y='Energy_TWh', color='sector',barmode='stack', height=1500)
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+    )
+    fig.update_traces(textposition='outside')
     fig.write_image(
         f"{plot_base_path}/energy_generation_TWh.png"
     )
 
     fig = px.bar(energy_generations, y='Energy_TWh', facet_row='sector', color='sector',barmode='stack', height=1500)
     fig.update_yaxes(matches=None)
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+    )
+    fig.update_traces(textposition='outside')
     fig.write_image(
         f"{plot_base_path}/energy_generation_facet_sector_TWh.png"
     )
@@ -189,6 +243,11 @@ def demand_plots(pypsa_network, sector_array, plot_base_path):
     demands_agg.name = 'load_TWh'
 
     fig = px.bar(demands_agg, y='load_TWh', barmode='group', height=800)
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+    )
+    fig.update_traces(textposition='outside')
     fig.write_image(
         f"{plot_base_path}/demands_sectorwise_TWh.png"
     )
@@ -198,12 +257,7 @@ def demand_plots(pypsa_network, sector_array, plot_base_path):
 def energy_balance_plot(plot_base_path, sector_array):
 
     for sector in sector_array:
-        if sector != 'AC':
-            load_sector_key = sector
-        else:
-            load_sector_key = 'low voltage'
-        gen_sector_key = sector
-        demands, generations = get_generation_demands_by_sector(pypsa_network, load_sector_key, gen_sector_key)
+        demands, generations = get_generation_demands_by_sector(pypsa_network, sector)
 
         fig = px.area(generations.where(generations > 0))
 
