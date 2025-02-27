@@ -276,8 +276,11 @@ def energy_balance_plot(plot_base_path, sector_array):
 
 def compare_generation_demand_agg_plot(energy_generations, demands_agg, sector_array):
     energy_agg = energy_generations.groupby('sector').sum()
-    
-    fig = px.bar(df,barmode='group')
+    df_comparison = pd.DataFrame(index=sector_array)
+    df_comparison['generations'] = energy_agg
+    df_comparison['demands'] = demands_agg
+
+    fig = px.bar(df_comparison,barmode='group')
     fig.update_layout(yaxis_title = 'Energy in TWh', title="Generation vs demand")
     fig.write_image(
         f"{plot_base_path}/generation_vs_demand.png"
