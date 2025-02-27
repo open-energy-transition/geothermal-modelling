@@ -49,11 +49,14 @@ def get_sector_key(sector):
     else:
         return sector
 
-def drop_carriers(df):
+def drop_carriers(df, key):
     drop_carriers_list = ['electricity distribution grid','H2 pipeline','H2 pipeline repurposed']
     for car in drop_carriers_list:
         if car in df.index.tolist():
-            df = df.drop(index=drop_carriers_list)
+            if key == 'rows':
+                df = df.drop(index=car)
+            elif key == 'columns':
+                df = df.drop([car], axis=1)
 
     return df
 
@@ -77,7 +80,7 @@ def get_capacities(pypsa_network, sector_array):
                 sector_capacities = pd.concat([sector_capacities,capacities])
         sector_capacities['sector'] = sector
         installed_capacities = pd.concat([installed_capacities,sector_capacities])
-    installed_capacities = drop_carriers(installed_capacities)
+    installed_capacities = drop_carriers(installed_capacities, 'rows')
     return installed_capacities
 
 def get_generations(pypsa_network, sector_array):
@@ -124,7 +127,7 @@ def get_generations(pypsa_network, sector_array):
         
         energy_generations = energy_generations._append(sector_generations)
     
-    energy_generations = drop_carriers(energy_generations)
+    energy_generations = drop_carriers(energy_generations, 'columns')
     return energy_generations
 
 def get_demands(pypsa_network, sector_array):
@@ -161,7 +164,7 @@ def get_generation_demands_by_sector(pypsa_network, sector):
             reqd_carriers = generators.carrier.unique()
             generators_ts = get_component(pypsa_network, comp+'_t')
             generations = generators_ts[indices].groupby(generators.query('carrier in @car', local_dict={'car':reqd_carriers}).carrier, axis=1).sum().div(1e3)
-            sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+sector)
+            sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+comp)
         else:
             generators = (df.query('bus1 in @sec', local_dict={'sec':gen_sector_buses}))
             indices = generators.index
@@ -177,11 +180,11 @@ def get_generation_demands_by_sector(pypsa_network, sector):
                 else:
                     generations = (generators_ts.p1[indices]).groupby(generators.query('carrier == @car').carrier, axis=1).sum().div(1e3) * -1
 
-                sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+sector)
+                sector_generations = sector_generations.join(generations, lsuffix="", rsuffix="_"+comp)
 
     # discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
     # sector_generations = sector_generations.drop(discharge_indices, axis=1)
-    sector_generations = drop_carriers(sector_generations)
+    sector_generations = drop_carriers(sector_generations,'columns')
     return demands_grouped_ts, sector_generations
 
 def installed_capacity_plots(pypsa_network, sector_array, plot_base_path):
@@ -197,7 +200,7 @@ def installed_capacity_plots(pypsa_network, sector_array, plot_base_path):
         f"{plot_base_path}/installed_capacity_GW.png"
     )
 
-    px.bar(installed_capacities,y='p_nom_opt',facet_row='sector', color='sector',barmode='stack',text_auto='0.2f', width=1200, height=1500)
+    px.bar(installed_capacities,y='p_nom_opt',facet_row='sector', color='sector',barmode='stack',text_auto='0.2f', width=1200, height=800)
     fig.update_yaxes(matches=None)
     fig.update_layout(
         uniformtext_minsize=5,
@@ -213,7 +216,7 @@ def installed_capacity_plots(pypsa_network, sector_array, plot_base_path):
 def energy_generation_plots(pypsa_network, sector_array, plot_base_path):
     energy_generations = get_generations(pypsa_network,sector_array)
     
-    fig = px.bar(energy_generations, y='Energy_TWh', color='sector',barmode='stack',text_auto='0.2f',width=1200, height=1500)
+    fig = px.bar(energy_generations, y='Energy_TWh', color='sector',barmode='stack',text_auto='0.2f',width=1500, height=1000)
     fig.update_layout(
         uniformtext_minsize=5,
         uniformtext_mode='show',
@@ -223,7 +226,7 @@ def energy_generation_plots(pypsa_network, sector_array, plot_base_path):
         f"{plot_base_path}/energy_generation_TWh.png"
     )
 
-    fig = px.bar(energy_generations, y='Energy_TWh', facet_row='sector', color='sector',barmode='stack',text_auto='0.2f',width=1200, height=1500)
+    fig = px.bar(energy_generations, y='Energy_TWh', facet_row='sector', color='sector',barmode='stack',text_auto='0.2f',width=1500, height=1000)
     fig.update_yaxes(matches=None)
     fig.update_layout(
         uniformtext_minsize=5,
@@ -231,7 +234,7 @@ def energy_generation_plots(pypsa_network, sector_array, plot_base_path):
     )
     fig.update_traces(textposition='outside')
     fig.write_image(
-        f"{plot_base_path}/energy_generation_facet_sector_TWh.png"
+        f"{plot_base_path}/energy_generation_facet_sector_TWh.png", scale=2
     )
 
     return energy_generations
@@ -277,8 +280,14 @@ def compare_generation_demand_agg_plot(energy_generations, demands_agg, sector_a
     df_comparison['generations'] = energy_agg
     df_comparison['demands'] = demands_agg
 
-    fig = px.bar(df_comparison,barmode='group')
-    fig.update_layout(yaxis_title = 'Energy in TWh', title="Generation vs demand")
+    fig = px.bar(df_comparison,barmode='group',text_auto='0.2f')
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+        yaxis_title = 'Energy in TWh', 
+        title="Generation vs demand"
+    )
+    fig.update_traces(textposition='outside')
     fig.write_image(
         f"{plot_base_path}/generation_vs_demand.png"
     )
