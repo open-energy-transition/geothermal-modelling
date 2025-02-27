@@ -482,7 +482,7 @@ rule build_demand_profiles_from_eia:
     
 rule plot_summaries:
     params:
-        sector_array = config["US"]["summary"]["sector_array"]
+        sector_array = config["US"]["summary"]["sector_array"],
     input:
         pypsa_earth_results_path = expand(
             pathlib.Path(

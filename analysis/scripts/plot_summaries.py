@@ -51,10 +51,11 @@ def get_sector_key(sector):
 
 def drop_carriers(df):
     drop_carriers_list = ['electricity distribution grid','H2 pipeline','H2 pipeline repurposed']
-    try:
-        return df.drop(index=drop_carriers_list)
-    except:
-        return df
+    for car in drop_carriers_list:
+        if car in df.index.tolist():
+            df = df.drop(index=drop_carriers_list)
+
+    return df
 
 def get_capacities(pypsa_network, sector_array):
     installed_capacities = pd.DataFrame()
@@ -273,6 +274,16 @@ def energy_balance_plot(plot_base_path, sector_array):
             f"{plot_base_path}/energy_balance_ts_{sector}.png"
         )
 
+def compare_generation_demand_agg_plot(energy_generations, demands_agg, sector_array):
+    energy_agg = energy_generations.groupby('sector').sum()
+    
+    fig = px.bar(df,barmode='group')
+    fig.update_layout(yaxis_title = 'Energy in TWh', title="Generation vs demand")
+    fig.write_image(
+        f"{plot_base_path}/generation_vs_demand.png"
+    )
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
         from _helpers_usa import mock_snakemake
@@ -285,7 +296,7 @@ if __name__ == "__main__":
     plot_path = pathlib.Path(default_path, snakemake.output.plot_path)
 
     sector_array = snakemake.params.sector_array
-
+    
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
     log_output_file_path = pathlib.Path(
@@ -293,8 +304,6 @@ if __name__ == "__main__":
     )
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
-
-    config_path = pathlib.Path(default_path, "configs", "config.usa_baseline.yaml")
 
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
 
@@ -306,7 +315,7 @@ if __name__ == "__main__":
 
     demands, demands_agg = demand_plots(pypsa_network, sector_array, plot_path)
 
-    compare_generation_demand_agg_plot(energy_generations, demands_agg)
+    compare_generation_demand_agg_plot(energy_generations, demands_agg, sector_array)
 
     energy_balance_plot(plot_path, sector_array)
 
