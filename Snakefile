@@ -481,6 +481,8 @@ rule build_demand_profiles_from_eia:
         "analysis/scripts/build_demand_profiles_from_eia.py"
     
 rule plot_summaries:
+    params:
+        sector_array = config["US"]["summary"]["sector_array"]
     input:
         pypsa_earth_results_path = expand(
             pathlib.Path(
@@ -501,7 +503,7 @@ rule plot_summaries:
             "summary_plots"
         ),
     script:
-        "analysis/scripts/plot_energy_balance.py"
+        "analysis/scripts/plot_summaries.py"
 
 rule summary:
     input:

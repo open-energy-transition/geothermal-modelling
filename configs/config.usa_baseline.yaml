@@ -24,6 +24,7 @@ US:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
+    sector_array: [AC,heat,water,H2,oil,gas,biomass]
   area_crs: 6372
 
 
@@ -53,7 +54,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2030
   sopts:
-  - "144H"
+  - "24H"
   demand:
   - "AB"
 
@@ -689,8 +690,6 @@ sector:
     oil: oil
     coal: coal
     lignite: lignite
-    biomass: biomass
-    nuclear: nuclear
     biomass: biomass
   keep_existing_capacities: true
 

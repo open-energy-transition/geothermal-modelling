@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 import pathlib
 import pandas as pd
 import plotly.express as px
+import datetime as dt
+import plotly.graph_objects as go
 
 def parse_inputs(default_path):
     pypsa_network_path = pathlib.Path(default_path, snakemake.input.pypsa_earth_results_path[0])
     pypsa_network = pypsa.Network(pypsa_network_path)
 
     return pypsa_network
-
 
 def get_component(network, component):
     if component == 'generators':
@@ -29,11 +30,25 @@ def get_component(network, component):
     elif component == 'storage_units_t':
         return network.storage_units_t.p
 
+def get_component_list(sector):
+    sector_component_dict = {
+        'electricity': ['generators','links','storage_units','stores'],
+        'heat':['links','stores'],
+        'H2':['links','stores'],
+        'water':['links','stores'],
+        'oil':['links','stores'],
+        'biomass':['links','stores'],
+        'gas':['links','stores']
+    }
+    return sector_component_dict[sector]
+
 def get_capacities(pypsa_network, sector_array):
     installed_capacities = pd.DataFrame()
     for sector in sector_array:
         sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
-        components = ['generators', 'links', 'storage_units']
+        components = get_component_list(sector)
+        # Removing stores as they contain only the nominal storage capacity in MWh and not the power capacity in MW
+        components.remove('stores')
         sector_capacities = pd.DataFrame()
         for comp in components:
             df = get_component(pypsa_network, comp)
@@ -49,10 +64,10 @@ def get_capacities(pypsa_network, sector_array):
     return installed_capacities
 
 def get_generations(pypsa_network, sector_array):
-    energy_generations = pd.DataFrame(index=pypsa_network.snapshots)
+    energy_generations = pd.DataFrame()
     for sector in sector_array:
         sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
-        components = ['generators', 'links', 'storage_units']
+        components = get_component_list(sector)
         sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
         for comp in components:
             df = get_component(pypsa_network, comp)
@@ -61,28 +76,41 @@ def get_generations(pypsa_network, sector_array):
                 indices = generators.index
                 reqd_carriers = generators.carrier.unique()
                 generators_ts = get_component(pypsa_network, comp+'_t')
-                generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3)
+                generations = generators_ts.p[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3)
                 sector_generations = sector_generations.join(generations)
             else:
                 generators = (df.query('bus1 in @sec', local_dict={'sec':sector_buses}))
                 indices = generators.index
                 reqd_carriers = generators.carrier.unique()
                 generators_ts = get_component(pypsa_network, comp+'_t')
-                generations = generators_ts[indices].groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1
+                generations = (generators_ts.p1[indices]).groupby(generators.query('carrier in @reqd_carriers').carrier, axis=1).sum().div(1e3) * -1 
+
                 sector_generations = sector_generations.join(generations)
 
-        discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
-        sector_generations = sector_generations.drop(discharge_indices, axis=1)
-        energy_generations = energy_generations.join(sector_generations, how='left',lsuffix='_x', rsuffix='_y')
+        # discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
+        # sector_generations = sector_generations.drop(discharge_indices, axis=1)
+
+        time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
+        sector_generations = sector_generations.sum() * time_granularity / 1e3 #in TWh
+        sector_generations.name='Energy_TWh'
+        sector_generations = pd.DataFrame(sector_generations)
+        sector_generations['sector'] = sector
+        
+        energy_generations = energy_generations._append(sector_generations)
+        
     return energy_generations
 
 def get_demands(pypsa_network, sector_array):
     demands_ts = pd.DataFrame(index=pypsa_network.snapshots)
     demands_grouped_ts = pd.DataFrame(index=pypsa_network.snapshots)
     for sector in sector_array:
-        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(sector)]
-        load_sector_columns = pypsa_network.demands.query('bus in @sec', local_dict={'sec':sector_buses}).index
-        load_sector_ts = pypsa_network.demands_t.p[load_sector_columns].groupby(pypsa_network.demands.carrier, axis=1).sum().div(1e3)
+        if sector == 'AC':
+            key = 'low voltage'
+        else:
+            key = sector
+        sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(key)]
+        load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':sector_buses}).index
+        load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
         
         demands_grouped_ts[sector] = load_sector_ts.sum(axis=1)
         demands_ts = demands_ts.join(load_sector_ts, how='left', lsuffix='_x', rsuffix='_y')
@@ -91,12 +119,12 @@ def get_demands(pypsa_network, sector_array):
 
 def get_generation_demands_by_sector(pypsa_network, load_sector, gen_sector):
     load_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(load_sector)]
-    load_sector_columns = pypsa_network.demands.query('bus in @sec', local_dict={'sec':load_sector_buses}).index
-    load_sector_ts = pypsa_network.demands_t.p[load_sector_columns].groupby(pypsa_network.demands.carrier, axis=1).sum().div(1e3)
+    load_sector_columns = pypsa_network.loads.query('bus in @sec', local_dict={'sec':load_sector_buses}).index
+    load_sector_ts = pypsa_network.loads_t.p[load_sector_columns].groupby(pypsa_network.loads.carrier, axis=1).sum().div(1e3)
     
     demands_grouped_ts = load_sector_ts.sum(axis=1)
 
-    components = ['generators', 'links', 'storage_units']
+    components = get_component_list(sector)
     sector_generations = pd.DataFrame(index=pypsa_network.snapshots)
     gen_sector_buses = pypsa_network.buses.index[pypsa_network.buses.carrier.str.contains(gen_sector)]
 
@@ -117,92 +145,77 @@ def get_generation_demands_by_sector(pypsa_network, load_sector, gen_sector):
             generations = generators_ts[indices].groupby(generators.query('carrier in @car', local_dict={'car':reqd_carriers}).carrier, axis=1).sum().div(1e3) * -1
             sector_generations = sector_generations.join(generations)
 
-    discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
-    sector_generations = sector_generations.drop(discharge_indices, axis=1)
+    # discharge_indices = [x for x in sector_generations.columns if 'discharge' in x]
+    # sector_generations = sector_generations.drop(discharge_indices, axis=1)
 
     return demands_grouped_ts, sector_generations
 
+def installed_capacity_plots(pypsa_network, sector_array, plot_base_path):
+    installed_capacities = get_capacities(pypsa_network,sector_array)
 
+    fig = px.bar(installed_capacities, y='p_nom_opt', color='sector', barmode='stack', height=800)
+    fig.write_image(
+        f"{plot_base_path}/installed_capacity_GW.png"
+    )
 
+    px.bar(installed_capacities,y='p_nom_opt',facet_row='sector', color='sector',barmode='stack', height=1500)
+    fig.update_yaxes(matches=None)
+    fig.write_image(
+        f"{plot_base_path}/installed_capacity_facet_sector_GW.png"
+    )
 
-# def plot_electricity_balance(pypsa_network, renewable_carriers, conventional_carriers, storage_unit_carriers):
-#     # ac_buses = pypsa_network.buses.query("carrier == 'AC'")
-#     links = (
-#         pypsa_network.links_t.p1.groupby(pypsa_network.links.carrier, axis=1).sum().div(1e3) * -1
-#     )
-#     conventional_energy = links[link_carriers]
-#     p_by_carrier = conventional_energy
+    return installed_capacities
 
-#     generators = pypsa_network.generators_t.p.groupby(pypsa_network.generators.carrier, axis=1).sum().div(1e3)
-#     renewable_energy = generators[generator_carriers]
-#     p_by_carrier = pd.concat([p_by_carrier,generators],axis=1)
-
-#     if not pypsa_network.storage_units.empty:
-#         sto = (
-#             pypsa_network.storage_units_t.p.groupby(pypsa_network.storage_units.carrier, axis=1).sum().div(1e3)
-#         )
-#         p_by_carrier = pd.concat([p_by_carrier,sto],axis=1)
-
-#         fig, ax = plt.subplots(figsize=(6, 3))
-
-#     # color = p_by_carrier.columns.map(pypsa_network.carriers.color)
+def energy_generation_plots(pypsa_network, sector_array, plot_base_path):
+    energy_generations = get_generations(pypsa_network,sector_array)
     
-#     p_by_carrier.where(p_by_carrier > 0).plot.area(
-#         ax=ax,
-#         linewidth=0,
-#         # color=color,
-#     )
-
-#     charge = p_by_carrier.where(p_by_carrier < 0).dropna(how="all", axis=1)
-
-#     if not charge.empty:
-#         charge.plot.area(
-#             ax=ax,
-#             linewidth=0,
-#             # color=charge.columns.map(pypsa_network.carriers.color)
-#         )
-
-#     # (pypsa_network.loads_t.p_set.sum(axis=1).loc[time].div(1e3)).plot(ax=ax, c="k",linewidth = 0.1)
-#     plt.legend(loc=(1.05, 0),fontsize=5,reverse=True)
-#     ax.set_ylabel("GW")
-#     # ax.set_ylim(-5, 30)
-#     plt.subplots_adjust(right=0.8)
-#     ax.grid(linestyle="--")
-#     return p_by_carrier
-
-def installed_capacity_plots(pypsa_network, plot_base_path):
-    installed_capacities = get_capacities(pypsa_network,['AC','heat','water','H2','oil','gas','biomass'])
-
-    fig = px.bar(installed_capacities, y='p_nom_opt', color='sector', barmode='group', height=800)
+    fig = px.bar(energy_generations, y='Energy_TWh', color='sector',barmode='stack', height=1500)
     fig.write_image(
-        f"{plot_base_path}/installed_capacity_sectorwise_GW.png", scale=1.5
+        f"{plot_base_path}/energy_generation_TWh.png"
     )
 
-def energy_generation_plots(pypsa_network, plot_base_path):
-    energy_generations = get_generations(pypsa_network,['AC','heat','water','H2','oil','gas','biomass'])
-    time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
-    energy_generations_agg = energy_generations.sum() * time_granularity / 1e3 #in TWh
-    energy_generations_agg.name = 'energy_gen'
-
-    fig = px.bar(energy_generations_agg, y='energy_gen', barmode='group', height=800)
+    fig = px.bar(energy_generations, y='Energy_TWh', facet_row='sector', color='sector',barmode='stack', height=1500)
+    fig.update_yaxes(matches=None)
     fig.write_image(
-        f"{plot_base_path}/energy_generation_sectorwise_TWh.png", scale=1.5
+        f"{plot_base_path}/energy_generation_facet_sector_TWh.png"
     )
-    return energy_generations, energy_generations_agg
 
-def demand_plots(pypsa_network, plot_base_path):
-    demands = get_demands(pypsa_network,['low voltage','heat','water','H2','oil','gas','biomass'])
+    return energy_generations
+
+def demand_plots(pypsa_network, sector_array, plot_base_path):
+    demands_ts, demands_grouped_ts = get_demands(pypsa_network, sector_array)
     time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
-    demands_agg = demands.sum() * time_granularity / 1e3 #in TWh
-    demands_agg.name = 'load in TWh'
+    demands_agg = demands_grouped_ts.sum() * time_granularity / 1e3 #in TWh
+    demands_agg.name = 'load_TWh'
 
-    fig = px.bar(demands_agg, y='load in TWh', barmode='group', height=800)
+    fig = px.bar(demands_agg, y='load_TWh', barmode='group', height=800)
     fig.write_image(
-        f"{plot_base_path}/demands_sectorwise_TWh.png", scale=1.5
+        f"{plot_base_path}/demands_sectorwise_TWh.png"
     )
 
     return demands, demands_agg
 
+def energy_balance_plot(plot_base_path, sector_array):
+
+    for sector in sector_array:
+        if sector != 'AC':
+            load_sector_key = sector
+        else:
+            load_sector_key = 'low voltage'
+        gen_sector_key = sector
+        demands, generations = get_generation_demands_by_sector(pypsa_network, load_sector_key, gen_sector_key)
+
+        fig = px.area(generations.where(generations > 0))
+
+        generations_neg = generations.where(generations < 0).dropna(axis=1)
+        for col in generations_neg.columns:
+            fig.add_trace(go.Scatter(x=generations_neg.index, y=generations_neg[col], stackgroup='one', name=col))
+
+        fig.add_trace(go.Scatter(x=demands.index, y=demands, line_color='black', name=f"{sector} demand"))
+        fig.update_layout(yaxis_title = 'Energy in TWh', title=sector)
+        fig.write_image(
+            f"{plot_base_path}/energy_balance_ts_{sector}.png"
+        )
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -214,6 +227,8 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "plot_summaries")
     plot_path = pathlib.Path(default_path, snakemake.output.plot_path)
+
+    sector_array = snakemake.params.sector_array
 
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
     today_date = str(dt.datetime.now())
@@ -229,10 +244,14 @@ if __name__ == "__main__":
 
     pypsa_network = parse_inputs(default_path)
 
-    installed_capacity_plots(pypsa_network, plot_path)
+    installed_capacities = installed_capacity_plots(pypsa_network, sector_array, plot_path)
 
-    energy_generations, energy_generations_agg = energy_generation_plots(pypsa_network, plot_path)
+    energy_generations = energy_generation_plots(pypsa_network, sector_array, plot_path)
 
-    demands, demands_agg = demand_plots(pypsa_network, plot_path)
-    
+    demands, demands_agg = demand_plots(pypsa_network, sector_array, plot_path)
+
+    compare_generation_demand_agg_plot(energy_generations, demands_agg)
+
+    energy_balance_plot(plot_path, sector_array)
+
     log_output_file.close()
