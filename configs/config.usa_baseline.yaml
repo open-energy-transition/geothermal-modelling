@@ -24,7 +24,7 @@ US:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
-    sector_array: [electricity,heat,water,H2,oil,gas,biomass,battery]
+    energy_carriers: [electricity,heat,H2,oil,gas,biomass,battery]
   area_crs: 6372
 
 
