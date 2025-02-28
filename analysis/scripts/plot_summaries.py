@@ -187,7 +187,7 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carriers):
 def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_path):
     installed_capacities = get_capacities(pypsa_network,energy_carriers_array)
 
-    fig = px.bar(installed_capacities, y='p_nom_opt', color='energy_carriers', barmode='stack',text_auto='0.2f', width=1200, height=800)
+    fig = px.bar(installed_capacities, y='p_nom_opt', color='carrier', barmode='stack',text_auto='0.2f', width=1200, height=800)
     fig.update_layout(
         uniformtext_minsize=5,
         uniformtext_mode='show',
@@ -197,7 +197,7 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
         f"{plot_base_path}/installed_capacity_GW.png"
     )
 
-    fig = px.bar(installed_capacities,y='p_nom_opt',facet_row='energy_carriers', color='energy_carriers',barmode='stack',text_auto='0.2f', width=1200, height=800)
+    fig = px.bar(installed_capacities,y='p_nom_opt',facet_row='carrier', color='carrier',barmode='stack',text_auto='0.2f', width=1200, height=800)
     fig.update_yaxes(matches=None)
     fig.update_layout(
         uniformtext_minsize=5,
@@ -205,7 +205,7 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
     )
     fig.update_traces(textposition='outside')
     fig.for_each_yaxis(lambda y: y.update(title = ''))
-    fig.add_annotation(x=-0.1,y=0.5,
+    fig.add_annotation(x=0.1,y=0.5,
                     text="Energy (TWh)", textangle=-90,
                         xref="paper", yref="paper")
     fig.write_image(
@@ -217,7 +217,7 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
 def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path):
     energy_generations = get_generations(pypsa_network,energy_carriers_array)
     
-    fig = px.bar(energy_generations, y='Energy_TWh', color='energy_carriers',barmode='stack',text_auto='0.2f',width=1500, height=800)
+    fig = px.bar(energy_generations, y='Energy_TWh', color='carrier',barmode='stack',text_auto='0.2f',width=1500, height=800)
     fig.update_layout(
         uniformtext_minsize=6,
         uniformtext_mode='show',
@@ -227,7 +227,7 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
         f"{plot_base_path}/energy_generation_TWh.png", scale=3
     )
 
-    fig = px.bar(energy_generations, y='Energy_TWh', facet_row='energy_carriers', color='energy_carriers',barmode='stack',text_auto='0.2f',width=1500, height=900)
+    fig = px.bar(energy_generations, y='Energy_TWh', facet_row='carrier', color='carrier',barmode='stack',text_auto='0.2f',width=1500, height=900)
     fig.update_yaxes(matches=None)
     fig.update_layout(
         uniformtext_minsize=6,
@@ -235,7 +235,7 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
     )
     fig.update_traces(textposition='outside')
     fig.for_each_yaxis(lambda y: y.update(title = ''))
-    fig.add_annotation(x=-0.1,y=0.5,
+    fig.add_annotation(x=0.1,y=0.5,
                     text="Energy (TWh)", textangle=-90,
                         xref="paper", yref="paper")
     fig.write_image(
@@ -280,7 +280,7 @@ def energy_balance_plot(plot_base_path, energy_carriers_array):
         )
 
 def compare_generation_demand_agg_plot(energy_generations, demands_agg, energy_carriers_array, plot_base_path):
-    energy_agg = energy_generations.groupby('energy_carriers').sum()
+    energy_agg = energy_generations.groupby('carrier').sum()
     df_comparison = pd.DataFrame(index=energy_carriers_array)
     df_comparison['generations'] = energy_agg
     df_comparison['demands'] = demands_agg
