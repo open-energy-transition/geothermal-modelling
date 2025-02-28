@@ -50,7 +50,7 @@ def get_energy_carriers_key(energy_carrier):
         return energy_carrier
 
 def drop_carriers(df, key):
-    drop_carriers_list = ['electricity distribution grid','H2 pipeline','H2 pipeline repurposed']
+    drop_carriers_list = ['electricity distribution grid','H2 pipeline','H2 pipeline repurposed','DC','B2B']
     for car in drop_carriers_list:
         if car in df.index.tolist() and key == 'rows':
             df = df.drop(index=car)
@@ -77,7 +77,7 @@ def get_capacities(pypsa_network, energy_carriers_array):
                 capacities = (df.query('bus1 in @sec', local_dict={'sec':energy_carriers_buses}).groupby('carrier').p_nom_opt.sum() * df.query('bus1 in @sec', local_dict={'sec':energy_carriers_buses}).groupby('carrier').efficiency.mean()).div(1e3)
                 capacities.name = 'p_nom_opt'
                 energy_carriers_capacities = pd.concat([energy_carriers_capacities,capacities])
-        energy_carriers_capacities['energy_carriers'] = energy_carriers
+        energy_carriers_capacities['carrier'] = energy_carriers
         installed_capacities = pd.concat([installed_capacities,energy_carriers_capacities])
     installed_capacities = drop_carriers(installed_capacities, 'rows')
     return installed_capacities
@@ -115,14 +115,12 @@ def get_generations(pypsa_network, energy_carriers_array):
 
                     energy_carriers_generations = energy_carriers_generations.join(generations, lsuffix="", rsuffix="_"+energy_carriers)
 
-        # discharge_indices = [x for x in energy_carriers_generations.columns if 'discharge' in x]
-        # energy_carriers_generations = energy_carriers_generations.drop(discharge_indices, axis=1)
 
         time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
         energy_carriers_generations = energy_carriers_generations.sum() * time_granularity / 1e3 #in TWh
         energy_carriers_generations.name='Energy_TWh'
         energy_carriers_generations = pd.DataFrame(energy_carriers_generations)
-        energy_carriers_generations['energy_carriers'] = energy_carriers
+        energy_carriers_generations['carrier'] = energy_carriers
         
         energy_generations = energy_generations._append(energy_carriers_generations)
     
@@ -206,6 +204,10 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
         uniformtext_mode='show',
     )
     fig.update_traces(textposition='outside')
+    fig.for_each_yaxis(lambda y: y.update(title = ''))
+    fig.add_annotation(x=-0.1,y=0.5,
+                    text="Energy (TWh)", textangle=-90,
+                        xref="paper", yref="paper")
     fig.write_image(
         f"{plot_base_path}/installed_capacity_facet_energy_carriers_GW.png"
     )
@@ -232,6 +234,10 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
         uniformtext_mode='show',
     )
     fig.update_traces(textposition='outside')
+    fig.for_each_yaxis(lambda y: y.update(title = ''))
+    fig.add_annotation(x=-0.1,y=0.5,
+                    text="Energy (TWh)", textangle=-90,
+                        xref="paper", yref="paper")
     fig.write_image(
         f"{plot_base_path}/energy_generation_facet_energy_carriers_TWh.png", scale=3
     )
