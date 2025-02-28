@@ -205,7 +205,9 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
     )
     fig.update_traces(textposition='outside')
     fig.for_each_yaxis(lambda y: y.update(title = ''))
-    fig.add_annotation(x=0.1,y=0.5,
+    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[1]))
+
+    fig.add_annotation(x=-0.05,y=0.5,
                     text="Energy (TWh)", textangle=-90,
                         xref="paper", yref="paper")
     fig.write_image(
@@ -235,7 +237,9 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
     )
     fig.update_traces(textposition='outside')
     fig.for_each_yaxis(lambda y: y.update(title = ''))
-    fig.add_annotation(x=0.1,y=0.5,
+    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[1]))
+
+    fig.add_annotation(x=-0.05,y=0.5,
                     text="Energy (TWh)", textangle=-90,
                         xref="paper", yref="paper")
     fig.write_image(
