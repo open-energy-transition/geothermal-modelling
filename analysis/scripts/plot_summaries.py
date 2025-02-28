@@ -302,6 +302,19 @@ def compare_generation_demand_agg_plot(energy_generations, demands_agg, energy_c
     )
 
 
+    fig = px.bar(df_comparison.T,barmode='stack',text_auto='0.2f')
+    fig.update_layout(
+        uniformtext_minsize=5,
+        uniformtext_mode='show',
+        yaxis_title = 'Energy in TWh', 
+        title="Generation vs demand"
+    )
+    fig.update_traces(textposition='outside')
+    fig.write_image(
+        f"{plot_base_path}/generation_vs_demand_stacked.png"
+    )
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
         from _helpers_usa import mock_snakemake
