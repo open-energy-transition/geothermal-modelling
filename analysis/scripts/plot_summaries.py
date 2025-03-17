@@ -116,8 +116,8 @@ def get_generations(pypsa_network, energy_carriers_array):
                     energy_carriers_generations = energy_carriers_generations.join(generations, lsuffix="", rsuffix="_"+energy_carriers)
 
 
-        time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
-        energy_carriers_generations = energy_carriers_generations.sum() * time_granularity / 1e3 #in TWh
+        time_granularity = pypsa_network.snapshot_weightings.objective
+        energy_carriers_generations = energy_carriers_generations.mul(time_granularity, axis=0).div(1e3).sum() #in TWh
         energy_carriers_generations.name='Energy_TWh'
         energy_carriers_generations = pd.DataFrame(energy_carriers_generations)
         energy_carriers_generations['carrier'] = energy_carriers
@@ -250,8 +250,8 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
 
 def demand_plots(pypsa_network, energy_carriers_array, plot_base_path):
     demands_ts, demands_grouped_ts = get_demands(pypsa_network, energy_carriers_array)
-    time_granularity = pypsa_network.snapshots.diff()[-1].total_seconds() / 3600
-    demands_agg = demands_grouped_ts.sum() * time_granularity / 1e3 #in TWh
+    time_granularity = pypsa_network.snapshot_weightings.objective
+    demands_agg = demands_grouped_ts.mul(time_granularity, axis=0).div(1e3).sum() #in TWh
     demands_agg.name = 'load_TWh'
 
     fig = px.bar(demands_agg, y='load_TWh', barmode='group',text_auto='0.2f',width=1200, height=800)
@@ -309,7 +309,7 @@ def compare_generation_demand_agg_plot(energy_generations, demands_agg, energy_c
         yaxis_title = 'Energy in TWh', 
         title="Generation vs demand"
     )
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='inside')
     fig.write_image(
         f"{plot_base_path}/generation_vs_demand_stacked.png"
     )
