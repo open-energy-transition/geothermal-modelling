@@ -9,7 +9,7 @@ csv_file="puma_codes.csv"
 
 # uncomment to run across the whole file with PUMA definitions
 # while IFS=',' read -r var1 var2
-head -n 1000 "$csv_file" | while IFS=',' read -r var_puma; do
+head -n 10 "$csv_file" | while IFS=',' read -r var_puma; do
   puma_str="${var_puma}"
   echo "PUMA: $field2"
 
