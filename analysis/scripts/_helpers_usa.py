@@ -201,6 +201,7 @@ def mock_snakemake(
             os.chdir(script_dir)
     return snakemake
 
+
 def get_component(network, component):
     """
     Returns PyPSA model component

@@ -43,7 +43,12 @@ import pandas as pd
 import plotly.express as px
 import datetime as dt
 import plotly.graph_objects as go
-from _helpers_usa import get_component, get_component_list, get_energy_carriers_key, drop_carriers
+from _helpers_usa import (
+    get_component,
+    get_component_list,
+    get_energy_carriers_key,
+    drop_carriers,
+)
 
 
 def parse_inputs(default_path):
@@ -679,16 +684,22 @@ if __name__ == "__main__":
     installed_capacities = installed_capacity_plots(
         pypsa_network, energy_carriers_array, plot_path
     )
-    installed_capacities.round(2).to_csv(pathlib.Path(output_path,"Installed_Capacities_in_GW.csv"))
+    installed_capacities.round(2).to_csv(
+        pathlib.Path(output_path, "Installed_Capacities_in_GW.csv")
+    )
 
     energy_generations = energy_generation_plots(
         pypsa_network, energy_carriers_array, plot_path
     )
-    energy_generations.round(2).to_csv(pathlib.Path(output_path,"Energy_generations_in_TWh.csv"))
+    energy_generations.round(2).to_csv(
+        pathlib.Path(output_path, "Energy_generations_in_TWh.csv")
+    )
 
     demands, demands_agg = demand_plots(pypsa_network, energy_carriers_array, plot_path)
-    demands.round(2).to_csv(pathlib.Path(output_path,"Demands_in_TWh.csv"))
-    demands_agg.round(2).to_csv(pathlib.Path(output_path,"Aggregated_demands_in_TWh.csv"))
+    demands.round(2).to_csv(pathlib.Path(output_path, "Demands_in_TWh.csv"))
+    demands_agg.round(2).to_csv(
+        pathlib.Path(output_path, "Aggregated_demands_in_TWh.csv")
+    )
 
     compare_generation_demand_agg_plot(
         energy_generations, demands_agg, energy_carriers_array, plot_path
