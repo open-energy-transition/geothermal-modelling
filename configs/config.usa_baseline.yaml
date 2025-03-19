@@ -60,7 +60,7 @@ scenario:
   sopts:
   - "24H"
   demand:
-  - "AB"
+  - "DF"
 
 snapshots:
   start: "2013-01-01"

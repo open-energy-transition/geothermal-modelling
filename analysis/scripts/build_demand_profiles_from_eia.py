@@ -72,6 +72,8 @@ def parse_inputs(default_path, distance_crs):
         Output of preprocess_demand_data - demand mapped to utility level shapes and holes
     pypsa_network: pypsa
         network to obtain pypsa bus information
+    gadm_shape: geopandas dataframe
+        Administrative boundaries
     """
     BA_demand_path1 = pathlib.Path(default_path, snakemake.input.BA_demand_path1[0])
     BA_demand_path2 = pathlib.Path(default_path, snakemake.input.BA_demand_path2[0])
@@ -101,7 +103,11 @@ def parse_inputs(default_path, distance_crs):
     )
     pypsa_network = pypsa.Network(pypsa_network_path)
 
-    return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network
+    # read gadm file
+    gadm_shape = gpd.read_file(snakemake.input.gadm_shape)
+
+
+    return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network, gadm_shape
 
 
 def build_demand_profiles(
@@ -235,7 +241,7 @@ def read_scaling_factor(demand_scenario, horizon, default_path):
     # logger.info(f"Read {filename} for scaling the demand for {horizon}.")
     return scaling_factor
 
-def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor):
+def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs):
     """
     Scales demand profiles for each state based on the NREL EFS demand projections
     Parameters
@@ -251,17 +257,14 @@ def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor):
     scaled_demand_profiles: pandas dataframe
          Scaled demand profiles based on the demand projections
     """
-    # read gadm file
-    gadm_shape = gpd.read_file(snakemake.input.gadm_shape)
-
     # create geodataframe out of x and y coordinates of buses
     buses_gdf = gpd.GeoDataFrame(
         pypsa_network.buses,
         geometry=gpd.points_from_xy(pypsa_network.buses.x, pypsa_network.buses.y),
-        crs=snakemake.params.geo_crs,
+        crs=geo_crs,
     ).reset_index()
 
-    gadm_centroid = gadm_shape.to_crs(snakemake.params.geo_crs)
+    gadm_centroid = gadm_shape.to_crs(geo_crs)
     gadm_centroid.geometry = gadm_centroid.geometry.centroid
 
     # map gadm shapes to each bus
@@ -269,8 +272,6 @@ def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor):
         buses_gdf.sjoin_nearest(gadm_centroid, how="left")
         .set_index("Bus")["ISO_1"].str.replace("US-", "")
     )
-
-    # breakpoint()
 
     # convert demand_profiles from wide to long format
     df_demand_long = df_demand_profiles.melt(ignore_index=False, var_name="Bus", value_name="demand")
@@ -280,7 +281,6 @@ def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor):
 
     # merge with scaling_factor DataFrame based on region_code and time
     scaling_factor["time"] = scaling_factor["time"].apply(lambda t: t.replace(year=df_demand_long.index[0].year))
-    # breakpoint()
     df_demand_long = df_demand_long.reset_index().rename(columns={"snapshot":"time"})
     df_scaled = df_demand_long.merge(scaling_factor, on=["region_code", "time"], how="left")
     del scaling_factor
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
 
-    (df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network) = parse_inputs(
+    (df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network, gadm_shape) = parse_inputs(
         default_path, distance_crs
     )
 
@@ -341,7 +341,7 @@ if __name__ == "__main__":
 
     if demand_horizon > 2020:
         scaling_factor = read_scaling_factor(demand_scenario, demand_horizon, default_path)
-        df_demand_profiles = scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor)
+        df_demand_profiles = scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs)
 
 
     df_demand_profiles.to_csv(output_demand_profile_path)
