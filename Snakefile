@@ -124,7 +124,8 @@ if config["US"].get("retrieve_US_databundle", True):
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
-                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv", "HS861 2010-.xlsx" ],
+                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv", "HS861 2010-.xlsx", 
+                            "future_demand_projections"]
             ),
         script:
             "analysis/scripts/download_from_gdrive.py"
@@ -424,7 +425,9 @@ rule preprocess_demand_data:
 rule build_demand_profiles_from_eia:
     params:
         geo_crs= config['crs']['geo_crs'],
-        distance_crs= config['crs']['distance_crs']
+        distance_crs= config['crs']['distance_crs'],
+        demand_horizon=config["US"]["demand_projection"]["planning_horizon"],
+        demand_scenario=config["US"]["demand_projection"]["scenario"],
     input:
         BA_demand_path1 = expand(
             pathlib.Path(
@@ -467,7 +470,14 @@ rule build_demand_profiles_from_eia:
                 run_name,
                 "base.nc"
             ),
+        ),
+        gadm_shape=pathlib.Path(
+            "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
+        ),
+        demand_projections_path=pathlib.Path(
+            "analysis","gdrive_data","data","electricity_demand_data","future_demand_projections",
         )
+
     output:
         demand_profile_path = pathlib.Path(
             "workflow",
