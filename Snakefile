@@ -27,7 +27,7 @@ use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profil
 
 demand_year = config["US"]["demand_year"]
 run_name = config["run"]["name"]
-
+SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
 
 localrules:
     all,
@@ -489,6 +489,66 @@ rule build_demand_profiles_from_eia:
 
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
+
+rule modify_energy_totals:
+    params:
+        country = config['countries']
+    input:
+        demand_profile_path = pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "demand_profiles.csv"
+        ),
+        energy_totals_path=expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                SECDIR,
+                "energy_totals_{demand}_{planning_horizons}.csv"
+            ),
+            **config['scenario'],
+        ),
+    output:
+        energy_totals_path=expand(pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            SECDIR,
+            "energy_totals_{demand}_{planning_horizons}_updated.csv"
+        ),
+        **config['scenario']
+    )
+    script:
+        "analysis/scripts/modify_energy_totals.py"    
+
+rule replace_energy_totals:
+    input:
+        energy_totals_path=expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                SECDIR,
+                "energy_totals_{demand}_{planning_horizons}_updated.csv"
+            ),
+            **config['scenario']
+        ),
+    output:
+        energy_totals_path=expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                SECDIR,
+                "energy_totals_{demand}_{planning_horizons}.csv"
+            ),
+            **config['scenario'],
+        ),
+    shell:
+        "cp {input} {output}" 
     
 rule plot_and_extract_summaries:
     params:

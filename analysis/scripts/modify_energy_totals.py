@@ -1,0 +1,114 @@
+"""
+Plotting scripts to visualize model results
+
+Relevant Settings
+-----------------
+
+.. code:: yaml
+
+
+.. seealso::
+    Documentation of the configuration file ``config.usa_baseline.yaml``
+
+
+Inputs
+------
+
+- ``workflow/pypsa-earth/resources/{run_name}/demand_profiles.csv``
+
+
+
+Outputs
+-------
+
+- ``analysis/plots/summary_plots``
+- ``analysis/outputs/summary_outputs``
+
+
+Description
+-----------
+"""
+
+import pypsa
+import pathlib
+import pandas as pd
+import datetime as dt
+
+
+def parse_inputs(default_path):
+    """
+    Load all input data required for preprocessing and computing utility level demand data
+
+    Parameters
+    ----------
+    default_path: str
+        current total directory path
+
+    Returns
+    -------
+    df_demand: pandas dataframe
+        Electricity demand profiles
+    energy_totals: pandas dataframe
+        Total energy requirement for each carrier
+    """
+    demand_profiles_path = pathlib.Path(
+        default_path, snakemake.input.demand_profile_path
+    )
+    energy_totals_path = pathlib.Path(
+        default_path, snakemake.input.energy_totals_path[0]
+    )
+
+    df_demand = pd.read_csv(demand_profiles_path, index_col="time")
+    energy_totals = pd.read_csv(energy_totals_path, index_col="Unnamed: 0.1")
+
+    return df_demand, energy_totals
+
+
+# Currently handles only a single country
+# Replacing time varying electricity load totals
+# The services electricity and electricity residential values are replaced to match demand projections based
+# on NREL EFS study after deduction of constant loads
+def modify_electricity_totals(df_demand, energy_totals, country):
+    elec_cols = [x for x in energy_totals.columns if "electricity" in x and x not in ["electricity residential", "services electricity"]]
+    
+    elec_services = energy_totals.loc[country,"services electricity"]
+    elec_residential = energy_totals.loc[country,"electricity residential"]
+    service_elec_ratio = elec_services / (elec_services+elec_residential)
+    elec_residential_ratio = elec_residential / (elec_services+elec_residential)
+
+    total_electricity_demand = df_demand.sum().sum()
+    replace_demand = total_electricity_demand - energy_totals.loc[country,elec_cols].sum()
+
+    energy_totals.loc[country,"electricity residential"] = replace_demand * elec_residential_ratio
+    energy_totals.loc[country,"services electricity"] = replace_demand * service_elec_ratio
+
+    return energy_totals
+
+
+if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
+
+        snakemake = mock_snakemake("modify_energy_totals")
+
+    # set relevant paths
+    default_path = pathlib.Path(__file__).parent.parent.parent
+    log_path = pathlib.Path(default_path, "analysis", "logs", "modify_energy_totals")
+
+    pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
+    today_date = str(dt.datetime.now())
+    log_output_file_path = pathlib.Path(
+        log_path, f"output_modify_energy_totals_{today_date[:10]}.txt"
+    )
+    log_output_file_path.touch(exist_ok=True)
+    log_output_file = open(log_output_file_path, "w")
+
+    output_path = pathlib.Path(default_path, snakemake.output.output_path)
+    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
+
+    # Only one country - needs to be changed if multiple countries are being accounted for
+    country = snakemake.params.country[0]
+    df_demand, energy_totals = parse_inputs(default_path)
+
+    modified_energy_totals = modify_electricity_totals(df_demand, energy_totals, country)
+    modified_energy_totals.to_csv(output_path)
