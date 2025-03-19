@@ -24,10 +24,17 @@ Outputs
 -------
 
 - ``analysis/plots/summary_plots``
+- ``analysis/outputs/summary_outputs``
 
 
 Description
 -----------
+
+To-do
+------
+1. Add plot of technology costs (sorted by merit-order for each energy carrier)
+2. Ordering of technologies on the plot
+3. Reflection of colors as in the config file
 """
 
 import pypsa
@@ -750,6 +757,7 @@ if __name__ == "__main__":
     default_path = pathlib.Path(__file__).parent.parent.parent
     log_path = pathlib.Path(default_path, "analysis", "logs", "plot_summaries")
     plot_path = pathlib.Path(default_path, snakemake.output.plot_path)
+    output_path = pathlib.Path(default_path, snakemake.output.output_path)
 
     energy_carriers_array = snakemake.params.energy_carriers
 
@@ -762,18 +770,23 @@ if __name__ == "__main__":
     log_output_file = open(log_output_file_path, "w")
 
     pathlib.Path(plot_path).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
 
     pypsa_network = parse_inputs(default_path)
 
     installed_capacities = installed_capacity_plots(
         pypsa_network, energy_carriers_array, plot_path
     )
+    installed_capacities.round(2).to_csv(pathlib.Path(output_path,"Installed_Capacities_in_GW.csv"))
 
     energy_generations = energy_generation_plots(
         pypsa_network, energy_carriers_array, plot_path
     )
+    energy_generations.round(2).to_csv(pathlib.Path(output_path,"Energy_generations_in_TWh.csv"))
 
     demands, demands_agg = demand_plots(pypsa_network, energy_carriers_array, plot_path)
+    demands.round(2).to_csv(pathlib.Path(output_path,"Demands_in_TWh.csv"))
+    demands_agg.round(2).to_csv(pathlib.Path(output_path,"Aggregated_demands_in_TWh.csv"))
 
     compare_generation_demand_agg_plot(
         energy_generations, demands_agg, energy_carriers_array, plot_path

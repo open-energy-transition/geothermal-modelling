@@ -490,7 +490,7 @@ rule build_demand_profiles_from_eia:
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
     
-rule plot_summaries:
+rule plot_and_extract_summaries:
     params:
         energy_carriers = config["US"]["summary"]["energy_carriers"],
     input:
@@ -514,8 +514,15 @@ rule plot_summaries:
             "summary_plots"
             )
         ),
+        output_path = directory(
+            pathlib.Path(
+                "analysis",
+                "outputs",
+                "summary_outputs"
+            )
+        )
     script:
-        "analysis/scripts/plot_summaries.py"
+        "analysis/scripts/plot_and_extract_summaries.py"
 
 rule summary:
     input:
