@@ -29,7 +29,6 @@ Description
 -----------
 """
 
-import pypsa
 import pathlib
 import pandas as pd
 import datetime as dt
@@ -69,18 +68,29 @@ def parse_inputs(default_path):
 # The services electricity and electricity residential values are replaced to match demand projections based
 # on NREL EFS study after deduction of constant loads
 def modify_electricity_totals(df_demand, energy_totals, country):
-    elec_cols = [x for x in energy_totals.columns if "electricity" in x and x not in ["electricity residential", "services electricity"]]
-    
-    elec_services = energy_totals.loc[country,"services electricity"]
-    elec_residential = energy_totals.loc[country,"electricity residential"]
-    service_elec_ratio = elec_services / (elec_services+elec_residential)
-    elec_residential_ratio = elec_residential / (elec_services+elec_residential)
+    elec_cols = [
+        x
+        for x in energy_totals.columns
+        if "electricity" in x
+        and x not in ["electricity residential", "services electricity"]
+    ]
+
+    elec_services = energy_totals.loc[country, "services electricity"]
+    elec_residential = energy_totals.loc[country, "electricity residential"]
+    service_elec_ratio = elec_services / (elec_services + elec_residential)
+    elec_residential_ratio = elec_residential / (elec_services + elec_residential)
 
     total_electricity_demand = df_demand.sum().sum()
-    replace_demand = total_electricity_demand - energy_totals.loc[country,elec_cols].sum()
+    replace_demand = (
+        total_electricity_demand - energy_totals.loc[country, elec_cols].sum()
+    )
 
-    energy_totals.loc[country,"electricity residential"] = replace_demand * elec_residential_ratio
-    energy_totals.loc[country,"services electricity"] = replace_demand * service_elec_ratio
+    energy_totals.loc[country, "electricity residential"] = (
+        replace_demand * elec_residential_ratio
+    )
+    energy_totals.loc[country, "services electricity"] = (
+        replace_demand * service_elec_ratio
+    )
 
     return energy_totals
 
@@ -110,5 +120,7 @@ if __name__ == "__main__":
     country = snakemake.params.country[0]
     df_demand, energy_totals = parse_inputs(default_path)
 
-    modified_energy_totals = modify_electricity_totals(df_demand, energy_totals, country)
+    modified_energy_totals = modify_electricity_totals(
+        df_demand, energy_totals, country
+    )
     modified_energy_totals.to_csv(output_path)
