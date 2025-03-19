@@ -1,3 +1,35 @@
+"""
+Plotting scripts to visualize model results
+
+Relevant Settings
+-----------------
+
+.. code:: yaml
+
+    US:
+        summary:
+            energy_carriers: ['electricity','heat']
+
+.. seealso::
+    Documentation of the configuration file ``config.usa_baseline.yaml``
+
+
+Inputs
+------
+
+- ``workflow/pypsa-earth/results/postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc``
+
+
+Outputs
+-------
+
+- ``analysis/plots/summary_plots``
+
+
+Description
+-----------
+"""
+
 import pypsa
 import pathlib
 import pandas as pd
@@ -7,6 +39,18 @@ import plotly.graph_objects as go
 
 
 def parse_inputs(default_path):
+    """
+    Load all input data required for preprocessing and computing utility level demand data
+
+    Parameters
+    ----------
+    default_path: str
+        current total directory path
+
+    Returns
+    -------
+    pypsa_network: PyPSA model
+    """
     pypsa_network_path = pathlib.Path(
         default_path, snakemake.input.pypsa_earth_results_path[0]
     )
@@ -16,6 +60,22 @@ def parse_inputs(default_path):
 
 
 def get_component(network, component):
+    """
+    Returns PyPSA model component
+
+    Parameters
+    ----------
+    network: PyPSA model object
+        pypsa model
+    component: str
+        PyPSA component to be returned
+
+    Returns
+    -------
+    network[component]: pandas dataframe
+        component of the PyPSA model
+    """
+
     if component == "generators":
         return network.generators
     elif component == "links":
@@ -35,6 +95,18 @@ def get_component(network, component):
 
 
 def get_component_list(energy_carrier):
+    """
+    Relevant PyPSA model components for each energy carrier
+
+    Parameters
+    ----------
+    energy_carrier: str
+
+    Returns
+    -------
+    list of components relevant to that particular energy carrier
+    """
+
     energy_carrier_component_dict = {
         "electricity": ["generators", "links", "storage_units", "stores"],
         "heat": ["links", "stores"],
@@ -49,6 +121,17 @@ def get_component_list(energy_carrier):
 
 
 def get_energy_carriers_key(energy_carrier):
+    """
+    List of PyPSA carriers for each energy carrier
+
+    Parameters
+    ----------
+    energy_carrier: str
+
+    Returns
+    -------
+    key to filter relevant PyPSA carriers
+    """
     if energy_carrier == "electricity":
         return "AC|low voltage"
     else:
@@ -56,6 +139,9 @@ def get_energy_carriers_key(energy_carrier):
 
 
 def drop_carriers(df, key):
+    """
+    To drop irrelevant technologies
+    """
     drop_carriers_list = [
         "electricity distribution grid",
         "H2 pipeline",
@@ -73,6 +159,21 @@ def drop_carriers(df, key):
 
 
 def get_capacities(pypsa_network, energy_carriers_array):
+    """
+    To fetch installed capacities across all technologies for a list of energy carriers
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carriers_array: str list
+        list of energy carriers
+
+    Returns
+    -------
+    installed_capacities: pandas dataframe
+        Installed capacities in GW
+    """
+
     installed_capacities = pd.DataFrame()
     for energy_carriers in energy_carriers_array:
         energy_carriers_key = get_energy_carriers_key(energy_carriers)
@@ -119,6 +220,20 @@ def get_capacities(pypsa_network, energy_carriers_array):
 
 
 def get_generations(pypsa_network, energy_carriers_array):
+    """
+    To fetch energy generations in TWh
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carriers_array: str list
+        List of energy carriers
+
+    Returns
+    -------
+    energy_generations: pandas dataframe
+        Energy generations across energy carriers in TWh
+    """
     energy_generations = pd.DataFrame()
     for energy_carriers in energy_carriers_array:
         energy_carriers_key = get_energy_carriers_key(energy_carriers)
@@ -211,6 +326,26 @@ def get_generations(pypsa_network, energy_carriers_array):
 
 
 def get_demands(pypsa_network, energy_carriers_array):
+    """
+    Fetch demands across energy carriers
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carriers_array: str list
+        List of energy carriers
+
+    Returns
+    -------
+    demands_ts: pandas dataframe
+        Time series of demands for each PyPSA carrier
+        e.g., AC, rail transport electricity, agriculture electricity
+
+    demands_grouped_ts: pandas dataframe
+        Time series of demands aggregated over each energy carrier
+        e.g., electricity, heat
+    """
+
     demands_ts = pd.DataFrame(index=pypsa_network.snapshots)
     demands_grouped_ts = pd.DataFrame(index=pypsa_network.snapshots)
     for energy_carriers in energy_carriers_array:
@@ -232,38 +367,55 @@ def get_demands(pypsa_network, energy_carriers_array):
         demands_ts = demands_ts.join(
             load_energy_carriers_ts, how="left", lsuffix="_x", rsuffix="_y"
         )
-
     return demands_ts, demands_grouped_ts
 
 
-def get_generation_demands_by_energy_carriers(pypsa_network, energy_carriers):
-    energy_carriers_key = get_energy_carriers_key(energy_carriers)
-    load_energy_carriers_buses = pypsa_network.buses.index[
-        pypsa_network.buses.carrier.str.contains(energy_carriers_key)
+def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
+    """
+    Fetch demands across different technologies for each energy carrier
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carrier: str
+       energy carrier
+
+    Returns
+    -------
+
+    demands_grouped_ts: pandas dataframe
+        Time series of demands in TWh aggregated for a particular energy carrier
+    energy_carrier_generations: pandas dataframe
+        Time series of generations in TWh across each of the technologies associated to an energy carrier
+    """
+
+    energy_carrier_key = get_energy_carriers_key(energy_carrier)
+    load_energy_carrier_buses = pypsa_network.buses.index[
+        pypsa_network.buses.carrier.str.contains(energy_carrier_key)
     ]
-    load_energy_carriers_columns = pypsa_network.loads.query(
-        "bus in @sec", local_dict={"sec": load_energy_carriers_buses}
+    load_energy_carrier_columns = pypsa_network.loads.query(
+        "bus in @sec", local_dict={"sec": load_energy_carrier_buses}
     ).index
-    load_energy_carriers_ts = (
-        pypsa_network.loads_t.p[load_energy_carriers_columns]
+    load_energy_carrier_ts = (
+        pypsa_network.loads_t.p[load_energy_carrier_columns]
         .groupby(pypsa_network.loads.carrier, axis=1)
         .sum()
         .div(1e3)
     )
 
-    demands_grouped_ts = load_energy_carriers_ts.sum(axis=1)
+    demands_grouped_ts = load_energy_carrier_ts.sum(axis=1)
 
-    components = get_component_list(energy_carriers)
-    energy_carriers_generations = pd.DataFrame(index=pypsa_network.snapshots)
-    gen_energy_carriers_buses = pypsa_network.buses.index[
-        pypsa_network.buses.carrier.str.contains(energy_carriers_key)
+    components = get_component_list(energy_carrier)
+    energy_carrier_generations = pd.DataFrame(index=pypsa_network.snapshots)
+    gen_energy_carrier_buses = pypsa_network.buses.index[
+        pypsa_network.buses.carrier.str.contains(energy_carrier_key)
     ]
 
     for comp in components:
         df = get_component(pypsa_network, comp)
         if comp != "links":
             generators = df.query(
-                "bus in @sec", local_dict={"sec": gen_energy_carriers_buses}
+                "bus in @sec", local_dict={"sec": gen_energy_carrier_buses}
             )
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
@@ -279,12 +431,12 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carriers):
                 .sum()
                 .div(1e3)
             )
-            energy_carriers_generations = energy_carriers_generations.join(
+            energy_carrier_generations = energy_carrier_generations.join(
                 generations, lsuffix="", rsuffix="_" + comp
             )
         else:
             generators = df.query(
-                "bus1 in @sec", local_dict={"sec": gen_energy_carriers_buses}
+                "bus1 in @sec", local_dict={"sec": gen_energy_carrier_buses}
             )
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
@@ -321,17 +473,35 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carriers):
                         * -1
                     )
 
-                energy_carriers_generations = energy_carriers_generations.join(
+                energy_carrier_generations = energy_carrier_generations.join(
                     generations, lsuffix="", rsuffix="_" + comp
                 )
 
-    # discharge_indices = [x for x in energy_carriers_generations.columns if 'discharge' in x]
-    # energy_carriers_generations = energy_carriers_generations.drop(discharge_indices, axis=1)
-    energy_carriers_generations = drop_carriers(energy_carriers_generations, "columns")
-    return demands_grouped_ts, energy_carriers_generations
+    # discharge_indices = [x for x in energy_carrier_generations.columns if 'discharge' in x]
+    # energy_carrier_generations = energy_carrier_generations.drop(discharge_indices, axis=1)
+    energy_carrier_generations = drop_carriers(energy_carrier_generations, "columns")
+    return demands_grouped_ts, energy_carrier_generations
 
 
 def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_path):
+    """
+    Plot installed capacity in GW across energy carriers
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carriers_array: str list
+        List of energy carriers
+    plot_base_path: str
+        Plot directory path
+
+    Returns
+    --------
+    installed_capacities: pandas dataframe
+        Installed capacities in GW across energy carriers
+
+    """
+
     installed_capacities = get_capacities(pypsa_network, energy_carriers_array)
 
     fig = px.bar(
@@ -378,6 +548,23 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
 
 
 def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path):
+    """
+    Plot energy generation in TWh across energy carriers
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carriers_array: str list
+        List of energy carriers
+    plot_base_path: str
+        Plot directory path
+
+    Returns
+    --------
+    energy_generations: pandas dataframe
+        Energy generations in TWh across energy carriers
+
+    """
     energy_generations = get_generations(pypsa_network, energy_carriers_array)
 
     fig = px.bar(
@@ -426,6 +613,22 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
 
 
 def demand_plots(pypsa_network, energy_carriers_array, plot_base_path):
+    """
+    Plot demands in TWh across energy carriers
+
+    Parameters
+    ----------
+    pypsa_network: PyPSA model
+    energy_carriers_array: str list
+        List of energy carriers
+    plot_base_path: str
+        Plot directory path
+
+    Returns
+    --------
+    demands_ts: pandas dataframe
+    demands_agg: pandas dataframe
+    """
     demands_ts, demands_grouped_ts = get_demands(pypsa_network, energy_carriers_array)
     time_granularity = pypsa_network.snapshot_weightings.objective
     demands_agg = (
@@ -452,6 +655,17 @@ def demand_plots(pypsa_network, energy_carriers_array, plot_base_path):
 
 
 def energy_balance_plot(plot_base_path, energy_carriers_array):
+    """
+    Plot energy balance between generations and demands in TWh across energy carriers
+
+    Parameters
+    ----------
+    energy_carriers_array: str list
+        List of energy carriers
+    plot_base_path: str
+        Plot directory path
+
+    """
     for energy_carriers in energy_carriers_array:
         demands, generations = get_generation_demands_by_energy_carriers(
             pypsa_network, energy_carriers
@@ -485,6 +699,21 @@ def energy_balance_plot(plot_base_path, energy_carriers_array):
 def compare_generation_demand_agg_plot(
     energy_generations, demands_agg, energy_carriers_array, plot_base_path
 ):
+    """
+    Plot generations vs demands in TWh across energy carriers
+
+    Parameters
+    ----------
+    energy_generations: pandas dataframe
+        Aggregated generation in TWh for each energy carrier
+    demands_agg: pandas dataframe
+        Aggregated demand in TWh for each energy carrier
+    energy_carriers_array: str list
+        List of energy carriers
+    plot_base_path: str
+        Plot directory path
+
+    """
     energy_agg = energy_generations.groupby("carrier").sum()
     df_comparison = pd.DataFrame(index=energy_carriers_array)
     df_comparison["generations"] = energy_agg
