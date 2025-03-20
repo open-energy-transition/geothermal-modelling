@@ -29,7 +29,6 @@ Description
 -----------
 """
 
-import pypsa
 import pathlib
 import pandas as pd
 import datetime as dt
@@ -87,8 +86,12 @@ def modify_electricity_totals(df_demand, energy_totals, industry_demand, country
     total_electricity_demand = df_demand.sum().sum() / 1e6 #in TWh
     replace_demand = total_electricity_demand - energy_totals.loc[country,elec_cols].sum() - industry_electricity_demand
 
-    energy_totals.loc[country,"electricity residential"] = replace_demand * elec_residential_ratio
-    energy_totals.loc[country,"services electricity"] = replace_demand * service_elec_ratio
+    energy_totals.loc[country, "electricity residential"] = (
+        replace_demand * elec_residential_ratio
+    )
+    energy_totals.loc[country, "services electricity"] = (
+        replace_demand * service_elec_ratio
+    )
 
     return energy_totals
 
