@@ -511,6 +511,16 @@ rule modify_energy_totals:
             ),
             **config['scenario'],
         ),
+        industrial_demand_path=expand(
+            pathlib.Path(
+                "resources/",
+                SECDIR,
+                "demand/industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv",
+            ),
+            **config["scenario"],
+            **config["costs"],
+            **config["export"],
+        ),
     output:
         energy_totals_path=expand(pathlib.Path(
             "workflow",

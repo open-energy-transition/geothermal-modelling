@@ -244,12 +244,7 @@ def read_scaling_factor(demand_scenario, horizon, default_path):
     # logger.info(f"Read {filename} for scaling the demand for {horizon}.")
     return scaling_factor
 
-<<<<<<< HEAD
 def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs):
-=======
-
-def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor):
->>>>>>> origin/sector_coupled_workflow_changes
     """
     Scales demand profiles for each state based on the NREL EFS demand projections
     Parameters
