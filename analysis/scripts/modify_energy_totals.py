@@ -74,17 +74,26 @@ def parse_inputs(default_path):
 # The services electricity and electricity residential values are replaced to match demand projections based
 # on NREL EFS study after deduction of constant loads
 def modify_electricity_totals(df_demand, energy_totals, industry_demand, country):
-    elec_cols = [x for x in energy_totals.columns if "electricity" in x and x not in ["electricity residential", "services electricity"]]
-    
-    elec_services = energy_totals.loc[country,"services electricity"]
-    elec_residential = energy_totals.loc[country,"electricity residential"]
-    service_elec_ratio = elec_services / (elec_services+elec_residential)
-    elec_residential_ratio = elec_residential / (elec_services+elec_residential)
+    elec_cols = [
+        x
+        for x in energy_totals.columns
+        if "electricity" in x
+        and x not in ["electricity residential", "services electricity"]
+    ]
 
-    industry_electricity_demand = industry_demand["electricity"].sum() / 1e6 #in TWh
+    elec_services = energy_totals.loc[country, "services electricity"]
+    elec_residential = energy_totals.loc[country, "electricity residential"]
+    service_elec_ratio = elec_services / (elec_services + elec_residential)
+    elec_residential_ratio = elec_residential / (elec_services + elec_residential)
+
+    industry_electricity_demand = industry_demand["electricity"].sum() / 1e6  # in TWh
     # demand profiles have one hour granularity
-    total_electricity_demand = df_demand.sum().sum() / 1e6 #in TWh
-    replace_demand = total_electricity_demand - energy_totals.loc[country,elec_cols].sum() - industry_electricity_demand
+    total_electricity_demand = df_demand.sum().sum() / 1e6  # in TWh
+    replace_demand = (
+        total_electricity_demand
+        - energy_totals.loc[country, elec_cols].sum()
+        - industry_electricity_demand
+    )
 
     energy_totals.loc[country, "electricity residential"] = (
         replace_demand * elec_residential_ratio
@@ -121,5 +130,7 @@ if __name__ == "__main__":
     country = snakemake.params.country[0]
     df_demand, energy_totals, industrial_demand = parse_inputs(default_path)
 
-    modified_energy_totals = modify_electricity_totals(df_demand, energy_totals, industrial_demand, country)
+    modified_energy_totals = modify_electricity_totals(
+        df_demand, energy_totals, industrial_demand, country
+    )
     modified_energy_totals.to_csv(output_path)

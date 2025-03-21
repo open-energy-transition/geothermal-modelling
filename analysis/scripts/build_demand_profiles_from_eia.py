@@ -106,7 +106,6 @@ def parse_inputs(default_path, distance_crs):
     # read gadm file
     gadm_shape = gpd.read_file(snakemake.input.gadm_shape)
 
-
     return df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network, gadm_shape
 
 
@@ -244,7 +243,10 @@ def read_scaling_factor(demand_scenario, horizon, default_path):
     # logger.info(f"Read {filename} for scaling the demand for {horizon}.")
     return scaling_factor
 
-def scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs):
+
+def scale_demand_profiles(
+    df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs
+):
     """
     Scales demand profiles for each state based on the NREL EFS demand projections
     Parameters
@@ -340,8 +342,8 @@ if __name__ == "__main__":
     log_output_file_path.touch(exist_ok=True)
     log_output_file = open(log_output_file_path, "w")
 
-    (df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network, gadm_shape) = parse_inputs(
-        default_path, distance_crs
+    (df_ba_demand, gdf_ba_shape, df_utility_demand, pypsa_network, gadm_shape) = (
+        parse_inputs(default_path, distance_crs)
     )
 
     df_demand_profiles = build_demand_profiles(
@@ -354,9 +356,12 @@ if __name__ == "__main__":
     )
 
     if demand_horizon > 2020:
-        scaling_factor = read_scaling_factor(demand_scenario, demand_horizon, default_path)
-        df_demand_profiles = scale_demand_profiles(df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs)
-
+        scaling_factor = read_scaling_factor(
+            demand_scenario, demand_horizon, default_path
+        )
+        df_demand_profiles = scale_demand_profiles(
+            df_demand_profiles, pypsa_network, scaling_factor, gadm_shape, geo_crs
+        )
 
     df_demand_profiles.to_csv(output_demand_profile_path)
 
