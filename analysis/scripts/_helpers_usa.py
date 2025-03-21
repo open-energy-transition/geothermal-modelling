@@ -200,3 +200,102 @@ def mock_snakemake(
         if user_in_script_dir:
             os.chdir(script_dir)
     return snakemake
+
+
+def get_component(network, component):
+    """
+    Returns PyPSA model component
+
+    Parameters
+    ----------
+    network: PyPSA model object
+        pypsa model
+    component: str
+        PyPSA component to be returned
+
+    Returns
+    -------
+    network[component]: pandas dataframe
+        component of the PyPSA model
+    """
+
+    if component == "generators":
+        return network.generators
+    elif component == "links":
+        return network.links
+    elif component == "stores":
+        return network.stores
+    elif component == "storage_units":
+        return network.storage_units
+    elif component == "generators_t":
+        return network.generators_t.p
+    elif component == "links_t":
+        return network.links_t
+    elif component == "stores_t":
+        return network.stores_t.p
+    elif component == "storage_units_t":
+        return network.storage_units_t.p
+
+
+def get_component_list(energy_carrier):
+    """
+    Relevant PyPSA model components for each energy carrier
+
+    Parameters
+    ----------
+    energy_carrier: str
+
+    Returns
+    -------
+    list of components relevant to that particular energy carrier
+    """
+
+    energy_carrier_component_dict = {
+        "electricity": ["generators", "links", "storage_units", "stores"],
+        "heat": ["links", "stores"],
+        "H2": ["links", "stores"],
+        "water": ["links", "stores"],
+        "oil": ["links", "stores"],
+        "biomass": ["links", "stores"],
+        "gas": ["links", "stores"],
+        "battery": ["links", "stores"],
+    }
+    return energy_carrier_component_dict[energy_carrier]
+
+
+def get_energy_carriers_key(energy_carrier):
+    """
+    List of PyPSA carriers for each energy carrier
+
+    Parameters
+    ----------
+    energy_carrier: str
+
+    Returns
+    -------
+    key to filter relevant PyPSA carriers
+    """
+    if energy_carrier == "electricity":
+        return "AC|low voltage"
+    else:
+        return energy_carrier
+
+
+def drop_carriers(df, key):
+    """
+    To drop irrelevant technologies
+    """
+    drop_carriers_list = [
+        "electricity distribution grid",
+        "H2 pipeline",
+        "H2 pipeline repurposed",
+        "DC",
+        "B2B",
+    ]
+    for car in drop_carriers_list:
+        if car in df.index.tolist() and key == "rows":
+            df = df.drop(index=car)
+        elif car in df.columns.tolist() and key == "columns":
+            df = df.drop(car, axis=1)
+
+    return df
