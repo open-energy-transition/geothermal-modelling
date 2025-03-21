@@ -269,15 +269,13 @@ def scale_demand_profiles(
         crs=geo_crs,
     ).reset_index()
 
-    gadm_centroid = gadm_shape.to_crs(geo_crs)
-    gadm_centroid.geometry = gadm_centroid.geometry.centroid
-
     # map gadm shapes to each bus
     spatial_gadm_bus_mapping = (
-        buses_gdf.sjoin_nearest(gadm_centroid, how="left")
+        buses_gdf.sjoin(gadm_shape, how="left", predicate="within")
         .set_index("Bus")["ISO_1"]
         .str.replace("US-", "")
     )
+    spatial_gadm_bus_mapping = spatial_gadm_bus_mapping[~spatial_gadm_bus_mapping.index.duplicated(keep='first')]
 
     # convert demand_profiles from wide to long format
     df_demand_long = df_demand_profiles.melt(
