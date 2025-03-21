@@ -513,6 +513,8 @@ rule modify_energy_totals:
         ),
         industrial_demand_path=expand(
             pathlib.Path(
+                "workflow",
+                "pypsa-earth",
                 "resources/",
                 SECDIR,
                 "demand/industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv",
