@@ -275,7 +275,9 @@ def scale_demand_profiles(
         .set_index("Bus")["ISO_1"]
         .str.replace("US-", "")
     )
-    spatial_gadm_bus_mapping = spatial_gadm_bus_mapping[~spatial_gadm_bus_mapping.index.duplicated(keep='first')]
+    spatial_gadm_bus_mapping = spatial_gadm_bus_mapping[
+        ~spatial_gadm_bus_mapping.index.duplicated(keep="first")
+    ]
 
     # convert demand_profiles from wide to long format
     df_demand_long = df_demand_profiles.melt(
