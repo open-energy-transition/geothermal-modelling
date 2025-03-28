@@ -49,7 +49,7 @@ from _helpers_usa import (
     get_energy_carriers_key,
     drop_carriers,
 )
-
+import numpy as np
 
 def parse_inputs(default_path):
     """
@@ -182,6 +182,9 @@ def get_generations(pypsa_network, energy_carriers_array):
                 )
                 indices = generators.index
                 reqd_carriers = generators.carrier.unique()
+                charger_carriers = df.query("carrier.str.contains(' charger') and bus0 in (@sec)",local_dict={"sec": energy_carriers_buses}).carrier.unique()
+
+                reqd_carriers = np.append(reqd_carriers, charger_carriers)
                 generators_ts = get_component(pypsa_network, comp + "_t")
                 for car in reqd_carriers:
                     if "CHP" in car or "Fuel cell" in car:
@@ -210,6 +213,14 @@ def get_generations(pypsa_network, energy_carriers_array):
                             .div(1e3)
                             * -1
                         )
+                    elif " charger" in car:
+                        generations = (
+                            (generators_ts.p1.filter(like=car))
+                            .sum(axis=1)
+                            .div(1e3)
+                        )
+                        generations.name = car
+                        generations = pd.DataFrame(generations)
                     else:
                         generations = (
                             (generators_ts.p1[indices])
@@ -354,7 +365,12 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
             )
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
+            charger_carriers = df.query("carrier.str.contains(' charger') and bus0 in (@sec)",local_dict={"sec": gen_energy_carrier_buses}).carrier.unique()
+
+            reqd_carriers = np.append(reqd_carriers, charger_carriers)
+
             generators_ts = get_component(pypsa_network, comp + "_t")
+
             for car in reqd_carriers:
                 if "CHP" in car or "Fuel cell" in car:
                     intersecting_columns = indices.intersection(
@@ -378,6 +394,15 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
                         .div(1e3)
                         * -1
                     )
+                elif " charger" in car:
+                    generations = (
+                        (generators_ts.p1.filter(like=car))
+                        .sum(axis=1)
+                        .div(1e3)
+                    )
+                    generations.name = car
+                    generations = pd.DataFrame(generations)
+
                 else:
                     generations = (
                         (generators_ts.p1[indices])
@@ -390,7 +415,6 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
                 energy_carrier_generations = energy_carrier_generations.join(
                     generations, lsuffix="", rsuffix="_" + comp
                 )
-
     # discharge_indices = [x for x in energy_carrier_generations.columns if 'discharge' in x]
     # energy_carrier_generations = energy_carrier_generations.drop(discharge_indices, axis=1)
     energy_carrier_generations = drop_carriers(energy_carrier_generations, "columns")
