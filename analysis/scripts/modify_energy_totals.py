@@ -74,6 +74,25 @@ def parse_inputs(default_path):
 # The services electricity and electricity residential values are replaced to match demand projections based
 # on NREL EFS study after deduction of constant loads
 def modify_electricity_totals(df_demand, energy_totals, industry_demand, country):
+    """
+    To modify energy_totals_{demand}_{planning_horizons}.csv
+
+    Parameters
+    ----------
+    df_demand: pandas dataframe
+        Electricity demand profiles from EIA (scaled by NREL EFS projections for future years)
+    energy_totals: pandas dataframe
+        Annual energy demand for each country across various technologies and sectors
+    industry_demand: pandas dataframe
+        Industrial demands
+    country: str
+        Country code
+
+    Returns
+    -------
+    energy_totals: pandas dataframe
+        Modified annual energy demands
+    """
     elec_cols = [
         x
         for x in energy_totals.columns
