@@ -51,6 +51,7 @@ from _helpers_usa import (
 )
 import numpy as np
 
+
 def parse_inputs(default_path):
     """
     Load all input data required for preprocessing and computing utility level demand data
@@ -182,7 +183,10 @@ def get_generations(pypsa_network, energy_carriers_array):
                 )
                 indices = generators.index
                 reqd_carriers = generators.carrier.unique()
-                charger_carriers = df.query("carrier.str.contains(' charger') and bus0 in (@sec)",local_dict={"sec": energy_carriers_buses}).carrier.unique()
+                charger_carriers = df.query(
+                    "carrier.str.contains(' charger') and bus0 in (@sec)",
+                    local_dict={"sec": energy_carriers_buses},
+                ).carrier.unique()
 
                 reqd_carriers = np.append(reqd_carriers, charger_carriers)
                 generators_ts = get_component(pypsa_network, comp + "_t")
@@ -215,9 +219,7 @@ def get_generations(pypsa_network, energy_carriers_array):
                         )
                     elif " charger" in car:
                         generations = (
-                            (generators_ts.p1.filter(like=car))
-                            .sum(axis=1)
-                            .div(1e3)
+                            (generators_ts.p1.filter(like=car)).sum(axis=1).div(1e3)
                         )
                         generations.name = car
                         generations = pd.DataFrame(generations)
@@ -365,7 +367,10 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
             )
             indices = generators.index
             reqd_carriers = generators.carrier.unique()
-            charger_carriers = df.query("carrier.str.contains(' charger') and bus0 in (@sec)",local_dict={"sec": gen_energy_carrier_buses}).carrier.unique()
+            charger_carriers = df.query(
+                "carrier.str.contains(' charger') and bus0 in (@sec)",
+                local_dict={"sec": gen_energy_carrier_buses},
+            ).carrier.unique()
 
             reqd_carriers = np.append(reqd_carriers, charger_carriers)
 
@@ -396,9 +401,7 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
                     )
                 elif " charger" in car:
                     generations = (
-                        (generators_ts.p1.filter(like=car))
-                        .sum(axis=1)
-                        .div(1e3)
+                        (generators_ts.p1.filter(like=car)).sum(axis=1).div(1e3)
                     )
                     generations.name = car
                     generations = pd.DataFrame(generations)
