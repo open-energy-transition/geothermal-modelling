@@ -293,7 +293,7 @@ def overlay_demands(df_erst_gpd, df_gadm_usa, df_demand_utility):
     Parameters
     ----------
     df_erst_gpd: geopandas dataframe
-        Utilty level shapes
+        Utility level shapes
     df_gadm_usa: geopandas dataframe
         GADM shapes
     df_demand_utility: pandas dataframe
@@ -385,7 +385,7 @@ def map_demands_utilitywise(
     df_demand_utility: pandas dataframe
         Utility level demand data from EIA
     df_erst_gpd: geopandas dataframe
-        Utilty level shapes
+        Utility level shapes
     df_country: geopandas dataframe
         Country level shapes
     df_gadm_usa: geopandas dataframe
@@ -401,9 +401,9 @@ def map_demands_utilitywise(
     plotting: boolean
         If set to true - html plots are generated else no
     distance_crs: CRS code
-        Co-ordinate reference system to retrieve coordinate in 'm'
+        Coordinate reference system to retrieve coordinate in 'm'
     area_crs: CRS code
-        Co-ordinate reference system to retrieve coordinates in 'sq.m'
+        Coordinate reference system to retrieve coordinates in 'sq.m'
     Returns
     -------
     df_final: geopandas dataframe
