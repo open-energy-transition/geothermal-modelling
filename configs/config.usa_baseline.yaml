@@ -20,10 +20,15 @@ US:
     holes_area_threshold: 100 # to ignore holes smaller than this area in sq.km (CRS 6372)
     nprocesses: 4
     plotting: false
+  # Config options to scale demand to future years based on NREL EFS study
+  demand_projection:
+    planning_horizon: 2050
+    scenario: "Reference"
   summary:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
+    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery]
   area_crs: 6372
 
 
@@ -51,11 +56,11 @@ scenario:
   clusters: [100]
   opts: [Co2L-24H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
-  - 2030
+  - 2050
   sopts:
-  - "144H"
+  - "24H"
   demand:
-  - "AB"
+  - "DF"
 
 snapshots:
   start: "2013-01-01"
@@ -156,9 +161,9 @@ electricity:
   voltages: [132., 220., 300., 380., 500., 750.]
   # co2limit: 7.75e+7  # European default, 0.05 * 3.1e9*0.5, needs to be adjusted for Africa
   # co2base: 1.487e+9  # European default, adjustment to Africa necessary
-  co2limit: 1.4728e+9 # 0.8 * 1.841e+9
+  # co2limit: 1.4728e+9 # 0.8 * 1.841e+9
   # co2limit_enable: false # For sector coupled studies
-  co2base: 226.86e+6 #base_from_2020 Locations of the 250 MMmt of CO2 emissions from the WECC 2021.
+  # co2base: 226.86e+6 #base_from_2020 Locations of the 250 MMmt of CO2 emissions from the WECC 2021.
   agg_p_nom_limits: data/agg_p_nom_minmax.csv
   hvdc_as_lines: false  # should HVDC lines be modeled as `Line` or as `Link` component?
   automatic_emission: false
@@ -449,7 +454,7 @@ demand_data:
 
 
 fossil_reserves:
-  oil: 100 #TWh Maybe redundant
+  oil: 1000 #TWh Maybe redundant
 
 export:
   endogenous: false # If true, the export demand is endogenously determined by the model
@@ -685,6 +690,7 @@ sector:
 
   conventional_generation: # generator : carrier
     OCGT: gas
+    CCGT: gas
     oil: oil
     coal: coal
     lignite: lignite
