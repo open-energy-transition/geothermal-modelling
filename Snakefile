@@ -23,11 +23,13 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles as * # noqa
+use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles
+
 
 demand_year = config["US"]["demand_year"]
 run_name = config["run"]["name"]
 SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
+
 
 localrules:
     all,
@@ -120,13 +122,29 @@ if config["US"].get("retrieve_US_databundle", True):
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_generation_data/{filename}",
-                filename=["EIA_statewise_data/use_all_phy_update.xlsx", "generation_eia.csv"],
+                filename=[
+                    "EIA_statewise_data/use_all_phy_update.xlsx",
+                    "generation_eia.csv",
+                ],
             ),
             expand(
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
-                filename=["use_es_capita.xlsx", "EIA930_2021_Jan_Jun_opt.csv", "EIA930_2021_Jul_Dec_opt.csv", "HS861 2010-.xlsx"]
+                filename=[
+                    "use_es_capita.xlsx",
+                    "EIA930_2021_Jan_Jun_opt.csv",
+                    "EIA930_2021_Jul_Dec_opt.csv",
+                    "HS861 2010-.xlsx",
+                ],
             ),
-            directory(pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","future_demand_projections")),
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "electricity_demand_data",
+                    "future_demand_projections",
+                )
+            ),
         script:
             "analysis/scripts/download_from_gdrive.py"
 
@@ -366,9 +384,9 @@ rule preprocess_demand_data:
         holes_area_threshold=config["US"]["demand_modelling"]["holes_area_threshold"],  # to ignore holes smaller than this area in sq.km (CRS 6372)
         nprocesses=config["US"]["demand_modelling"]["nprocesses"],
         plotting=config["US"]["demand_modelling"]["plotting"],
-        geo_crs= config["crs"]["geo_crs"],
-        distance_crs= config["crs"]["distance_crs"],
-        area_crs= config["US"]["area_crs"]
+        geo_crs=config["crs"]["geo_crs"],
+        distance_crs=config["crs"]["distance_crs"],
+        area_crs=config["US"]["area_crs"],
     input:
         demand_utility_path=pathlib.Path(
             "analysis",
@@ -410,37 +428,37 @@ rule preprocess_demand_data:
             "data",
             "electricity_demand_data",
             "HS861 2010-.xlsx",
-        )
+        ),
     output:
-        utility_demand_path = pathlib.Path(
+        utility_demand_path=pathlib.Path(
             "analysis",
             "outputs",
             "demand_modelling",
-            "ERST_mapped_demand_centroids.geojson"
-        )
+            "ERST_mapped_demand_centroids.geojson",
+        ),
     script:
         "analysis/scripts/preprocess_demand_data.py"
 
 
 rule build_demand_profiles_from_eia:
     params:
-        geo_crs= config['crs']['geo_crs'],
-        distance_crs= config['crs']['distance_crs'],
+        geo_crs=config["crs"]["geo_crs"],
+        distance_crs=config["crs"]["distance_crs"],
         demand_horizon=config["US"]["demand_projection"]["planning_horizon"],
         demand_scenario=config["US"]["demand_projection"]["scenario"],
     input:
-        BA_demand_path1 = expand(
+        BA_demand_path1=expand(
             pathlib.Path(
                 "analysis",
                 "gdrive_data",
                 "data",
                 "electricity_demand_data",
                 "EIA930_{demand_year}_Jan_Jun_opt.csv",
-            ), 
+            ),
             **config["US"],
         ),
-        BA_demand_path2 = expand(
-                pathlib.Path(
+        BA_demand_path2=expand(
+            pathlib.Path(
                 "analysis",
                 "gdrive_data",
                 "data",
@@ -449,57 +467,46 @@ rule build_demand_profiles_from_eia:
             ),
             **config["US"],
         ),
-        BA_shape_path = pathlib.Path(
+        BA_shape_path=pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "shape_files",
             "Balancing_Authorities.geojson",
         ),
-        utility_demand_path = pathlib.Path(
+        utility_demand_path=pathlib.Path(
             "analysis",
             "outputs",
             "demand_modelling",
             "ERST_mapped_demand_centroids.geojson",
         ),
-        pypsa_network_path = (
-            pathlib.Path(       
-                "workflow",
-                "pypsa-earth",
-                "networks",
-                run_name,
-                "base.nc"
-            ),
+        pypsa_network_path=(
+            pathlib.Path("workflow", "pypsa-earth", "networks", run_name, "base.nc"),
         ),
         gadm_shape=pathlib.Path(
             "analysis", "gdrive_data", "data", "shape_files", "gadm41_USA_1.json"
         ),
         demand_projections_path=pathlib.Path(
-            "analysis","gdrive_data","data","electricity_demand_data","future_demand_projections",
-        )
-
-    output:
-        demand_profile_path = pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            run_name,
-            "demand_profiles.csv"
+            "analysis",
+            "gdrive_data",
+            "data",
+            "electricity_demand_data",
+            "future_demand_projections",
         ),
-
+    output:
+        demand_profile_path=pathlib.Path(
+            "workflow", "pypsa-earth", "resources", run_name, "demand_profiles.csv"
+        ),
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
 
+
 rule modify_energy_totals:
     params:
-        country = config['countries']
+        country=config["countries"],
     input:
-        demand_profile_path = pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            run_name,
-            "demand_profiles.csv"
+        demand_profile_path=pathlib.Path(
+            "workflow", "pypsa-earth", "resources", run_name, "demand_profiles.csv"
         ),
         energy_totals_path=expand(
             pathlib.Path(
@@ -507,9 +514,9 @@ rule modify_energy_totals:
                 "pypsa-earth",
                 "resources",
                 SECDIR,
-                "energy_totals_{demand}_{planning_horizons}.csv"
+                "energy_totals_{demand}_{planning_horizons}.csv",
             ),
-            **config['scenario'],
+            **config["scenario"],
         ),
         industrial_demand_path=expand(
             pathlib.Path(
@@ -524,17 +531,19 @@ rule modify_energy_totals:
             **config["export"],
         ),
     output:
-        energy_totals_path=expand(pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            SECDIR,
-            "energy_totals_{demand}_{planning_horizons}_updated.csv"
+        energy_totals_path=expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                SECDIR,
+                "energy_totals_{demand}_{planning_horizons}_updated.csv",
+            ),
+            **config["scenario"],
         ),
-        **config['scenario']
-    )
     script:
-        "analysis/scripts/modify_energy_totals.py"    
+        "analysis/scripts/modify_energy_totals.py"
+
 
 rule replace_energy_totals:
     input:
@@ -544,9 +553,9 @@ rule replace_energy_totals:
                 "pypsa-earth",
                 "resources",
                 SECDIR,
-                "energy_totals_{demand}_{planning_horizons}_updated.csv"
+                "energy_totals_{demand}_{planning_horizons}_updated.csv",
             ),
-            **config['scenario']
+            **config["scenario"],
         ),
     output:
         energy_totals_path=expand(
@@ -555,18 +564,19 @@ rule replace_energy_totals:
                 "pypsa-earth",
                 "resources",
                 SECDIR,
-                "energy_totals_{demand}_{planning_horizons}.csv"
+                "energy_totals_{demand}_{planning_horizons}.csv",
             ),
-            **config['scenario'],
+            **config["scenario"],
         ),
     shell:
-        "cp {input} {output}" 
-    
+        "cp {input} {output}"
+
+
 rule plot_and_extract_summaries:
     params:
-        energy_carriers = config["US"]["summary"]["energy_carriers"],
+        energy_carriers=config["US"]["summary"]["energy_carriers"],
     input:
-        pypsa_earth_results_path = expand(
+        pypsa_earth_results_path=expand(
             pathlib.Path(
                 "workflow",
                 "pypsa-earth",
@@ -579,39 +589,31 @@ rule plot_and_extract_summaries:
             **config["export"],
         ),
     output:
-        plot_path = directory(
-            pathlib.Path(
-            "analysis",
-            "plots",
-            "summary_plots"
-            )
-        ),
-        output_path = directory(
-            pathlib.Path(
-                "analysis",
-                "outputs",
-                "summary_outputs"
-            )
-        )
+        plot_path=directory(pathlib.Path("analysis", "plots", "summary_plots")),
+        output_path=directory(pathlib.Path("analysis", "outputs", "summary_outputs")),
     script:
         "analysis/scripts/plot_and_extract_summaries.py"
 
+
 rule summary:
     input:
-        pathlib.Path("analysis","plots","generation_comparison") if config["US"]["summary"]["generation_comparison"] else [],
-        pathlib.Path("analysis","plots",installed_capacity_comparison_plot_folder_name) if config["US"]["summary"]["installed_capacity_comparison"] else [],
-        pathlib.Path("analysis","outputs","network_comparison") if config["US"]["summary"]["network_comparison"] else [],
+        pathlib.Path("analysis", "plots", "generation_comparison")
+        if config["US"]["summary"]["generation_comparison"]
+        else [],
+        pathlib.Path(
+            "analysis", "plots", installed_capacity_comparison_plot_folder_name
+        )
+        if config["US"]["summary"]["installed_capacity_comparison"]
+        else [],
+        pathlib.Path("analysis", "outputs", "network_comparison")
+        if config["US"]["summary"]["network_comparison"]
+        else [],
         expand(
             pathlib.Path("analysis", "outputs", "{filedir}"),
-            filedir=[
-                "demand_modelling/ERST_mapped_demand_centroids.geojson"],
+            filedir=["demand_modelling/ERST_mapped_demand_centroids.geojson"],
         ),
         pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            run_name,
-            "demand_profiles.csv"
+            "workflow", "pypsa-earth", "resources", run_name, "demand_profiles.csv"
         ),
         expand(
             pathlib.Path(
@@ -625,9 +627,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path(
-            "analysis",
-            "plots",
-            "summary_plots"
-        ),
-
+        pathlib.Path("analysis", "plots", "summary_plots"),
