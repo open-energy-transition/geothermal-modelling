@@ -59,7 +59,7 @@ def parse_inputs(default_path, distance_crs):
     default_path: str
         current total directory path
     distance_crs: CRS code
-        Co-ordinate reference system to retrieve coordinate in 'm'
+        Coordinate reference system to retrieve coordinate in 'm'
 
     Returns
     -------
@@ -120,9 +120,9 @@ def build_demand_profiles(
     pypsa_network: pypsa
         network to obtain pypsa bus information
     geo_crs: CRS code
-        Co-ordinate reference system to retrieve coordinates in 'geometrical degrees'
+        Coordinate reference system to retrieve coordinates in 'geometrical degrees'
     distance_crs: CRS code
-        Co-ordinate reference system to retrieve coordinate in 'm'
+        Coordinate reference system to retrieve coordinate in 'm'
 
     Returns
     -------

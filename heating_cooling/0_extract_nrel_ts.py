@@ -2,15 +2,15 @@
 # Extract ReStock/ComStock data by states
 # ---------------------------------------
 
+import os
+
+import pandas as pd
+
 # paths must be adjusted
 resstock_dir = "./_geothermal_/data/_NREL_profiles_/ResStock/"
 comstock_dir = "./_geothermal_/data/_NREL_profiles_/ComStock/"
 
 output_dir = "./_heating implementation_/_data processing_/_res_/"
-
-import os
-
-import pandas as pd
 
 # define constants ------------------------------------------------------------
 STATES = [
