@@ -594,6 +594,7 @@ rule plot_and_extract_summaries:
     script:
         "analysis/scripts/plot_and_extract_summaries.py"
 
+
 rule summary:
     input:
         pathlib.Path("analysis", "plots", "generation_comparison")
@@ -627,4 +628,3 @@ rule summary:
             **config["export"],
         ),
         pathlib.Path("analysis", "plots", "summary_plots"),
-
