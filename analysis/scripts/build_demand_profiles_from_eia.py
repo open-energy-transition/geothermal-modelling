@@ -49,6 +49,7 @@ from _helpers_usa import get_colors
 import numpy as np
 import pypsa
 import os
+import math
 
 
 def parse_inputs(default_path, distance_crs):
@@ -219,6 +220,35 @@ def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network
     pypsa_network.export_to_netcdf(pypsa_network_path)
 
 
+
+def interpolate_demands(interpolate_year, demand_scenario, default_path, demand_path):
+    # interpolate_year = 2035
+    decade_end = math.ceil(interpolate_year/10)*10
+    decade_start = math.floor(interpolate_year/10)*10
+
+    decade_start_filename = f"Scaling_Factor_{demand_scenario}_Moderate_{decade_start}_by_state.csv"
+    decade_end_filename = f"Scaling_Factor_{demand_scenario}_Moderate_{decade_end}_by_state.csv"
+
+    demand_decade_start = pd.read_csv(os.path.join(demand_path, decade_start_filename),sep=";")
+    demand_decade_end = pd.read_csv(os.path.join(demand_path, decade_end_filename),sep=";")
+    demand_decade_start['time'] = demand_decade_start['time'].apply(pd.to_datetime) + pd.DateOffset(years=(interpolate_year - decade_start))
+    demand_decade_end['time'] = demand_decade_end['time'].apply(pd.to_datetime) - pd.DateOffset(years=(decade_end - interpolate_year))
+
+    demand_decade_start.set_index(['region_code','time'],inplace=True)
+    demand_decade_end.set_index(['region_code','time'],inplace=True)
+
+    df_combined = pd.DataFrame(index=demand_decade_start.index)
+    df_combined = df_combined.join(demand_decade_start)
+    df_combined = df_combined.join(demand_decade_end, lsuffix="_"+str(decade_start), rsuffix="_"+str(decade_end))
+    df_combined[interpolate_year] = df_combined.apply(lambda x: np.interp(interpolate_year, [decade_start,decade_end],x), axis=1)
+
+    scaling_factor = pd.DataFrame(df_combined[interpolate_year])
+    scaling_factor.reset_index(inplace=True)
+    scaling_factor.rename(columns={interpolate_year:"scaling_factor"})
+
+    return scaling_factor
+
+
 def read_scaling_factor(demand_scenario, horizon, default_path):
     """
     Reads scaling factor for future projections
@@ -237,9 +267,12 @@ def read_scaling_factor(demand_scenario, horizon, default_path):
         2024 if horizon == 2025 else horizon
     )  # select 2024 demand projection for 2025 horizon
     foldername = os.path.join(default_path, snakemake.input.demand_projections_path)
-    filename = f"Scaling_Factor_{demand_scenario}_Moderate_{horizon}_by_state.csv"
-    scaling_factor = pd.read_csv(os.path.join(foldername, filename), sep=";")
-    scaling_factor["time"] = pd.to_datetime(scaling_factor["time"])
+    if horizon % 10 != 0:
+        scaling_factor = interpolate_demands(horizon, demand_scenario, default_path, folder_name)
+    else:
+        filename = f"Scaling_Factor_{demand_scenario}_Moderate_{horizon}_by_state.csv"
+        scaling_factor = pd.read_csv(os.path.join(foldername, filename), sep=";")
+        scaling_factor["time"] = pd.to_datetime(scaling_factor["time"])
     # logger.info(f"Read {filename} for scaling the demand for {horizon}.")
     return scaling_factor
 
