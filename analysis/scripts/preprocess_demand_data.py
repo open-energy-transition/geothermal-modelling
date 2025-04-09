@@ -539,7 +539,9 @@ def map_demands_utilitywise(
     df_demand_utility = df_demand_utility.reset_index()
     df_demand_utility.rename(columns={"STATE": "State"}, inplace=True)
     missing_utilities = list(set(df_demand_utility.NAME) - set(df_erst_gpd.NAME))
-    df_missing_utilities = df_demand_utility.query("NAME in @util", local_dict={"util":missing_utilities})
+    df_missing_utilities = df_demand_utility.query(
+        "NAME in @util", local_dict={"util": missing_utilities}
+    )
     df_utilities_grouped_state = df_missing_utilities.groupby("State")[
         "Sales (Megawatthours)"
     ].sum()
