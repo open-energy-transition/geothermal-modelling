@@ -261,7 +261,7 @@ def interpolate_demands(interpolate_year, demand_scenario, default_path, demand_
 
     scaling_factor = pd.DataFrame(df_combined[interpolate_year])
     scaling_factor.reset_index(inplace=True)
-    scaling_factor.rename(columns={interpolate_year: "scaling_factor"})
+    scaling_factor.rename(columns={interpolate_year: "scaling_factor"}, inplace=True)
 
     return scaling_factor
 

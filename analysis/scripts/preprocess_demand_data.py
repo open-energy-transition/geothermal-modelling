@@ -107,7 +107,7 @@ def parse_inputs(default_path, demand_year):
     # Per capita data available only until 2022
     try:
         df_eia_per_capita = df_eia_per_capita[demand_year]
-    except ValueError:
+    except KeyError:
         df_eia_per_capita = df_eia_per_capita[2022]
 
     # The utility level data adds upto 3294 TWh of sales in 2021 whilst at the state level data adds upto 3800 TWh
@@ -538,7 +538,8 @@ def map_demands_utilitywise(
     # Missing utilities in ERST shape files
     df_demand_utility = df_demand_utility.reset_index()
     df_demand_utility.rename(columns={"STATE": "State"}, inplace=True)
-    df_missing_utilities = df_demand_utility.query("NAME in @missing_utilities")
+    missing_utilities = list(set(df_demand_utility.NAME) - set(df_erst_gpd.NAME))
+    df_missing_utilities = df_demand_utility.query("NAME in @util", local_dict={"util":missing_utilities})
     df_utilities_grouped_state = df_missing_utilities.groupby("State")[
         "Sales (Megawatthours)"
     ].sum()
