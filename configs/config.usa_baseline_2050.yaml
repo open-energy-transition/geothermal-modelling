@@ -36,7 +36,7 @@ enable:
   retrieve_databundle: true  #  Recommended 'true', for the first run. Otherwise data might be missing.
   retrieve_cost_data: true  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
   download_osm_data: true  # If 'true', OpenStreetMap data will be downloaded for the above given countries
-  build_natura_raster: true  # If True, then an exclusion raster will be build
+  build_natura_raster: false  # If True, then an exclusion raster will be build
   build_cutout: false
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/api-how-to
@@ -533,7 +533,7 @@ sector:
     spatial_oil: true
 
   district_heating:
-    potential: 0.3 #maximum fraction of urban demand which can be supplied by district heating
+    potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share
     #progress = 0 means today's district heating share, progress=-1 means maximum fraction of urban demand is supplied by district heating
     progress: 1
@@ -601,7 +601,7 @@ sector:
   home_battery: true # adds home batteries to low voltage buses ((only work if electricity_distribution_grid: true)
   transmission_efficiency:
     electricity distribution grid:
-      efficiency_static: 0.97 # efficiency of distribution grid (i.e. 3% loses)
+      efficiency_static: 1 # efficiency of distribution grid (i.e. 3% loses)
     H2 pipeline:
       efficiency_per_1000km: 1
       compression_per_1000km: 0.017 # DEA technology data. Mean of  Energy losses, lines 5000-20000 MW and lines >20000 MW for 2020, 2030 and 2050, [%/1000 km]
