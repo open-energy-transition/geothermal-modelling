@@ -482,7 +482,12 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
     fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[1]))
 
     fig.add_annotation(
-        x=-0.05, y=0.5, text="Installed capacity (GW)", textangle=-90, xref="paper", yref="paper"
+        x=-0.05,
+        y=0.5,
+        text="Installed capacity (GW)",
+        textangle=-90,
+        xref="paper",
+        yref="paper",
     )
     fig.write_image(f"{plot_base_path}/installed_capacity_facet_energy_carriers_GW.png")
 
@@ -612,8 +617,12 @@ def energy_balance_plot(plot_base_path, output_path, energy_carriers_array):
         demands, generations = get_generation_demands_by_energy_carriers(
             pypsa_network, energy_carriers
         )
-        generations.round(2).to_csv(pathlib.Path(output_path, f"Sector_generations_ts_{energy_carriers}_in_TWh.csv"))
-       
+        generations.round(2).to_csv(
+            pathlib.Path(
+                output_path, f"Sector_generations_ts_{energy_carriers}_in_TWh.csv"
+            )
+        )
+
         fig = px.area(generations.where(generations > 0))
 
         generations_neg = generations.where(generations < 0).dropna(axis=1)
