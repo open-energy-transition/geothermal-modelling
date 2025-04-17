@@ -28,7 +28,7 @@ US:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
-    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery]
+    energy_carriers: [electricity] #, heat, H2, oil, gas, biomass, battery, cooling]
   area_crs: 6372
 
 
@@ -58,7 +58,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "24H"
+  - "144H"
   demand:
   - "DF"
 
@@ -371,7 +371,7 @@ renewable:
 # TODO: Needs to be adjusted for Africa.
 # Costs Configuration (Do not remove, needed for Sphynx documentation).
 costs:
-  year: 2030
+  year: 2050
   version: v0.10.0
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
