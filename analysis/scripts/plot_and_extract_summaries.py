@@ -97,7 +97,8 @@ def get_capacities(pypsa_network, energy_carriers_array):
         ]
         components = get_component_list(energy_carriers)
         # Removing stores as they contain only the nominal storage capacity in MWh and not the power capacity in MW
-        components.remove("stores")
+        if "stores" in components:
+            components.remove("stores")
         energy_carriers_capacities = pd.DataFrame()
         for comp in components:
             df = get_component(pypsa_network, comp)
@@ -481,7 +482,7 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
     fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[1]))
 
     fig.add_annotation(
-        x=-0.05, y=0.5, text="Energy (TWh)", textangle=-90, xref="paper", yref="paper"
+        x=-0.05, y=0.5, text="Installed capacity (GW)", textangle=-90, xref="paper", yref="paper"
     )
     fig.write_image(f"{plot_base_path}/installed_capacity_facet_energy_carriers_GW.png")
 
@@ -595,7 +596,7 @@ def demand_plots(pypsa_network, energy_carriers_array, plot_base_path):
     return demands_ts, demands_agg
 
 
-def energy_balance_plot(plot_base_path, energy_carriers_array):
+def energy_balance_plot(plot_base_path, output_path, energy_carriers_array):
     """
     Plot energy balance between generations and demands in TWh across energy carriers
 
@@ -611,10 +612,12 @@ def energy_balance_plot(plot_base_path, energy_carriers_array):
         demands, generations = get_generation_demands_by_energy_carriers(
             pypsa_network, energy_carriers
         )
-
+        generations.round(2).to_csv(pathlib.Path(output_path, f"Sector_generations_ts_{energy_carriers}_in_TWh.csv"))
+       
         fig = px.area(generations.where(generations > 0))
 
         generations_neg = generations.where(generations < 0).dropna(axis=1)
+        breakpoint()
         for col in generations_neg.columns:
             fig.add_trace(
                 go.Scatter(
@@ -634,6 +637,10 @@ def energy_balance_plot(plot_base_path, energy_carriers_array):
             )
         )
         fig.update_layout(yaxis_title="Energy in TWh", title=energy_carriers)
+        fig.update_layout(
+            uniformtext_minsize=5,
+            # uniformtext_mode="show",
+        )
         fig.write_image(f"{plot_base_path}/energy_balance_ts_{energy_carriers}.png")
 
 
@@ -732,6 +739,6 @@ if __name__ == "__main__":
         energy_generations, demands_agg, energy_carriers_array, plot_path
     )
 
-    energy_balance_plot(plot_path, energy_carriers_array)
+    energy_balance_plot(plot_path, output_path, energy_carriers_array)
 
     log_output_file.close()
