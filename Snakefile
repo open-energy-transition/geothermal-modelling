@@ -501,6 +501,63 @@ rule build_demand_profiles_from_eia:
         "analysis/scripts/build_demand_profiles_from_eia.py"
 
 
+rule energyplus_aggregate:
+    input:
+        # TODO `state_heat_dir & state_cool_dir should be adjusted`
+        # The clean ResStock outputs are currently available via
+        # `3. Project Delivery/2- Working Files/resstock/heating_cooling_summaries/`
+        state_heat_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus", 
+            "heating_cooling_summaries", 
+            "heating", 
+            "2018"
+        ),
+        state_cool_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus", 
+            "heating_cooling_summaries", 
+            "cooling", 
+            "2018"
+        ),        
+        shapes_path=pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            run_name,
+            "bus_regions",
+            "regions_onshore_elec_s{simpl}_{clusters}.geojson",
+        ),
+        puma_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "utilities",
+            "ipums_puma_2020",
+            "ipums_puma_2020.shp",
+        ),
+        states_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "utilities",
+            "states_centroids_abbr.csv",
+        ),
+    output:
+        heat_demand="resources/"
+        + SECDIR
+        + "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        cooling_demand="resources/"
+        + SECDIR
+        + "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+    script:
+        "analysis/scripts/energyplus_aggregate.py"
+
+
 rule modify_energy_totals:
     params:
         country=config["countries"],
