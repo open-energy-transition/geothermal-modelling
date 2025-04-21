@@ -1,38 +1,30 @@
 import logging
 import pandas as pd
 import geopandas as gpd
-import numpy as np
 import os
 import pathlib
-import pypsa
-import sys
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("energyplus_aggregate.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler("energyplus_aggregate.log"), logging.StreamHandler()],
 )
 
+
 def get_state_id(
-        state_fl_name,
-        file_suff,
-        abbrev_df,
-        pumas_df,
+    state_fl_name,
+    file_suff,
+    abbrev_df,
+    pumas_df,
 ):
     state_abbr = state_fl_name.replace(file_suff, "").upper()
-    state_full_name = (
-        abbrev_df[abbrev_df.state == state_abbr]
-        .full_name
-        .to_list()[0]
-    )
+    state_full_name = abbrev_df[abbrev_df.state == state_abbr].full_name.to_list()[0]
     state_id = pumas_df[pumas_df.State == state_full_name].STATEFIP.unique()[0]
     state_geoid = str(state_id)
 
     return state_geoid
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
