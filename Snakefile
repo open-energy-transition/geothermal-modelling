@@ -548,12 +548,20 @@ rule energyplus_aggregate:
             "states_centroids_abbr.csv",
         ),
     output:
-        heat_demand="resources/"
-        + SECDIR
-        + "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
-        cooling_demand="resources/"
-        + SECDIR
-        + "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        heat_demand_path=pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            SECDIR,
+            "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
+        cool_demand_path==pathlib.Path(
+            "workflow",
+            "pypsa-earth",
+            "resources",
+            SECDIR,
+            "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
     script:
         "analysis/scripts/energyplus_aggregate.py"
 
