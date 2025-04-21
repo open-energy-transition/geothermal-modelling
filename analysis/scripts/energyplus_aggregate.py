@@ -34,118 +34,126 @@ def get_state_id(
 
     return state_geoid
 
-# -----------------------------------------------------------------------------
-custom_pref1 = "."
-custom_pref2 = "."
-custom_pref3 = "."
+if __name__ == "__main__":
+    if "snakemake" not in globals():
+        from _helpers_usa import mock_snakemake
 
-clust_shapes_dir = custom_pref1 + "/pypsa-earth/resources/US_sec/bus_regions"
-clust_shapes_fl = "regions_onshore_elec_s_10.geojson"
+        snakemake = mock_snakemake("preprocess_demand_data")
 
-puma_dir = custom_pref1 + "/pypsa-earth/data/usa_resstock_puma/ipums_puma_2020"
-puma_fl = "ipums_puma_2020.shp"
+    default_path = pathlib.Path(__file__).parent.parent.parent
 
-state_heat_dir = custom_pref2 + "/_NREL_profiles_/EnergyPlus/clean_data/heating_cooling_summaries/heating/2018"
-state_cool_dir = custom_pref2 + "/_NREL_profiles_/EnergyPlus/clean_data/heating_cooling_summaries/cooling/2018"
-abbr_fl = custom_pref3 + "/_heating implementation_/_workflow_/data_inputs/states_centroids_abbr.csv"
+    state_heat_dir = pathlib.Path(default_path, snakemake.input.state_heat_dir)
+    state_cool_dir = pathlib.Path(default_path, snakemake.input.state_cool_dir)
+    shapes_path = pathlib.Path(default_path, snakemake.input.shapes_path)
+    puma_path = pathlib.Path(default_path, snakemake.input.puma_path)
+    states_path = pathlib.Path(default_path, snakemake.input.states_path)
 
-model_gdf = gpd.read_file(os.path.join(clust_shapes_dir, clust_shapes_fl))
-puma_gdf = gpd.read_file(os.path.join(puma_dir, puma_fl)).to_crs(model_gdf.crs)
+    heat_demand_path = pathlib.Path(default_path, snakemake.output.heat_demand)
+    cool_demand_path = pathlib.Path(default_path, snakemake.output.cool_demand)
 
-puma_centroid = puma_gdf.copy()
-puma_centroid.geometry = puma_centroid.geometry.centroid
-puma_centroid_merged = gpd.sjoin_nearest(
-    puma_centroid, model_gdf, how="left"
-)
+    # gis information is processed for the model and PUMA regions
+    # to match demand time series for the model bus regions
+    model_gdf = gpd.read_file(shapes_path)
+    puma_gdf = gpd.read_file(puma_path).to_crs(model_gdf.crs)
 
-# consolidating load profiles
-heating_state_fls = os.listdir(state_heat_dir)
-cooling_state_fls = os.listdir(state_cool_dir)
+    # abbreviation vs full names transformaiton is needed
+    # to deal with transformaitons of PUMA codes
+    states_abbr_df = pd.read_csv(states_path)
 
-heating_state_fls = os.listdir(state_heat_dir)
-cooling_state_fls = os.listdir(state_cool_dir)
-# Alaska and Hawai are not included into the power model
-if "ak.csv" in heating_state_fls: 
-    heating_state_fls.remove("ak.csv")
-if "hi.csv" in heating_state_fls:
-    heating_state_fls.remove("hi.csv")
+    puma_centroid = puma_gdf.copy()
+    puma_centroid.geometry = puma_centroid.geometry.centroid
+    puma_centroid_merged = gpd.sjoin_nearest(puma_centroid, model_gdf, how="left")
 
-if "ak.csv" in cooling_state_fls: 
-    cooling_state_fls.remove("ak.csv")
-if "hi.csv" in cooling_state_fls:
-    cooling_state_fls.remove("hi.csv")    
+    # consolidating load profiles
+    heating_state_fls = list(state_heat_dir.iterdir())
+    cooling_state_fls = list(state_cool_dir.iterdir())
 
-# abbreviation vs full names transformaiton is needed
-# to deal with transformaitons of PUMA codes
-states_abbr_df = pd.read_csv(abbr_fl)
+    # Alaska and Hawai are not included into the power model
+    if "ak.csv" in heating_state_fls:
+        heating_state_fls.remove("ak.csv")
+    if "hi.csv" in heating_state_fls:
+        heating_state_fls.remove("hi.csv")
 
-# a single time-series dataframe is needed to look-up for each PUMA -----------
-heating_ts_national_list = [None] * len(heating_state_fls)
-cooling_ts_national_list = [None] * len(cooling_state_fls)
+    if "ak.csv" in cooling_state_fls:
+        cooling_state_fls.remove("ak.csv")
+    if "hi.csv" in cooling_state_fls:
+        cooling_state_fls.remove("hi.csv")
 
-logger.info("Build a consolidated national-wide load dataframe")
-for i, st_fl in enumerate(heating_state_fls):
-    logger.info("Heating consolidation for " + st_fl)
-    state_heat_df = pd.read_csv(
-        os.path.join(state_heat_dir, st_fl),
-    ).set_index("time")  
+    # a single time-series dataframe is needed to look-up for each PUMA -----------
+    heating_ts_national_list = [None] * len(heating_state_fls)
+    cooling_ts_national_list = [None] * len(cooling_state_fls)
 
-    # the column names should correspond to GEOID to make further lookup work  
-    state_geoid = get_state_id(
-        st_fl,
-        file_suff=".csv",
-        abbrev_df=states_abbr_df,
-        pumas_df=puma_centroid_merged
-    )
-    state_heat_df.columns = [state_geoid + col for col in state_heat_df.columns]
-    heating_ts_national_list[i] = state_heat_df
+    logger.info("Build a consolidated national-wide load dataframe")
+    for i, st_fl in enumerate(heating_state_fls):
+        logger.info("Heating consolidation for " + st_fl)
+        state_heat_df = pd.read_csv(
+            os.path.join(state_heat_dir, st_fl),
+        ).set_index("time")
 
-heating_ts_national_df = pd.concat(heating_ts_national_list, axis=1) 
+        # the column names should correspond to GEOID to make further lookup work
+        state_geoid = get_state_id(
+            st_fl,
+            file_suff=".csv",
+            abbrev_df=states_abbr_df,
+            pumas_df=puma_centroid_merged,
+        )
+        state_heat_df.columns = [state_geoid + col for col in state_heat_df.columns]
+        heating_ts_national_list[i] = state_heat_df
 
-# cooling requires a special treatment
-for i, st_fl in enumerate(cooling_state_fls):
-    logger.info("Cooling consolidation for " + st_fl)
-    state_cool_df = pd.read_csv(
-        os.path.join(state_cool_dir, st_fl),
-    ).set_index("time")    
+    heating_ts_national_df = pd.concat(heating_ts_national_list, axis=1)
 
-    # the column names should correspond to GEOID to make further lookup work  
-    state_geoid = get_state_id(
-        st_fl,
-        file_suff=".csv",
-        abbrev_df=states_abbr_df,
-        pumas_df=puma_centroid_merged
-    )
-    state_cool_df.columns = [state_geoid + col for col in state_cool_df.columns]
+    # cooling requires a special treatment
+    for i, st_fl in enumerate(cooling_state_fls):
+        logger.info("Cooling consolidation for " + st_fl)
+        state_cool_df = pd.read_csv(
+            os.path.join(state_cool_dir, st_fl),
+        ).set_index("time")
 
-    cooling_ts_national_list[i] = state_cool_df
+        # the column names should correspond to GEOID to make further lookup work
+        state_geoid = get_state_id(
+            st_fl,
+            file_suff=".csv",
+            abbrev_df=states_abbr_df,
+            pumas_df=puma_centroid_merged,
+        )
+        state_cool_df.columns = [state_geoid + col for col in state_cool_df.columns]
 
-cooling_ts_national_df = pd.concat(cooling_ts_national_list, axis=1)    
+        cooling_ts_national_list[i] = state_cool_df
 
-# time-series for each PUMA should be aggregated ------------------------------
-load_buses = puma_centroid_merged.name.unique()
-pumas_heating_list = [None] * len(load_buses)
-pumas_cooling_list = [None] * len(load_buses)
+    cooling_ts_national_df = pd.concat(cooling_ts_national_list, axis=1)
 
-logger.info("Aggregate by PUMAs")
-for i, bus in enumerate(load_buses):
-    logger.info("Load aggreagtion for a bus: " + bus)
-    bus_pumas = puma_centroid_merged[puma_centroid_merged.name == bus]["GEOID"]
+    # time-series for each PUMA should be aggregated ------------------------------
+    load_buses = puma_centroid_merged.name.unique()
+    pumas_heating_list = [None] * len(load_buses)
+    pumas_cooling_list = [None] * len(load_buses)
 
-    # some PUMAs can be missed from the time-series data columns
-    pumas_in_heating_data = heating_ts_national_df.columns.intersection(bus_pumas).to_list()
-    pumas_in_cooling_data = cooling_ts_national_df.columns.intersection(bus_pumas).to_list()    
+    logger.info("Aggregate by PUMAs")
+    for i, bus in enumerate(load_buses):
+        logger.info("Load aggreagtion for a bus: " + bus)
+        bus_pumas = puma_centroid_merged[puma_centroid_merged.name == bus]["GEOID"]
 
-    pumas_heating_df = pd.DataFrame(index = heating_ts_national_df.index)
-    pumas_heating_df[bus] = heating_ts_national_df[pumas_in_heating_data].sum(axis=1)
-    pumas_heating_list[i] = pumas_heating_df
+        # some PUMAs can be missed from the time-series data columns
+        pumas_in_heating_data = heating_ts_national_df.columns.intersection(
+            bus_pumas
+        ).to_list()
+        pumas_in_cooling_data = cooling_ts_national_df.columns.intersection(
+            bus_pumas
+        ).to_list()
 
-    pumas_cooling_df = pd.DataFrame(index = cooling_ts_national_df.index)
-    pumas_cooling_df[bus] = cooling_ts_national_df[pumas_in_cooling_data].sum(axis=1)
-    pumas_cooling_list[i] = pumas_cooling_df    
+        pumas_heating_df = pd.DataFrame(index=heating_ts_national_df.index)
+        pumas_heating_df[bus] = heating_ts_national_df[pumas_in_heating_data].sum(
+            axis=1
+        )
+        pumas_heating_list[i] = pumas_heating_df
 
-heating_load_aggreg_df = pd.concat(pumas_heating_list, axis=1)
-cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)
+        pumas_cooling_df = pd.DataFrame(index=cooling_ts_national_df.index)
+        pumas_cooling_df[bus] = cooling_ts_national_df[pumas_in_cooling_data].sum(
+            axis=1
+        )
+        pumas_cooling_list[i] = pumas_cooling_df
 
-heating_load_aggreg_df.to_csv("heating_loads.csv")
-cooling_load_aggreg_df.to_csv("cooling_loads.csv")
+    heating_load_aggreg_df = pd.concat(pumas_heating_list, axis=1)
+    cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)
+
+    heating_load_aggreg_df.to_csv(heat_demand_path)
+    cooling_load_aggreg_df.to_csv(cool_demand_path)
