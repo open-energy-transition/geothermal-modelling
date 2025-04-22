@@ -591,8 +591,10 @@ rule plot_and_extract_summaries:
             **config["export"],
         ),
     output:
-        plot_path=directory(pathlib.Path("analysis", "plots", "summary_plots")),
-        output_path=directory(pathlib.Path("analysis", "outputs", "summary_outputs")),
+        plot_path=directory(pathlib.Path("analysis", "plots", SECDIR, "summary_plots")),
+        output_path=directory(
+            pathlib.Path("analysis", "outputs", SECDIR, "summary_outputs")
+        ),
     script:
         "analysis/scripts/plot_and_extract_summaries.py"
 

@@ -28,7 +28,7 @@ US:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
-    energy_carriers: [electricity] #, heat, H2, oil, gas, biomass, battery, cooling]
+    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery, cooling]
   area_crs: 6372
 
 
@@ -47,6 +47,7 @@ custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folde
 
 run:
   name: "US_2035" # use this to keep track of runs with different settings
+  sector_name: "US_2035"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -54,11 +55,11 @@ scenario:
   simpl: ['']
   ll: ['copt']
   clusters: [100]
-  opts: [24H]
+  opts: [3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2035
   sopts:
-  - "144H"
+  - "3H"
   demand:
   - "DF"
 
@@ -180,12 +181,12 @@ electricity:
     H2: 168
 
   extendable_carriers:
-    Generator: []
+    Generator: [solar, onwind, offwind-ac, offwind-dc]
     StorageUnit: []  # battery, H2
     Store: [battery, H2]
     Link: []  # H2 pipeline
 
-  powerplants_filter: (DateOut >= 2022 or DateOut != DateOut)
+  powerplants_filter: (DateOut >= 2030 or DateOut != DateOut)
   custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
   conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
@@ -662,7 +663,7 @@ sector:
     NZ_2030: 0.13
     DF_2030: 0.01
     AB_2030: 0.01
-    DF_2035: 0.01 #same share as DF_2030 -> needs to be updated (interpolate?)
+    DF_2035: 0.053 # 0.053 (Reference) 0.275 (Medium) 0.332 (High)
     BU_2050: 0.00
     AP_2050: 0.42
     NZ_2050: 0.68
