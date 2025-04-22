@@ -30,7 +30,7 @@ use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profil
 
 demand_year = config["US"]["demand_year"]
 run_name = config["run"]["name"]
-SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
+SECDIR = config["run"]["sector_name"] + "/" if config["run"].get("sector_name") else ""
 
 
 localrules:
@@ -631,4 +631,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path("analysis", "plots", "summary_plots"),
+        pathlib.Path("analysis", "plots",SECDIR, "summary_plots"),
