@@ -626,7 +626,6 @@ def energy_balance_plot(plot_base_path, output_path, energy_carriers_array):
         fig = px.area(generations.where(generations > 0))
 
         generations_neg = generations.where(generations < 0).dropna(axis=1)
-        breakpoint()
         for col in generations_neg.columns:
             fig.add_trace(
                 go.Scatter(

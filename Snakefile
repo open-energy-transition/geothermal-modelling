@@ -29,8 +29,9 @@ use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profil
 
 
 demand_year = config["US"]["demand_year"]
-run_name = config["run"]["name"]
-SECDIR = config["run"]["sector_name"] + "/" if config["run"].get("sector_name") else ""
+run = config["run"]
+run_name = run["name"]
+SECDIR = run["sector_name"] + "/" if run.get("sector_name") else ""
 
 
 localrules:
@@ -583,6 +584,7 @@ rule plot_and_extract_summaries:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -624,6 +626,7 @@ rule summary:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
