@@ -570,10 +570,9 @@ rule aggregate_energyplus:
             "data",
             "utilities",
             "states_centroids_abbr.csv",
-        ),
+        ),     
     output:
-        cool_demand_path
-        == pathlib.Path(
+        cool_demand_path=pathlib.Path(
             "workflow",
             "pypsa-earth",
             "resources",
