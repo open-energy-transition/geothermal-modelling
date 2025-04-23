@@ -11,6 +11,9 @@ logging.basicConfig(
     handlers=[logging.FileHandler("energyplus_aggregate.log"), logging.StreamHandler()],
 )
 
+# TODO Replace when the updated data will be available
+SHARE_WATER_SH_DEMAND = 0.20
+RATIO_SERV_TO_RESID = 1
 
 def get_state_id(
     state_fl_name,
@@ -213,11 +216,12 @@ if __name__ == "__main__":
     # A temporaly solution for warm water
     resstock_water_df = pd.DataFrame(
         index=resstock_heating_load_aggreg_df.index,
-        data=[0.20 * resstock_heating_load_aggreg_df.sum(axis=0)] * len(resstock_heating_load_aggreg_df.index),
+        data=[SHARE_WATER_SH_DEMAND * resstock_heating_load_aggreg_df.sum(axis=0)] * len(resstock_heating_load_aggreg_df.index),
     )
     comstock_water_df = pd.DataFrame(
         index=comstock_heating_load_aggreg_df.index,
-        data=[0.20 * comstock_heating_load_aggreg_df.sum(axis=0)] * len(comstock_heating_load_aggreg_df.index),
+        data=[SHARE_WATER_SH_DEMAND * comstock_heating_load_aggreg_df.sum(axis=0)] * len(comstock_heating_load_aggreg_df.index),
+    )
 
     # A multi-index dataframe is needed
     # 1) heating load has multiple components
