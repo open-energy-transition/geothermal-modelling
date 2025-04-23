@@ -1,7 +1,6 @@
 import logging
 import pandas as pd
 import geopandas as gpd
-import os
 import pathlib
 
 logger = logging.getLogger(__name__)
@@ -14,6 +13,7 @@ logging.basicConfig(
 # TODO Replace when the updated data will be available
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
+
 
 def get_state_id(
     state_fl_name,
@@ -28,6 +28,7 @@ def get_state_id(
 
     return state_geoid
 
+
 def consolidate_pumas(
     data_path,
     states_abbr_df,
@@ -36,7 +37,11 @@ def consolidate_pumas(
     # consolidating load profiles
     data_state_fls = list(data_path.iterdir())
 
-    data_state_fls_clean = [fl_path for fl_path in data_state_fls if fl_path.name not in ["ak.csv", "hi.csv"]]    
+    data_state_fls_clean = [
+        fl_path
+        for fl_path in data_state_fls
+        if fl_path.name not in ["ak.csv", "hi.csv"]
+    ]
 
     # a single time-series dataframe is needed to look-up for each PUMA -----------
     data_ts_national_list = [None] * len(data_state_fls_clean)
@@ -62,29 +67,19 @@ def consolidate_pumas(
 
     return data_ts_national_df
 
-def lookup_bus_pumas(
-    data_ts_national_df,
-    bus,
-    bus_pumas
-):
+
+def lookup_bus_pumas(data_ts_national_df, bus, bus_pumas):
     # some PUMAs can be missed from the time-series data columns
-    pumas_in_data = data_ts_national_df.columns.intersection(
-        bus_pumas
-    ).to_list()
+    pumas_in_data = data_ts_national_df.columns.intersection(bus_pumas).to_list()
     bus_pumas_df = pd.DataFrame(index=data_ts_national_df.index)
-    bus_pumas_df[bus] = data_ts_national_df[pumas_in_data].sum(
-        axis=1
-    )
-    return bus_pumas_df   
+    bus_pumas_df[bus] = data_ts_national_df[pumas_in_data].sum(axis=1)
+    return bus_pumas_df
+
 
 def add_level_column(df, level_name="residential space"):
-    df.columns = (
-        pd.MultiIndex.from_product(
-            [[level_name],
-            list(df.columns)]
-        )
-    )
+    df.columns = pd.MultiIndex.from_product([[level_name], list(df.columns)])
     return df
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -94,12 +89,19 @@ if __name__ == "__main__":
 
     default_path = pathlib.Path(__file__).parent.parent.parent
 
-    state_resstock_heat_dir = pathlib.Path(default_path, snakemake.input.state_resstock_heat_dir)
-    state_resstock_cool_dir = pathlib.Path(default_path, snakemake.input.state_resstock_cool_dir)
+    state_resstock_heat_dir = pathlib.Path(
+        default_path, snakemake.input.state_resstock_heat_dir
+    )
+    state_resstock_cool_dir = pathlib.Path(
+        default_path, snakemake.input.state_resstock_cool_dir
+    )
 
-    state_comstock_heat_dir = pathlib.Path(default_path, snakemake.input.state_comstock_heat_dir)
-    state_comstock_cool_dir = pathlib.Path(default_path, snakemake.input.state_comstock_cool_dir)
-
+    state_comstock_heat_dir = pathlib.Path(
+        default_path, snakemake.input.state_comstock_heat_dir
+    )
+    state_comstock_cool_dir = pathlib.Path(
+        default_path, snakemake.input.state_comstock_cool_dir
+    )
 
     shapes_path = pathlib.Path(default_path, snakemake.input.shapes_path)
     puma_path = pathlib.Path(default_path, snakemake.input.puma_path)
@@ -151,8 +153,8 @@ if __name__ == "__main__":
 
     resstock_pumas_heating_list = [None] * len(load_buses)
     comstock_pumas_heating_list = [None] * len(load_buses)
-    
-    pumas_cooling_list = [None] * len(load_buses)    
+
+    pumas_cooling_list = [None] * len(load_buses)
 
     logger.info("Aggregate by PUMAs")
     for i, bus in enumerate(load_buses):
@@ -192,8 +194,8 @@ if __name__ == "__main__":
 
     resstock_heating_load_aggreg_df = pd.concat(resstock_pumas_heating_list, axis=1)
     comstock_heating_load_aggreg_df = pd.concat(comstock_pumas_heating_list, axis=1)
-    
-    cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)    
+
+    cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)
 
     # Resstock
     print("Heating overall -- Resstock")
@@ -211,50 +213,42 @@ if __name__ == "__main__":
     print(cooling_load_aggreg_df.sum().sum() / 1e6)
 
     print("Cooling: cross-checking by PUMAs df -- Resstock + Comstock")
-    print(resstock_cooling_ts_national_df.sum().sum() / 1e6 + comstock_cooling_ts_national_df.sum().sum() / 1e6)
+    print(
+        resstock_cooling_ts_national_df.sum().sum() / 1e6
+        + comstock_cooling_ts_national_df.sum().sum() / 1e6
+    )
 
-    # A temporaly solution for warm water
+    # A temporally solution for warm water
     resstock_water_df = pd.DataFrame(
         index=resstock_heating_load_aggreg_df.index,
-        data=[SHARE_WATER_SH_DEMAND * resstock_heating_load_aggreg_df.sum(axis=0)] * len(resstock_heating_load_aggreg_df.index),
+        data=[SHARE_WATER_SH_DEMAND * resstock_heating_load_aggreg_df.sum(axis=0)]
+        * len(resstock_heating_load_aggreg_df.index),
     )
     comstock_water_df = pd.DataFrame(
         index=comstock_heating_load_aggreg_df.index,
-        data=[SHARE_WATER_SH_DEMAND * comstock_heating_load_aggreg_df.sum(axis=0)] * len(comstock_heating_load_aggreg_df.index),
+        data=[SHARE_WATER_SH_DEMAND * comstock_heating_load_aggreg_df.sum(axis=0)]
+        * len(comstock_heating_load_aggreg_df.index),
     )
 
     # A multi-index dataframe is needed
     # 1) heating load has multiple components
-    add_level_column(
-        df=resstock_heating_load_aggreg_df,
-        level_name="residential space"
-    )
-    add_level_column(
-        df=comstock_heating_load_aggreg_df,
-        level_name="services space"
-    )
-    add_level_column(
-        df=resstock_water_df,
-        level_name="residential water"
-    )
-    add_level_column(
-        df=comstock_water_df,
-        level_name="services water"
-    )
+    add_level_column(df=resstock_heating_load_aggreg_df, level_name="residential space")
+    add_level_column(df=comstock_heating_load_aggreg_df, level_name="services space")
+    add_level_column(df=resstock_water_df, level_name="residential water")
+    add_level_column(df=comstock_water_df, level_name="services water")
 
     heating_overall_load = pd.concat(
-        [resstock_water_df,
-        resstock_heating_load_aggreg_df,
-        comstock_water_df,
-        comstock_heating_load_aggreg_df],
+        [
+            resstock_water_df,
+            resstock_heating_load_aggreg_df,
+            comstock_water_df,
+            comstock_heating_load_aggreg_df,
+        ],
         axis=1,
     )
 
     # 2) cooling
-    add_level_column(
-        df=cooling_load_aggreg_df,
-        level_name="space"
-    )    
+    add_level_column(df=cooling_load_aggreg_df, level_name="space")
 
     heating_overall_load.to_csv(heat_demand_path)
     cooling_load_aggreg_df.to_csv(cool_demand_path)
