@@ -501,7 +501,7 @@ rule build_demand_profiles_from_eia:
         "analysis/scripts/build_demand_profiles_from_eia.py"
 
 
-rule energyplus_aggregate:
+rule aggregate_energyplus:
     input:
         # TODO `state_heat_dir & state_cool_dir should be adjusted`
         # The clean ResStock outputs are currently available via
@@ -564,7 +564,7 @@ rule energyplus_aggregate:
             "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
         ),
     script:
-        "analysis/scripts/energyplus_aggregate.py"
+        "analysis/scripts/aggregate_energyplus.py"
 
 
 rule modify_energy_totals:
