@@ -506,20 +506,44 @@ rule aggregate_energyplus:
         # TODO `state_heat_dir & state_cool_dir should be adjusted`
         # The clean ResStock outputs are currently available via
         # `3. Project Delivery/2- Working Files/resstock/heating_cooling_summaries/`
-        state_heat_dir=pathlib.Path(
+        state_resstock_heat_dir=pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "EnergyPlus",
+            "resstock",
             "heating_cooling_summaries",
             "heating",
             "2018",
         ),
-        state_cool_dir=pathlib.Path(
+        state_resstock_cool_dir=pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "EnergyPlus",
+            "resstock",            
+            "heating_cooling_summaries",
+            "cooling",
+            "2018",
+        ),
+        state_comstock_heat_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            # "comstock",
+            "resstock",
+            "heating_cooling_summaries",
+            "heating",
+            "2018",
+        ),
+        state_comstock_cool_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            # "comstock",
+            "resstock",            
             "heating_cooling_summaries",
             "cooling",
             "2018",
