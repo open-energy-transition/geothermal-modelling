@@ -74,6 +74,14 @@ def lookup_bus_pumas(
     )
     return bus_pumas_df   
 
+def add_level_column(df, level_name="residential space"):
+    df.columns = (
+        pd.MultiIndex.from_product(
+            [[level_name],
+            list(df.columns)]
+        )
+    )
+    return df
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -210,7 +218,39 @@ if __name__ == "__main__":
     comstock_water_df = pd.DataFrame(
         index=comstock_heating_load_aggreg_df.index,
         data=[0.20 * comstock_heating_load_aggreg_df.sum(axis=0)] * len(comstock_heating_load_aggreg_df.index),
+
+    # A multi-index dataframe is needed
+    # 1) heating load has multiple components
+    add_level_column(
+        df=resstock_heating_load_aggreg_df,
+        level_name="residential space"
+    )
+    add_level_column(
+        df=comstock_heating_load_aggreg_df,
+        level_name="services space"
+    )
+    add_level_column(
+        df=resstock_water_df,
+        level_name="residential water"
+    )
+    add_level_column(
+        df=comstock_water_df,
+        level_name="services water"
+    )
+
+    heating_overall_load = pd.concat(
+        [resstock_water_df,
+        resstock_heating_load_aggreg_df,
+        comstock_water_df,
+        comstock_heating_load_aggreg_df],
+        axis=1,
+    )
+
+    # 2) cooling
+    add_level_column(
+        df=cooling_load_aggreg_df,
+        level_name="space"
     )    
 
-    resstock_heating_load_aggreg_df.to_csv(heat_demand_path)
-    resstock_cooling_load_aggreg_df.to_csv(cool_demand_path)
+    heating_overall_load.to_csv(heat_demand_path)
+    cooling_load_aggreg_df.to_csv(cool_demand_path)
