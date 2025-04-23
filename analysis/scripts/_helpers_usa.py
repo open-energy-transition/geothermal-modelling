@@ -126,7 +126,7 @@ def mock_snakemake(
     """
     script_dir = pathlib.Path(__file__).parent.resolve()
     if root_dir is None:
-        root_dir = script_dir.parent
+        root_dir = script_dir.parent.parent
     else:
         root_dir = pathlib.Path(root_dir).resolve()
 
