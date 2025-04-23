@@ -561,8 +561,8 @@ rule aggregate_energyplus:
             "gdrive_data",
             "data",
             "utilities",
-            "ipums_puma_2020",
-            "ipums_puma_2020.shp",
+            "ipums_puma_2010",
+            "ipums_puma_2010.shp",
         ),
         states_path=pathlib.Path(
             "analysis",
