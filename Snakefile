@@ -251,6 +251,63 @@ rule build_custom_powerplants:
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
+    rule retrieve_pumas:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        output:
+            expand(
+                "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
+                filename=[
+                    "ipums_puma_2010.CPG",
+                    "ipums_puma_2010.sbn",
+                    "ipums_puma_2010.shp.xml",
+                    "ipums_puma_2010.dbf",
+                    "ipums_puma_2010.sbx",
+                    "ipums_puma_2010.shx",
+                    "ipums_puma_2010.prj",
+                    "ipums_puma_2010.shp",
+                ],
+            ),
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "utilities",
+                    "ipums_puma_2010",
+                )
+            ),
+        script:
+            "analysis/scripts/download_from_gdrive.py"
+
+# TODO Need to do the same for cooling and for  comstock
+# + add warm water an the next iteration
+    rule retrieve_resstock_space_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "heating",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"                    
+
 
 if config["US"].get("retrieve_US_databundle", True):
 
