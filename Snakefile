@@ -30,6 +30,33 @@ demand_year = config["US"]["demand_year"]
 run_name = config["run"]["name"]
 SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
 
+RDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "resources",
+    run_name,
+
+)
+SECDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "resources",
+    run_name,
+    "demand",
+    "heat",
+
+)
+RESDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "results",
+    run_name,
+)
+DATDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "data",
+)
 
 localrules:
     all,
