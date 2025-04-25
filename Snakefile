@@ -740,10 +740,10 @@ rule aggregate_energyplus:
             "ipums_puma_2010.shp",
         ),
         states_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
+            "workflow",
+            "pypsa-earth",
+            "resources",
             "data",
-            "utilities",
             "states_centroids_abbr.csv",
         ),     
     output:
