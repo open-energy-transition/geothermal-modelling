@@ -58,6 +58,151 @@ DATDIR_path = pathlib.Path(
     "data",
 )
 
+rule prepare_sector_network from pypsa_earth as prepare_sector_network_ep with:
+    input:
+        network=pathlib.Path(
+            RESDIR_path,
+            "prenetworks",
+            "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_presec.nc",
+        ),
+        costs=pathlib.Path(
+            RDIR_path,
+            "costs_{planning_horizons}.csv"
+        ),
+        cooling_costs=pathlib.Path(
+            DATDIR_path,
+            "costs_cooling.csv"
+        ),
+        h2_cavern=pathlib.Path(
+            DATDIR_path,
+            "hydrogen_salt_cavern_potentials.csv",
+        ),
+        nodal_energy_totals=pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "nodal_energy_heat_totals_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
+        transport=pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "transport_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
+        avail_profile=pathlib.Path(
+            SECDIR_path,
+            "pattern_profiles",
+            "avail_profile_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
+        dsm_profile=pathlib.Path(
+            SECDIR_path,
+            "pattern_profiles",
+            "dsm_profile_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
+        nodal_transport_data=pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "nodal_transport_data_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
+        overrides=pathlib.Path(DATDIR_path, "override_component_attrs"),
+        clustered_pop_layout = pathlib.Path(
+            SECDIR_path,
+            "population_shares",
+            "pop_layout_elec_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        industrial_demand = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
+        ),
+        energy_totals = pathlib.Path(
+            SECDIR_path,
+            "energy_totals_{demand}_{planning_horizons}.csv"
+        ),
+        airports = pathlib.Path(
+            SECDIR_path,
+            "airports.csv"
+        ),
+        ports = pathlib.Path(
+            SECDIR_path,
+            "ports.csv"
+        ),
+        heat_demand=pathlib.Path(
+            SECDIR_path,
+            "heat",
+            "demand",            
+            "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+            # "heat_demand_AB_s_10_2030_ep.csv",
+        ),
+        cooling_demand=pathlib.Path(
+            SECDIR_path,
+            "heat",
+            "demand",
+            "cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+            # "cooling_demand_AB_s_10_2030_ep.csv",
+        ),        
+        ashp_cop = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "ashp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        gshp_cop = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "gshp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        solar_thermal = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "solar_thermal_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        cop_hp_cooling_total = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "cop_hp_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        cop_ac_cooling_total = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "cop_ac_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        capft_abch_cooling_total = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "capft_abch_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        district_heat_share = pathlib.Path(
+            SECDIR_path,
+            "demand",
+            "heat",
+            "district_heat_share_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+        ),
+        biomass_transport_costs = pathlib.Path(
+            DATDIR_path,
+            "temp_hard_coded",
+            "biomass_transport_costs.csv"
+        ),
+        shapes_path = pathlib.Path(
+            RDIR_path,
+            "bus_regions",
+            "regions_onshore_elec_s{simpl}_{clusters}.geojson"
+        ),
+        pipelines = (
+            pathlib.Path("data", "custom", "pipelines.csv")
+            if config["custom_data"]["gas_network"]
+            else pathlib.Path(
+                SECDIR_path,
+                "gas_networks",
+                "gas_network_elec_s{simpl}_{clusters}.csv"
+            )
+        ),
+
+
 localrules:
     all,
 
