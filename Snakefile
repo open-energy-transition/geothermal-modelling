@@ -752,14 +752,14 @@ rule aggregate_energyplus:
             "pypsa-earth",
             "resources",
             SECDIR,
-            "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
         ),
         heat_demand_path=pathlib.Path(
             "workflow",
             "pypsa-earth",
             "resources",
             SECDIR,
-            "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
         ),
     script:
         "analysis/scripts/aggregate_energyplus.py"
