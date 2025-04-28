@@ -61,7 +61,7 @@ DATDIR_path = pathlib.Path(
 )
 
 if USE_ENERGY_PLUS:
-    rule prepare_sector_network from pypsa_earth as prepare_sector_network with:
+    use rule prepare_sector_network from pypsa_earth as prepare_sector_network with:
         input:
             network=pathlib.Path(
                 RESDIR_path,
