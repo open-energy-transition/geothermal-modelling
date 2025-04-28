@@ -16,12 +16,12 @@ RATIO_SERV_TO_RESID = 1
 SIMPLIFIED_WRMWATER = True
 
 # TODO Revise the scaling part accounting for the projections
-# Assuming that heating & cooling loads are ~25% of the electricity consumption 
-RESID_HEATING_TOTAL = 0.25 * 3.3e9 # [MWh]
-RESID_COOLING_TOTAL = 0.25 * 3.3e9 # [MWh]
+# Assuming that heating & cooling loads are ~25% of the electricity consumption
+RESID_HEATING_TOTAL = 0.25 * 3.3e9  # [MWh]
+RESID_COOLING_TOTAL = 0.25 * 3.3e9  # [MWh]
 
-SERVIS_HEATING_TOTAL = 0.25 * 3.3e9 # [MWh]
-SERVICE_COOLING_TOTAL = 0.25 * 3.3e9 # [MWh]
+SERVIS_HEATING_TOTAL = 0.25 * 3.3e9  # [MWh]
+SERVICE_COOLING_TOTAL = 0.25 * 3.3e9  # [MWh]
 
 
 def get_state_id(
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     )
     state_resstock_wrmwater_dir = pathlib.Path(
         default_path, snakemake.input.state_resstock_wrmwater_dir
-    )    
+    )
     state_resstock_cool_dir = pathlib.Path(
         default_path, snakemake.input.state_resstock_cool_dir
     )
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     )
     state_comstock_wrmwater_dir = pathlib.Path(
         default_path, snakemake.input.state_comstock_wrmwater_dir
-    )     
+    )
     state_comstock_cool_dir = pathlib.Path(
         default_path, snakemake.input.state_comstock_cool_dir
     )
@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
     cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)
 
-    if SIMPLIFIED_WRMWATER: 
+    if SIMPLIFIED_WRMWATER:
         # A temporally solution for warm water
         resstock_wrmwater_load_aggreg_df = pd.DataFrame(
             index=resstock_heating_load_aggreg_df.index,
@@ -229,7 +229,7 @@ if __name__ == "__main__":
             data_path=state_comstock_wrmwater_dir,
             states_abbr_df=states_abbr_df,
             puma_centroid_merged=puma_centroid_merged,
-        )  
+        )
         comstock_wrmwater_ts_national_df = consolidate_pumas(
             data_path=state_comstock_wrmwater_dir,
             states_abbr_df=states_abbr_df,
@@ -240,14 +240,14 @@ if __name__ == "__main__":
 
         for i, bus in enumerate(load_buses):
             logger.info("Load aggreagtion for a bus: " + bus)
-            bus_pumas = puma_centroid_merged[puma_centroid_merged.name == bus]["GEOID"] 
+            bus_pumas = puma_centroid_merged[puma_centroid_merged.name == bus]["GEOID"]
             # resstock ------------------------------------------------------------
             resstock_pumas_wrmwater_df = lookup_bus_pumas(
                 data_ts_national_df=resstock_wrmwater_ts_national_df,
                 bus=bus,
                 bus_pumas=bus_pumas,
             )
-            resstock_pumas_wrmwater_list[i] = resstock_pumas_wrmwater_df 
+            resstock_pumas_wrmwater_list[i] = resstock_pumas_wrmwater_df
             # comstock ------------------------------------------------------------
             comstock_pumas_wrmwater_df = lookup_bus_pumas(
                 data_ts_national_df=comstock_wrmwater_ts_national_df,
@@ -256,8 +256,12 @@ if __name__ == "__main__":
             )
             comstock_pumas_wrmwater_list[i] = comstock_pumas_wrmwater_df
 
-        resstock_wrmwater_load_aggreg_df = pd.concat(resstock_pumas_wrmwater_list, axis=1)
-        comstock_wrmwater_load_aggreg_df = pd.concat(comstock_pumas_wrmwater_list, axis=1)
+        resstock_wrmwater_load_aggreg_df = pd.concat(
+            resstock_pumas_wrmwater_list, axis=1
+        )
+        comstock_wrmwater_load_aggreg_df = pd.concat(
+            comstock_pumas_wrmwater_list, axis=1
+        )
 
     # Scaling is needed to be consistent with the overall energy balanse
     resstock_heating_scale = (
@@ -267,14 +271,20 @@ if __name__ == "__main__":
         SERVIS_HEATING_TOTAL / comstock_heating_load_aggreg_df.sum().sum()
     )
 
-    resstock_heating_load_aggreg_df = resstock_heating_scale * resstock_heating_load_aggreg_df
-    comstock_heating_load_aggreg_df = comstock_heating_scale * comstock_heating_load_aggreg_df
-                
+    resstock_heating_load_aggreg_df = (
+        resstock_heating_scale * resstock_heating_load_aggreg_df
+    )
+    comstock_heating_load_aggreg_df = (
+        comstock_heating_scale * comstock_heating_load_aggreg_df
+    )
+
     # A multi-index dataframe is needed
     # 1) heating load has multiple components
     add_level_column(df=resstock_heating_load_aggreg_df, level_name="residential space")
     add_level_column(df=comstock_heating_load_aggreg_df, level_name="services space")
-    add_level_column(df=resstock_wrmwater_load_aggreg_df, level_name="residential water")
+    add_level_column(
+        df=resstock_wrmwater_load_aggreg_df, level_name="residential water"
+    )
     add_level_column(df=comstock_wrmwater_load_aggreg_df, level_name="services water")
 
     heating_overall_load = pd.concat(
@@ -289,8 +299,8 @@ if __name__ == "__main__":
 
     # 2) cooling
     cooling_scale = (
-        (RESID_COOLING_TOTAL + SERVICE_COOLING_TOTAL) / cooling_load_aggreg_df.sum().sum()
-    )
+        RESID_COOLING_TOTAL + SERVICE_COOLING_TOTAL
+    ) / cooling_load_aggreg_df.sum().sum()
     cooling_load_aggreg_df = cooling_scale * cooling_load_aggreg_df
 
     add_level_column(df=cooling_load_aggreg_df, level_name="space")
