@@ -10,7 +10,7 @@ logging.basicConfig(
     handlers=[logging.FileHandler("energyplus_aggregate.log"), logging.StreamHandler()],
 )
 
-# TODO Replace when the updated data will be available
+# TODO Put the parameters into the config
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
 SIMPLIFIED_WRMWATER = True
