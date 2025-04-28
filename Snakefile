@@ -376,6 +376,123 @@ if config["US"].get("retrieve_US_databundle", True):
             ),         
         script:
             "analysis/scripts/download_from_gdrive.py"
+    
+    rule retrieve_resstock_wrmwater_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "warm_water",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"            
+
+    rule retrieve_resstock_space_cooling:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "cooling",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"            
+
+    rule retrieve_comstock_space_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "heating",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"
+    
+    rule retrieve_comstock_wrmwater_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "comstock",
+                    "heating_cooling_summaries",
+                    "warm_water",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"         
+
+    rule retrieve_comstock_space_cooling:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            delta_months=5,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "comstock",
+                    "heating_cooling_summaries",
+                    "cooling",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"            
+
+
 
 
 if config["US"].get("network_comparison", True):
