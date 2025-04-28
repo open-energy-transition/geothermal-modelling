@@ -44,8 +44,6 @@ SECDIR_path = pathlib.Path(
     "pypsa-earth",
     "resources",
     run_name,
-    "demand",
-    "heat",
 
 )
 RESDIR_path = pathlib.Path(
