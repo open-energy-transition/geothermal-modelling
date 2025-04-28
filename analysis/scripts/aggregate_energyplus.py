@@ -15,6 +15,14 @@ SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
 SIMPLIFIED_WRMWATER = True
 
+# TODO Revise the scaling part accounting for the projections
+# Assuming that heating & cooling loads are ~25% of the electricity consumption 
+RESID_HEATING_TOTAL = 0.25 * 3.3e9 # [MWh]
+RESID_COOLING_TOTAL = 0.25 * 3.3e9 # [MWh]
+
+SERVIS_HEATING_TOTAL = 0.25 * 3.3e9 # [MWh]
+SERVICE_COOLING_TOTAL = 0.25 * 3.3e9 # [MWh]
+
 
 def get_state_id(
     state_fl_name,
@@ -275,8 +283,13 @@ if __name__ == "__main__":
     resstock_heating_scale = (
         RESID_HEATING_TOTAL / resstock_heating_load_aggreg_df.sum().sum()
     )
+    comstock_heating_scale = (
+        SERVIS_HEATING_TOTAL / comstock_heating_load_aggreg_df.sum().sum()
     )
 
+    resstock_heating_load_aggreg_df = resstock_heating_scale * resstock_heating_load_aggreg_df
+    comstock_heating_load_aggreg_df = comstock_heating_scale * comstock_heating_load_aggreg_df
+                
     # A multi-index dataframe is needed
     # 1) heating load has multiple components
     add_level_column(df=resstock_heating_load_aggreg_df, level_name="residential space")
@@ -295,6 +308,11 @@ if __name__ == "__main__":
     )
 
     # 2) cooling
+    cooling_scale = (
+        (RESID_COOLING_TOTAL + SERVICE_COOLING_TOTAL) / cooling_load_aggreg_df.sum().sum()
+    )
+    cooling_load_aggreg_df = cooling_scale * cooling_load_aggreg_df
+
     add_level_column(df=cooling_load_aggreg_df, level_name="space")
 
     heating_overall_load.to_csv(heat_demand_path)
