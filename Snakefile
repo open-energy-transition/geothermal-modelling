@@ -25,7 +25,7 @@ module pypsa_earth:
 
 use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles
 # A temporaly solution to switch-on custom inputs for heating/cooling
-USE_ENERGY_PLUS = False
+USE_ENERGY_PLUS = True
 
 
 demand_year = config["US"]["demand_year"]
