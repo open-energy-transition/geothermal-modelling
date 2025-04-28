@@ -847,9 +847,8 @@ rule build_demand_profiles_from_eia:
 
 rule aggregate_energyplus:
     input:
-        # TODO `state_heat_dir & state_cool_dir may need adjustements
-        # The clean ResStock outputs are currently available via
-        # `3. Project Delivery/2- Working Files/resstock/heating_cooling_summaries/`
+        # The clean ResStock & ComStock outputs are currently available via
+        # `3. Project Delivery/2- Working Files/resstock | comstock`
         state_resstock_heat_dir=pathlib.Path(
             "analysis",
             "gdrive_data",
