@@ -40,7 +40,7 @@ def consolidate_pumas(
     data_state_fls_clean = [
         fl_path
         for fl_path in data_state_fls
-        if fl_path.name not in ["ak.csv", "hi.csv"]
+        if fl_path.name not in ["ak.csv", "hi.csv", "AK.csv", "HI.csv"]
     ]
 
     # a single time-series dataframe is needed to look-up for each PUMA -----------
