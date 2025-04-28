@@ -287,7 +287,7 @@ rule build_custom_powerplants:
 # + add warm water an the next iteration
     rule retrieve_resstock_space_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
