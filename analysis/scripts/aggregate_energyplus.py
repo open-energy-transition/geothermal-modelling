@@ -13,6 +13,7 @@ logging.basicConfig(
 # TODO Replace when the updated data will be available
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
+SIMPLIFIED_WRMWATER = True
 
 
 def get_state_id(
@@ -223,17 +224,57 @@ if __name__ == "__main__":
         resstock_cooling_ts_national_df.sum().sum() / 1e6
         + comstock_cooling_ts_national_df.sum().sum() / 1e6
     )
+    if SIMPLIFIED_WRMWATER: 
+        # A temporally solution for warm water
+        resstock_wrmwater_load_aggreg_df = pd.DataFrame(
+            index=resstock_heating_load_aggreg_df.index,
+            data=[SHARE_WATER_SH_DEMAND * resstock_heating_load_aggreg_df.sum(axis=0)]
+            * len(resstock_heating_load_aggreg_df.index),
+        )
+        comstock_wrmwater_load_aggreg_df = pd.DataFrame(
+            index=comstock_heating_load_aggreg_df.index,
+            data=[SHARE_WATER_SH_DEMAND * comstock_heating_load_aggreg_df.sum(axis=0)]
+            * len(comstock_heating_load_aggreg_df.index),
+        )
+    else:
+        resstock_wrmwater_ts_national_df = consolidate_pumas(
+            data_path=state_comstock_wrmwater_dir,
+            states_abbr_df=states_abbr_df,
+            puma_centroid_merged=puma_centroid_merged,
+        )  
+        comstock_wrmwater_ts_national_df = consolidate_pumas(
+            data_path=state_comstock_wrmwater_dir,
+            states_abbr_df=states_abbr_df,
+            puma_centroid_merged=puma_centroid_merged,
+        )
+        resstock_pumas_wrmwater_list = [None] * len(load_buses)
+        comstock_pumas_wrmwater_list = [None] * len(load_buses)
 
-    # A temporally solution for warm water
-    resstock_water_df = pd.DataFrame(
-        index=resstock_heating_load_aggreg_df.index,
-        data=[SHARE_WATER_SH_DEMAND * resstock_heating_load_aggreg_df.sum(axis=0)]
-        * len(resstock_heating_load_aggreg_df.index),
+        for i, bus in enumerate(load_buses):
+            logger.info("Load aggreagtion for a bus: " + bus)
+            bus_pumas = puma_centroid_merged[puma_centroid_merged.name == bus]["GEOID"] 
+            # resstock ------------------------------------------------------------
+            resstock_pumas_wrmwater_df = lookup_bus_pumas(
+                data_ts_national_df=resstock_wrmwater_ts_national_df,
+                bus=bus,
+                bus_pumas=bus_pumas,
+            )
+            resstock_pumas_wrmwater_list[i] = resstock_pumas_wrmwater_df 
+            # comstock ------------------------------------------------------------
+            comstock_pumas_wrmwater_df = lookup_bus_pumas(
+                data_ts_national_df=comstock_wrmwater_ts_national_df,
+                bus=bus,
+                bus_pumas=bus_pumas,
+            )
+            comstock_pumas_wrmwater_list[i] = comstock_pumas_wrmwater_df
+
+        resstock_wrmwater_load_aggreg_df = pd.concat(resstock_pumas_wrmwater_list, axis=1)
+        comstock_wrmwater_load_aggreg_df = pd.concat(comstock_pumas_wrmwater_list, axis=1)
+
+    # Scaling is needed to be consistent with the overall energy balanse
+    resstock_heating_scale = (
+        RESID_HEATING_TOTAL / resstock_heating_load_aggreg_df.sum().sum()
     )
-    comstock_water_df = pd.DataFrame(
-        index=comstock_heating_load_aggreg_df.index,
-        data=[SHARE_WATER_SH_DEMAND * comstock_heating_load_aggreg_df.sum(axis=0)]
-        * len(comstock_heating_load_aggreg_df.index),
     )
 
     # A multi-index dataframe is needed
