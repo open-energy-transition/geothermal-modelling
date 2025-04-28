@@ -294,14 +294,14 @@ if __name__ == "__main__":
     # 1) heating load has multiple components
     add_level_column(df=resstock_heating_load_aggreg_df, level_name="residential space")
     add_level_column(df=comstock_heating_load_aggreg_df, level_name="services space")
-    add_level_column(df=resstock_water_df, level_name="residential water")
-    add_level_column(df=comstock_water_df, level_name="services water")
+    add_level_column(df=resstock_wrmwater_load_aggreg_df, level_name="residential water")
+    add_level_column(df=comstock_wrmwater_load_aggreg_df, level_name="services water")
 
     heating_overall_load = pd.concat(
         [
-            resstock_water_df,
+            resstock_wrmwater_load_aggreg_df,
             resstock_heating_load_aggreg_df,
-            comstock_water_df,
+            comstock_wrmwater_load_aggreg_df,
             comstock_heating_load_aggreg_df,
         ],
         axis=1,
