@@ -92,6 +92,9 @@ if __name__ == "__main__":
     state_resstock_heat_dir = pathlib.Path(
         default_path, snakemake.input.state_resstock_heat_dir
     )
+    state_resstock_wrmwater_dir = pathlib.Path(
+        default_path, snakemake.input.state_resstock_wrmwater_dir
+    )    
     state_resstock_cool_dir = pathlib.Path(
         default_path, snakemake.input.state_resstock_cool_dir
     )
@@ -99,6 +102,9 @@ if __name__ == "__main__":
     state_comstock_heat_dir = pathlib.Path(
         default_path, snakemake.input.state_comstock_heat_dir
     )
+    state_comstock_wrmwater_dir = pathlib.Path(
+        default_path, snakemake.input.state_comstock_wrmwater_dir
+    )     
     state_comstock_cool_dir = pathlib.Path(
         default_path, snakemake.input.state_comstock_cool_dir
     )
