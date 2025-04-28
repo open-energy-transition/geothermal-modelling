@@ -352,8 +352,6 @@ if config["US"].get("retrieve_US_databundle", True):
         script:
             "analysis/scripts/download_from_gdrive.py"
 
-    # TODO Need to do the same for cooling and for  comstock
-    # + add warm water an the next iteration
     rule retrieve_resstock_space_heating:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
