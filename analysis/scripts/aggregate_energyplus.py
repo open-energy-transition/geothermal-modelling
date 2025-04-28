@@ -212,26 +212,6 @@ if __name__ == "__main__":
 
     cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)
 
-    # Resstock
-    print("Heating overall -- Resstock")
-    print(resstock_heating_load_aggreg_df.sum().sum() / 1e6)
-    print("Heating: cross-checking by PUMAs df -- Resstock")
-    print(resstock_heating_ts_national_df.sum().sum() / 1e6)
-
-    # Comstock
-    print("Heating overall -- Comstock")
-    print(comstock_heating_load_aggreg_df.sum().sum() / 1e6)
-    print("Heating: cross-checking by PUMAs df -- Comstock")
-    print(comstock_heating_ts_national_df.sum().sum() / 1e6)
-
-    print("Cooling overall -- Comstock")
-    print(cooling_load_aggreg_df.sum().sum() / 1e6)
-
-    print("Cooling: cross-checking by PUMAs df -- Resstock + Comstock")
-    print(
-        resstock_cooling_ts_national_df.sum().sum() / 1e6
-        + comstock_cooling_ts_national_df.sum().sum() / 1e6
-    )
     if SIMPLIFIED_WRMWATER: 
         # A temporally solution for warm water
         resstock_wrmwater_load_aggreg_df = pd.DataFrame(
