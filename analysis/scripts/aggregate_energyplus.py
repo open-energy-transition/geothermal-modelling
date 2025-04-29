@@ -14,6 +14,7 @@ logging.basicConfig(
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
 SIMPLIFIED_WRMWATER = True
+FILTER_ISLAND_PUMAS = False
 
 # TODO Revise the scaling part accounting for the projections
 # Assuming that heating & cooling loads are ~25% of the electricity consumption
@@ -180,21 +181,22 @@ if __name__ == "__main__":
         puma_centroid_merged=puma_centroid_merged,
     )
 
-    # assuming that islands are not nessecarily connected 
-    # with the mainland power system
-    resstock_heating_ts_national_df = filter_by_island_pumas(
-        puma_centroid_merged, data_df=resstock_heating_ts_national_df
-    ) 
-    resstock_cooling_ts_national_df = filter_by_island_pumas(
-        puma_centroid_merged, data_df=resstock_cooling_ts_national_df
-    )
+    if FILTER_ISLAND_PUMAS:
+        # assuming that islands are not nessecarily connected 
+        # with the mainland power system
+        resstock_heating_ts_national_df = filter_by_island_pumas(
+            puma_centroid_merged, data_df=resstock_heating_ts_national_df
+        ) 
+        resstock_cooling_ts_national_df = filter_by_island_pumas(
+            puma_centroid_merged, data_df=resstock_cooling_ts_national_df
+        )
 
-    comstock_heating_ts_national_df = filter_by_island_pumas(
-        puma_centroid_merged, data_df=comstock_heating_ts_national_df
-    )  
-    comstock_cooling_ts_national_df = filter_by_island_pumas(
-        puma_centroid_merged, data_df=comstock_cooling_ts_national_df
-    )    
+        comstock_heating_ts_national_df = filter_by_island_pumas(
+            puma_centroid_merged, data_df=comstock_heating_ts_national_df
+        )  
+        comstock_cooling_ts_national_df = filter_by_island_pumas(
+            puma_centroid_merged, data_df=comstock_cooling_ts_national_df
+        )    
 
     # time-series for each PUMA should be aggregated ------------------------------
     load_buses = puma_centroid_merged.name.unique()
@@ -269,14 +271,15 @@ if __name__ == "__main__":
             puma_centroid_merged=puma_centroid_merged,
         )
 
-        # Assuming that islands are not nessecarily connected 
-        # with the mainland power system
-        resstock_wrmwater_ts_national_df = filter_by_island_pumas(
-            puma_centroid_merged, data_df=resstock_wrmwater_ts_national_df
-        )
-        comstock_wrmwater_ts_national_df = filter_by_island_pumas(
-            puma_centroid_merged, data_df=comstock_wrmwater_ts_national_df
-        )        
+        if FILTER_ISLAND_PUMAS:
+            # Assuming that islands are not nessecarily connected 
+            # with the mainland power system
+            resstock_wrmwater_ts_national_df = filter_by_island_pumas(
+                puma_centroid_merged, data_df=resstock_wrmwater_ts_national_df
+            )
+            comstock_wrmwater_ts_national_df = filter_by_island_pumas(
+                puma_centroid_merged, data_df=comstock_wrmwater_ts_national_df
+            )        
 
         resstock_pumas_wrmwater_list = [None] * len(load_buses)
         comstock_pumas_wrmwater_list = [None] * len(load_buses)
