@@ -143,7 +143,7 @@ if __name__ == "__main__":
         data_path=state_resstock_heat_dir,
         states_abbr_df=states_abbr_df,
         puma_centroid_merged=puma_centroid_merged,
-    ) 
+    )
 
     resstock_cooling_ts_national_df = consolidate_pumas(
         data_path=state_resstock_cool_dir,
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         data_path=state_comstock_heat_dir,
         states_abbr_df=states_abbr_df,
         puma_centroid_merged=puma_centroid_merged,
-    ) 
+    )
 
     comstock_cooling_ts_national_df = consolidate_pumas(
         data_path=state_comstock_cool_dir,
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     load_buses = puma_centroid_merged.name.unique()
 
     resstock_pumas_heating_list = [None] * len(load_buses)
-    comstock_pumas_heating_list = [None] * len(load_buses)   
+    comstock_pumas_heating_list = [None] * len(load_buses)
 
     pumas_cooling_list = [None] * len(load_buses)
 
@@ -307,4 +307,3 @@ if __name__ == "__main__":
 
     heating_overall_load.to_csv(heat_demand_path)
     cooling_load_aggreg_df.to_csv(cool_demand_path)
-
