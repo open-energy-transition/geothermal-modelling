@@ -446,7 +446,7 @@ if config["US"].get("retrieve_US_databundle", True):
     
     rule retrieve_comstock_wrmwater_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
@@ -469,7 +469,7 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_comstock_space_cooling:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
