@@ -69,6 +69,7 @@ def consolidate_pumas(
             abbrev_df=states_abbr_df,
             pumas_df=puma_centroid_merged,
         )
+
         state_heat_df.columns = [state_geoid + col for col in state_heat_df.columns]
         data_ts_national_list[i] = state_heat_df
 
@@ -76,6 +77,20 @@ def consolidate_pumas(
 
     return data_ts_national_df
 
+def find_onshore_pumas(puma_centroid_merged):
+    if "distances" in puma_centroid_merged.columns:
+        i_pumas_inside_onshore = puma_centroid_merged.distances == 0
+        codes_pumas_inside_onshore = (
+            puma_centroid_merged[i_pumas_inside_onshore].STATEFIP 
+            + puma_centroid_merged[i_pumas_inside_onshore].PUMA
+        )
+    return codes_pumas_inside_onshore
+
+def filter_by_island_pumas(puma_centroid_merged, data_df):
+    onshore_codes = find_onshore_pumas(puma_centroid_merged)
+    onshore_data_cols = resstock_heating_ts_national_df.columns.intersection(onshore_codes)
+    
+    return data_df[onshore_data_cols]
 
 def lookup_bus_pumas(data_ts_national_df, bus, bus_pumas):
     # some PUMAs can be missed from the time-series data columns
@@ -136,7 +151,9 @@ if __name__ == "__main__":
 
     puma_centroid = puma_gdf.copy()
     puma_centroid.geometry = puma_centroid.geometry.centroid
-    puma_centroid_merged = gpd.sjoin_nearest(puma_centroid, model_gdf, how="left")
+    puma_centroid_merged = gpd.sjoin_nearest(
+        puma_centroid, model_gdf, how="left", distance_col="distances"
+    )
 
     # consolidating load profiles
     resstock_heating_ts_national_df = consolidate_pumas(
@@ -162,6 +179,22 @@ if __name__ == "__main__":
         states_abbr_df=states_abbr_df,
         puma_centroid_merged=puma_centroid_merged,
     )
+
+    # assuming that islands are not nessecarily connected 
+    # with the mainland power system
+    resstock_heating_ts_national_df = filter_by_island_pumas(
+        puma_centroid_merged, data_df=resstock_heating_ts_national_df
+    ) 
+    resstock_cooling_ts_national_df = filter_by_island_pumas(
+        puma_centroid_merged, data_df=resstock_cooling_ts_national_df
+    )
+
+    comstock_heating_ts_national_df = filter_by_island_pumas(
+        puma_centroid_merged, data_df=comstock_heating_ts_national_df
+    )  
+    comstock_cooling_ts_national_df = filter_by_island_pumas(
+        puma_centroid_merged, data_df=comstock_cooling_ts_national_df
+    )    
 
     # time-series for each PUMA should be aggregated ------------------------------
     load_buses = puma_centroid_merged.name.unique()
@@ -235,6 +268,16 @@ if __name__ == "__main__":
             states_abbr_df=states_abbr_df,
             puma_centroid_merged=puma_centroid_merged,
         )
+
+        # Assuming that islands are not nessecarily connected 
+        # with the mainland power system
+        resstock_wrmwater_ts_national_df = filter_by_island_pumas(
+            puma_centroid_merged, data_df=resstock_wrmwater_ts_national_df
+        )
+        comstock_wrmwater_ts_national_df = filter_by_island_pumas(
+            puma_centroid_merged, data_df=comstock_wrmwater_ts_national_df
+        )        
+
         resstock_pumas_wrmwater_list = [None] * len(load_buses)
         comstock_pumas_wrmwater_list = [None] * len(load_buses)
 
