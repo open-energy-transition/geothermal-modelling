@@ -584,7 +584,7 @@ rule plot_and_extract_summaries:
                 "workflow",
                 "pypsa-earth",
                 "results",
-                SECDIR
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -634,4 +634,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path("analysis", "plots",SECDIR, "summary_plots"),
+        pathlib.Path("analysis", "plots", SECDIR, "summary_plots"),
