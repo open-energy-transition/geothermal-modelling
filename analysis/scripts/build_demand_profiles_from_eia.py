@@ -241,7 +241,7 @@ def interpolate_demands(interpolate_year, demand_scenario, default_path, demand_
 
     Parameters
     ----------
-    interpolate_year: int 
+    interpolate_year: int
         Year for which demand is to be interpolated
     demand_scenario: str
         NREL EFS scenario
