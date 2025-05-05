@@ -43,14 +43,14 @@ SECDIR_path = pathlib.Path(
     "workflow",
     "pypsa-earth",
     "resources",
-    run_name,
+    SECDIR,
 
 )
 RESDIR_path = pathlib.Path(
     "workflow",
     "pypsa-earth",
     "results",
-    run_name,
+    SECDIR,
 )
 DATDIR_path = pathlib.Path(
     "workflow",
@@ -62,7 +62,10 @@ if USE_ENERGY_PLUS:
     use rule prepare_sector_network from pypsa_earth as prepare_sector_network with:
         input:
             network=pathlib.Path(
-                RESDIR_path,
+                "workflow",
+                "pypsa-earth",
+                "results",
+                SECDIR,
                 "prenetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_presec.nc",
             ),
@@ -129,15 +132,15 @@ if USE_ENERGY_PLUS:
             ),
             heat_demand=pathlib.Path(
                 SECDIR_path,
-                "heat",
-                "demand",            
+                "demand", 
+                "heat",    
                 "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
                 # "heat_demand_AB_s_10_2030_ep.csv",
             ),
             cooling_demand=pathlib.Path(
                 SECDIR_path,
-                "heat",
                 "demand",
+                "heat",
                 "cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
                 # "cooling_demand_AB_s_10_2030_ep.csv",
             ),        
@@ -255,6 +258,7 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename="geothermal_data",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
         output:
@@ -322,9 +326,11 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_pumas:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            #gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            gdrive_url="https://drive.google.com/drive/folders/1A8rA2p1a1cv1poPYlBRvAuLeYxENA-KK?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            cookie_filename = "pumas",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "utilities","ipums_puma_2010"),
             delta_months=5,
         output:
             expand(
@@ -340,15 +346,15 @@ if config["US"].get("retrieve_US_databundle", True):
                     "ipums_puma_2010.shp",
                 ],
             ),
-            directory(
-                pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "utilities",
-                    "ipums_puma_2010",
-                )
-            ),
+#            directory(
+#                pathlib.Path(
+#                    "analysis",
+#                    "gdrive_data",
+#                    "data",
+#                    "utilities",
+#                    "ipums_puma_2010",
+#                )
+#            ),
         script:
             "analysis/scripts/download_from_gdrive.py"
 
@@ -356,7 +362,8 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            cookie_filename = "restock_space_heating",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus"),
             delta_months=5,
         # TODO check that recursive retrieval works    
         output:
@@ -375,10 +382,11 @@ if config["US"].get("retrieve_US_databundle", True):
         script:
             "analysis/scripts/download_from_gdrive.py"
     
-    rule retrieve_resstock_wrmwater_heating:
+    rule retrieve_resstock_warmwater_heating:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "restock_warmwater_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
         # TODO check that recursive retrieval works    
@@ -425,6 +433,7 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_space_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
         # TODO check that recursive retrieval works    
@@ -435,7 +444,7 @@ if config["US"].get("retrieve_US_databundle", True):
                     "gdrive_data",
                     "data",
                     "EnergyPlus",
-                    "resstock",
+                    "comstock",
                     "heating_cooling_summaries",
                     "heating",
                     "2018",                     
@@ -912,13 +921,16 @@ rule aggregate_energyplus:
             "cooling",
             "2018",
         ),
-        shapes_path=pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            run_name,
-            "bus_regions",
-            "regions_onshore_elec_s{simpl}_{clusters}.geojson",
+        shapes_path=expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                run_name,
+                "bus_regions",
+                "regions_onshore_elec_s{simpl}_{clusters}.geojson",
+                ),
+            **config["scenario"],
         ),
         puma_path=pathlib.Path(
             "analysis",
@@ -926,26 +938,27 @@ rule aggregate_energyplus:
             "data",
             "utilities",
             "ipums_puma_2010",
-            "ipums_puma_2010.shp",
+            #r"ipums_puma_2010.shp",
         ),
         states_path=pathlib.Path(
             "data",
             "states_centroids_abbr.csv",
         ),     
     output:
-        cool_demand_path=pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            SECDIR,
-            "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+        cool_demand_path=expand(
+            pathlib.Path(
+                SECDIR_path,
+                #"cooling_demand_DF_s_100_2050_ep.csv"
+                "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+            ), ** config["scenario"]
         ),
-        heat_demand_path=pathlib.Path(
-            "workflow",
-            "pypsa-earth",
-            "resources",
-            SECDIR,
-            "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+        heat_demand_path=expand(
+            pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+            ), ** config["scenario"]
         ),
     script:
         "analysis/scripts/aggregate_energyplus.py"
