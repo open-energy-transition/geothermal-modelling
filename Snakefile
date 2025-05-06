@@ -261,6 +261,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookie_filename="geothermal_data",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
+            merge_files=False,            
         output:
             expand(
                 "analysis/gdrive_data/data/powerplant_data/{filename}",
@@ -332,6 +333,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookie_filename = "pumas",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data", "utilities","ipums_puma_2010"),
             delta_months=5,
+            merge_files=False,            
         output:
             expand(
                 "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
@@ -365,6 +367,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookie_filename = "restock_space_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus"),
             delta_months=5,
+            merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
@@ -384,11 +387,13 @@ if config["US"].get("retrieve_US_databundle", True):
     
     rule retrieve_resstock_warmwater_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            #gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1aIHHFzoXKqWFH6Yq2dPhhJ3xdpIkK27E?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_warmwater_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","warm_water","2018"),
             delta_months=5,
+            merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
@@ -408,10 +413,13 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_resstock_space_cooling:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            #gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1A78Iq8r7y3MYA5fOnL0V12v5PnteZL46?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            cookie_filename = "restock_space_cooling",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","cooling","2018"),
             delta_months=5,
+            merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
@@ -436,6 +444,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookie_filename = "comstock_space_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
+            merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
@@ -459,6 +468,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookies_path=pathlib.Path(".cache", "gdown"),
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
+            merge_files=True,            
         # TODO check that recursive retrieval works    
         output:
             directory(
@@ -482,6 +492,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookies_path=pathlib.Path(".cache", "gdown"),
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
+            merge_files=True,            
         # TODO check that recursive retrieval works    
         output:
             directory(
