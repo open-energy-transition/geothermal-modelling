@@ -311,6 +311,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EIA930_2021_Jan_Jun_opt.csv",
                     "EIA930_2021_Jul_Dec_opt.csv",
                     "HS861 2010-.xlsx",
+                    "demand_data/table_10_EIA_utility_sales.xlsx",
+                    "demand_data/Electric_Retail_Service_Territories.geojson",
                 ],
             ),
             directory(
