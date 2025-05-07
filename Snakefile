@@ -634,4 +634,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path("analysis", "plots",SECDIR, "summary_plots"),
+        pathlib.Path("analysis", "plots", SECDIR, "summary_plots"),

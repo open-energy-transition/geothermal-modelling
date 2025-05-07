@@ -292,7 +292,7 @@ def drop_carriers(df, key):
         "H2 pipeline repurposed",
         "DC",
         # "B2B",
-        #"urban central gas CHP",
+        # "urban central gas CHP",
     ]
     for car in drop_carriers_list:
         if car in df.index.tolist() and key == "rows":

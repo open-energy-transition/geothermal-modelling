@@ -204,6 +204,21 @@ def build_demand_profiles(
 
 
 def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network_path):
+    """
+    Aggregate and rewrite demand in the pypsa network
+
+    Parameters
+    ----------
+    df_demand_profiles: pandas dataframe
+        demand data profiles
+
+    pypsa_network: pypsa
+        network to obtain pypsa bus information
+
+    pypsa_network_path: str
+        Filepath of pypsa file
+
+    """
     # To-do: Change to using pypsa_network.snapshot_weightings
     time_resolution = 8760 / len(pypsa_network.snapshots)
     # Groupby time resolution and then convert from kWh -> kW
@@ -221,6 +236,26 @@ def modify_pypsa_network_demand(df_demand_profiles, pypsa_network, pypsa_network
 
 
 def interpolate_demands(interpolate_year, demand_scenario, default_path, demand_path):
+    """
+    Interpolate scaling factors for non-decade years e.g., 2032, 2035 etc between 2025 to 2050
+
+    Parameters
+    ----------
+    interpolate_year: int
+        Year for which demand is to be interpolated
+    demand_scenario: str
+        NREL EFS scenario
+    default_path: str
+       base folder path
+    demand_path: str
+        filepath to the decade demand files
+
+    Returns
+    -------
+    scaling_factor: pandas dataframe
+        interpolated scaling factors
+    """
+
     # interpolate_year = 2035
     decade_end = math.ceil(interpolate_year / 10) * 10
     decade_start = math.floor(interpolate_year / 10) * 10
