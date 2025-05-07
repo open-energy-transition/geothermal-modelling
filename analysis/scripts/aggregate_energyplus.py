@@ -14,7 +14,9 @@ logging.basicConfig(
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
 SIMPLIFIED_WRMWATER = True
-DATA_IS_SCALED = True # post processing was done externally to workflow, presented as MWh
+DATA_IS_SCALED = (
+    True  # post processing was done externally to workflow, presented as MWh
+)
 
 # TODO Revise the scaling part accounting for the projections
 # Assuming that heating & cooling loads are ~25% of the electricity consumption
