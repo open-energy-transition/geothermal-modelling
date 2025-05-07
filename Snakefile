@@ -362,10 +362,10 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_resstock_space_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1AMsr9bs9klMVdFYJDhevSW6M9ezLc_Gr?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_space_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus","resstock","heating_cooling_summaries","heating","2018"),
             delta_months=5,
             merge_files=True,
         # TODO check that recursive retrieval works    
@@ -387,8 +387,7 @@ if config["US"].get("retrieve_US_databundle", True):
     
     rule retrieve_resstock_warmwater_heating:
         params:
-            #gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
-            gdrive_url="https://drive.google.com/drive/folders/1aIHHFzoXKqWFH6Yq2dPhhJ3xdpIkK27E?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1Xu3774JF8MeZPuNjzGo_zxXhiZSSeQkG?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_warmwater_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","warm_water","2018"),
@@ -413,8 +412,7 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_resstock_space_cooling:
         params:
-            #gdrive_url="https://drive.google.com/drive/folders/1S-AkfE8qmjMAx3PkkI8zW0IoohTYReG3?usp=drive_link",
-            gdrive_url="https://drive.google.com/drive/folders/1A78Iq8r7y3MYA5fOnL0V12v5PnteZL46?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1XR6oGSi98y08nwWPyninnh0MNVwTM4GJ?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_space_cooling",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","cooling","2018"),
@@ -439,10 +437,10 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_comstock_space_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/13KzCy6on4ZQt9mkNX0s1wJC2fGIon2mY?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_space_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","heating","2018"),
             delta_months=5,
             merge_files=True,
         # TODO check that recursive retrieval works    
@@ -462,11 +460,11 @@ if config["US"].get("retrieve_US_databundle", True):
         script:
             "analysis/scripts/download_from_gdrive.py"
     
-    rule retrieve_comstock_wrmwater_heating:
+    rule retrieve_comstock_warmwater_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1p24dXnYSi4eYNOCkc6CjXahiaUm_9mG_?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
             delta_months=5,
             merge_files=True,            
         # TODO check that recursive retrieval works    
@@ -488,9 +486,9 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_comstock_space_cooling:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1isRGVA_9hJB5W2BpUVvZlT15byZTxhTF?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1-vKF6YFk4T0xklvNszwxYD-nxvUsrhPR?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
             delta_months=5,
             merge_files=True,            
         # TODO check that recursive retrieval works    
@@ -509,8 +507,6 @@ if config["US"].get("retrieve_US_databundle", True):
             ),         
         script:
             "analysis/scripts/download_from_gdrive.py"            
-
-
 
 
 if config["US"].get("network_comparison", True):
