@@ -11,7 +11,9 @@ sys.path.append("workflow/pypsa-earth/scripts")
 
 configfile: "workflow/pypsa-earth/config.default.yaml"
 configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
-configfile: "configs/config.usa_baseline.yaml"
+
+
+# configfile: "configs/config.usa_baseline.yaml"
 
 
 module pypsa_earth:
@@ -29,8 +31,9 @@ USE_ENERGY_PLUS = True
 
 
 demand_year = config["US"]["demand_year"]
-run_name = config["run"]["name"]
-SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
+run = config["run"]
+run_name = run["name"]
+SECDIR = run["sector_name"] + "/" if run.get("sector_name") else ""
 
 RDIR_path = pathlib.Path(
     "workflow",
@@ -1048,6 +1051,7 @@ rule plot_and_extract_summaries:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -1056,8 +1060,10 @@ rule plot_and_extract_summaries:
             **config["export"],
         ),
     output:
-        plot_path=directory(pathlib.Path("analysis", "plots", "summary_plots")),
-        output_path=directory(pathlib.Path("analysis", "outputs", "summary_outputs")),
+        plot_path=directory(pathlib.Path("analysis", "plots", SECDIR, "summary_plots")),
+        output_path=directory(
+            pathlib.Path("analysis", "outputs", SECDIR, "summary_outputs")
+        ),
     script:
         "analysis/scripts/plot_and_extract_summaries.py"
 
@@ -1087,6 +1093,7 @@ rule summary:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -1094,4 +1101,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path("analysis", "plots", "summary_plots"),
+        pathlib.Path("analysis", "plots", SECDIR, "summary_plots"),

@@ -28,7 +28,7 @@ US:
     installed_capacity_comparison: true
     generation_comparison: true
     network_comparison: true
-    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery]
+    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery, cooling]
   area_crs: 6372
 
 
@@ -36,7 +36,7 @@ enable:
   retrieve_databundle: true  #  Recommended 'true', for the first run. Otherwise data might be missing.
   retrieve_cost_data: true  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
   download_osm_data: true  # If 'true', OpenStreetMap data will be downloaded for the above given countries
-  build_natura_raster: true  # If True, then an exclusion raster will be build
+  build_natura_raster: false  # If True, then an exclusion raster will be build
   build_cutout: false
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/api-how-to
@@ -46,7 +46,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2021" # use this to keep track of runs with different settings
+  name: "US_2050" # use this to keep track of runs with different settings
+  sector_name: "US_2050"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -54,11 +55,11 @@ scenario:
   simpl: ['']
   ll: ['copt']
   clusters: [100]
-  opts: [Co2L-24H]
+  opts: [24H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "24H"
+  - "144H"
   demand:
   - "DF"
 
@@ -180,12 +181,12 @@ electricity:
     H2: 168
 
   extendable_carriers:
-    Generator: []
+    Generator: [solar, onwind, offwind-ac, offwind-dc]
     StorageUnit: []  # battery, H2
     Store: [battery, H2]
     Link: []  # H2 pipeline
 
-  powerplants_filter: (DateOut >= 2022 or DateOut != DateOut)
+  powerplants_filter: (DateOut >= 2040 or DateOut != DateOut)
   custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
   conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
@@ -367,12 +368,23 @@ renewable:
     clip_p_max_pu: 1.e-2
     extendable: true
     csp_model: advanced # simple or advanced
+  enhanced_geothermal:
+    power_heat_ratio_steps: 3
+    lifetime: 25
+    max_network_diameter: 20. # km
+    min_network_average_capacity: 10. # MWh
+    max_network_average_capacity: 30. # MWh
+    piping_cost: 1_300_000 # $/km
+    industrial_heating_n_cost_steps: 2
+    heat_distribution_network_efficiency: 0.9
 
 # TODO: Needs to be adjusted for Africa.
 # Costs Configuration (Do not remove, needed for Sphynx documentation).
 costs:
-  year: 2030
+  year: 2050
   version: v0.11.0
+  financial_case: "Market"
+  scenario: "Moderate"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
   fill_values:
@@ -533,10 +545,10 @@ sector:
     spatial_oil: true
 
   district_heating:
-    potential: 0.3 #maximum fraction of urban demand which can be supplied by district heating
+    potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share
     #progress = 0 means today's district heating share, progress=-1 means maximum fraction of urban demand is supplied by district heating
-    progress: 1
+    progress: 0
     # 2020: 0.0
     # 2030: 0.3
     # 2040: 0.6
@@ -601,7 +613,7 @@ sector:
   home_battery: true # adds home batteries to low voltage buses ((only work if electricity_distribution_grid: true)
   transmission_efficiency:
     electricity distribution grid:
-      efficiency_static: 0.97 # efficiency of distribution grid (i.e. 3% loses)
+      efficiency_static: 1 # efficiency of distribution grid (i.e. 3% loses)
     H2 pipeline:
       efficiency_per_1000km: 1
       compression_per_1000km: 0.017 # DEA technology data. Mean of  Energy losses, lines 5000-20000 MW and lines >20000 MW for 2020, 2030 and 2050, [%/1000 km]
@@ -655,7 +667,7 @@ sector:
     BU_2050: 0.00
     AP_2050: 0.42
     NZ_2050: 0.68
-    DF_2050: 0.011
+    DF_2050: 0.067
 
   co2_network: true
   co2_sequestration_potential: 200 #MtCO2/a sequestration potential for Europe
