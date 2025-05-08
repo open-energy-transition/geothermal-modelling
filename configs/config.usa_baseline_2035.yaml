@@ -87,7 +87,7 @@ build_shape_options:
   contended_flag: "set_by_country" # "set_by_country" assigns the contended areas to the countries according to the GADM database, "drop" drops these contended areas from the model
   gadm_file_prefix: "gadm41_"
   gadm_url_prefix: "https://geodata.ucdavis.edu/gadm/gadm4.1/gpkg/"
- 
+
 
 build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetMap
   group_tolerance_buses: 5000  # [m] (default 5000) Tolerance in meters of the close buses to merge
