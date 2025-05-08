@@ -121,12 +121,12 @@ if __name__ == "__main__":
         default_path, snakemake.input.state_comstock_cool_dir
     )
 
-    shapes_path = pathlib.Path(default_path, snakemake.input.shapes_path)
+    shapes_path = pathlib.Path(default_path, snakemake.input.shapes_path[0])
     puma_path = pathlib.Path(default_path, snakemake.input.puma_path)
     states_path = pathlib.Path(default_path, snakemake.input.states_path)
 
-    heat_demand_path = pathlib.Path(default_path, snakemake.output.heat_demand_path)
-    cool_demand_path = pathlib.Path(default_path, snakemake.output.cool_demand_path)
+    heat_demand_path = pathlib.Path(default_path, snakemake.output.heat_demand_path[0])
+    cool_demand_path = pathlib.Path(default_path, snakemake.output.cool_demand_path[0])
 
     # gis information is processed for the model and PUMA regions
     # to match demand time series for the model bus regions
