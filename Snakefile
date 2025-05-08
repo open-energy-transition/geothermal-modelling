@@ -308,13 +308,14 @@ if config["US"].get("retrieve_US_databundle", True):
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
                 filename=[
                     "use_es_capita.xlsx",
-                    "EIA930_2021_Jan_Jun_opt.csv",
-                    "EIA930_2021_Jul_Dec_opt.csv",
                     "HS861 2010-.xlsx",
                     "demand_data/table_10_EIA_utility_sales.xlsx",
                     "demand_data/Electric_Retail_Service_Territories.geojson",
                 ],
-            ),
+            ), 
+            expand("analysis/gdrive_data/data/electricity_demand_data/EIA930_{demand}_Jan_Jun_opt.csv"), **config["US"],
+            expand("analysis/gdrive_data/data/electricity_demand_data/EIA930_{demand}_Jul_Dec_opt.csv"), **config["US"],
+
             directory(
                 pathlib.Path(
                     "analysis",
@@ -466,6 +467,7 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1p24dXnYSi4eYNOCkc6CjXahiaUm_9mG_?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_warm_water",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
             delta_months=5,
             merge_files=True,            
@@ -490,6 +492,7 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1-vKF6YFk4T0xklvNszwxYD-nxvUsrhPR?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_space_cooling",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
             delta_months=5,
             merge_files=True,            
