@@ -134,8 +134,8 @@ if config["US"].get("retrieve_US_databundle", True):
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
                 filename=[
                     "use_es_capita.xlsx",
-                    "EIA930_2021_Jan_Jun_opt.csv",
-                    "EIA930_2021_Jul_Dec_opt.csv",
+                    "EIA930_2023_Jan_Jun_opt.csv",
+                    "EIA930_2023_Jul_Dec_opt.csv",
                     "HS861 2010-.xlsx",
                 ],
             ),

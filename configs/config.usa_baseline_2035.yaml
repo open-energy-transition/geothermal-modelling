@@ -11,6 +11,7 @@ logging:
 
 countries: ["US"]
 
+# Options specific to geothermal project
 US:
   retrieve_US_databundle: true # Exclusive for US data
   demand_year: 2023 # base demand year to be used for electricity demand modelling
