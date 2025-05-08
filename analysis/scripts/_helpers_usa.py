@@ -259,6 +259,7 @@ def get_component_list(energy_carrier):
         "biomass": ["links", "stores"],
         "gas": ["links", "stores"],
         "battery": ["links", "stores"],
+        "cooling": ["links"],
     }
     return energy_carrier_component_dict[energy_carrier]
 
@@ -290,7 +291,8 @@ def drop_carriers(df, key):
         "H2 pipeline",
         "H2 pipeline repurposed",
         "DC",
-        "B2B",
+        # "B2B",
+        # "urban central gas CHP",
     ]
     for car in drop_carriers_list:
         if car in df.index.tolist() and key == "rows":

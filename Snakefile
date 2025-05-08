@@ -11,7 +11,9 @@ sys.path.append("workflow/pypsa-earth/scripts")
 
 configfile: "workflow/pypsa-earth/config.default.yaml"
 configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
-configfile: "configs/config.usa_baseline.yaml"
+
+
+# configfile: "configs/config.usa_baseline.yaml"
 
 
 module pypsa_earth:
@@ -27,8 +29,9 @@ use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profil
 
 
 demand_year = config["US"]["demand_year"]
-run_name = config["run"]["name"]
-SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
+run = config["run"]
+run_name = run["name"]
+SECDIR = run["sector_name"] + "/" if run.get("sector_name") else ""
 
 
 localrules:
@@ -131,8 +134,8 @@ if config["US"].get("retrieve_US_databundle", True):
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
                 filename=[
                     "use_es_capita.xlsx",
-                    "EIA930_2021_Jan_Jun_opt.csv",
-                    "EIA930_2021_Jul_Dec_opt.csv",
+                    "EIA930_2023_Jan_Jun_opt.csv",
+                    "EIA930_2023_Jul_Dec_opt.csv",
                     "HS861 2010-.xlsx",
                 ],
             ),
@@ -581,6 +584,7 @@ rule plot_and_extract_summaries:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -589,8 +593,10 @@ rule plot_and_extract_summaries:
             **config["export"],
         ),
     output:
-        plot_path=directory(pathlib.Path("analysis", "plots", "summary_plots")),
-        output_path=directory(pathlib.Path("analysis", "outputs", "summary_outputs")),
+        plot_path=directory(pathlib.Path("analysis", "plots", SECDIR, "summary_plots")),
+        output_path=directory(
+            pathlib.Path("analysis", "outputs", SECDIR, "summary_outputs")
+        ),
     script:
         "analysis/scripts/plot_and_extract_summaries.py"
 
@@ -620,6 +626,7 @@ rule summary:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -627,4 +634,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path("analysis", "plots", "summary_plots"),
+        pathlib.Path("analysis", "plots", SECDIR, "summary_plots"),
