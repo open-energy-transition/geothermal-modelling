@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 import geopandas as gpd
 import pathlib
+import numpy as np
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -206,6 +207,12 @@ if __name__ == "__main__":
             bus=bus,
             bus_pumas=bus_pumas,
         )
+
+        # Comstock has 15 minutes granularity and restock 1 hour, 
+        # Grouping all comstock data to hourly granularity
+        comstock_pumas_heating_df = comstock_pumas_heating_df.groupby(np.arange(len(comstock_pumas_heating_df.index)) // 4).sum()
+        comstock_pumas_heating_df.index = resstock_pumas_cooling_df.index
+
         comstock_pumas_heating_list[i] = comstock_pumas_heating_df
 
         comstock_pumas_cooling_df = lookup_bus_pumas(
@@ -213,6 +220,11 @@ if __name__ == "__main__":
             bus=bus,
             bus_pumas=bus_pumas,
         )
+
+        # Comstock has 15 minutes granularity and restock 1 hour, 
+        # Grouping all comstock data to hourly granularity
+        comstock_pumas_cooling_df = comstock_pumas_cooling_df.groupby(np.arange(len(comstock_pumas_cooling_df.index)) // 4).sum()
+        comstock_pumas_cooling_df.index = resstock_pumas_cooling_df.index
 
         # for cooling we don't distinguish between the residential and services sector
         pumas_cooling_list[i] = resstock_pumas_cooling_df + comstock_pumas_cooling_df
@@ -307,6 +319,7 @@ if __name__ == "__main__":
         ],
         axis=1,
     )
+    breakpoint()
 
     if not DATA_IS_SCALED:
         # 2) cooling
