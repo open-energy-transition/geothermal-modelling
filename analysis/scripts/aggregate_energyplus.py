@@ -319,7 +319,6 @@ if __name__ == "__main__":
         ],
         axis=1,
     )
-    breakpoint()
 
     if not DATA_IS_SCALED:
         # 2) cooling
