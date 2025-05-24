@@ -12,6 +12,7 @@ sys.path.append("workflow/pypsa-earth/scripts")
 configfile: "workflow/pypsa-earth/config.default.yaml"
 configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
 configfile: "configs/config.usa_baseline.yaml"
+configfile: "/Users/ekaterina/Documents/_github_/pypsa-earth/config.yaml"
 
 
 module pypsa_earth:
@@ -23,7 +24,7 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles
+#use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles
 # A temporaly solution to switch-on custom inputs for heating/cooling
 USE_ENERGY_PLUS = True
 
@@ -876,105 +877,126 @@ rule aggregate_energyplus:
     input:
         # The clean ResStock & ComStock outputs are currently available via
         # `3. Project Delivery/2- Working Files/resstock | comstock`
+    # input:
+        # TODO `state_heat_dir & state_cool_dir should be adjusted`
+        # The clean ResStock outputs are currently available via
+        # `3. Project Delivery/2- Working Files/resstock/heating_cooling_summaries/`
+        # state_heat_dir=pathlib.Path(
+        #     "analysis",
+        #     "gdrive_data",
+        #     "data",
+        #     "EnergyPlus",
+        #     "heating_cooling_summaries",
+        #     "heating",
+        #     "2018",
+        # ),
+        # state_cool_dir=pathlib.Path(
+        #     "analysis",
+        #     "gdrive_data",
+        #     "data",
+        #     "EnergyPlus",
+        #     "heating_cooling_summaries",
+        #     "cooling",
+        #     "2018",
+        # ),
+        # shapes_path=pathlib.Path(
+        #     "workflow",
+        #     "pypsa-earth",
+        #     "resources",
+        #     run_name,
+        #     "bus_regions",
+        #     "regions_onshore_elec_s{simpl}_{clusters}.geojson",
+        # ),
+        # puma_path=pathlib.Path(
+        #     "analysis",
+        #     "gdrive_data",
+        #     "data",
+        #     "utilities",
+        #     "ipums_puma_2020",
+        #     "ipums_puma_2020.shp",
+        # ),
+        # states_path=pathlib.Path(
+        #     "analysis",
+        #     "gdrive_data",
+        #     "data",
+        #     "utilities",
+        #     "states_centroids_abbr.csv",
+        # ),
+    input:    
         state_resstock_heat_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            "/Users/ekaterina/Documents/_OET_/_geothermal_",
+            "data/_NREL_profiles_/EnergyPlus/clean data",
             "resstock",
-            "heating_cooling_summaries",
-            "heating",
-            "2018",
+            "heating_cooling_summaries/heating/2018",
         ),
         state_resstock_wrmwater_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
-            "resstock",
-            "heating_cooling_summaries",
-            "warm_water",
-            "2018",
+            "/Users/ekaterina/Documents/_OET_/_geothermal_",
+            "data/_NREL_profiles_/EnergyPlus/clean data",
+            # "resstock",
+            "comstock",
+            "heating_cooling_summaries/warm_water/2018",
         ),        
         state_resstock_cool_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            "/Users/ekaterina/Documents/_OET_/_geothermal_",
+            "data/_NREL_profiles_/EnergyPlus/clean data",
             "resstock",            
-            "heating_cooling_summaries",
-            "cooling",
-            "2018",
+            "heating_cooling_summaries/cooling/2018",
         ),
         state_comstock_heat_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
-            "comstock",
-            "heating_cooling_summaries",
-            "heating",
-            "2018",
+            "/Users/ekaterina/Documents/_OET_/_geothermal_",
+            "data/_NREL_profiles_/EnergyPlus/clean data",
+            # "comstock",
+            "resstock",
+            "heating_cooling_summaries/heating/2018",
         ),
         state_comstock_wrmwater_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
-            "comstock",
-            "heating_cooling_summaries",
-            "warm_water",
-            "2018",
-        ),        
+            "/Users/ekaterina/Documents/_OET_/_geothermal_",
+            "data/_NREL_profiles_/EnergyPlus/clean data",
+            "comstock",            
+            "heating_cooling_summaries/warm_water/2018",
+        ), 
         state_comstock_cool_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
-            "comstock",
-            "heating_cooling_summaries",
-            "cooling",
-            "2018",
-        ),
-        shapes_path=expand(
-            pathlib.Path(
-                "workflow",
-                "pypsa-earth",
-                "resources",
-                run_name,
-                "bus_regions",
-                "regions_onshore_elec_s{simpl}_{clusters}.geojson",
-                ),
-            **config["scenario"],
+            "/Users/ekaterina/Documents/_OET_/_geothermal_",
+            "data/_NREL_profiles_/EnergyPlus/clean data",
+            # "comstock",
+            "resstock",            
+            "heating_cooling_summaries/cooling/2018",
+        ),        
+        shapes_path=pathlib.Path(
+            "/Users/ekaterina/Documents/_github_/pypsa-earth",
+            "resources",
+            "US_sec",
+            "bus_regions",
+            # "regions_onshore_elec_s{simpl}_{clusters}.geojson",
+            "regions_onshore_elec_s_10.geojson",
         ),
         puma_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "utilities",
-            "ipums_puma_2010",
-            #r"ipums_puma_2010.shp",
+            "/Users/ekaterina/Documents/_github_/pypsa-earth",
+            "data/usa_resstock_puma/ipums_puma_2010",
+            "ipums_puma_2010.shp",
         ),
         states_path=pathlib.Path(
-            "data",
+            "/Users/ekaterina/Documents/_github_/pypsa-africa-aux/",
+            "_heating implementation_/_workflow_/data_inputs",
             "states_centroids_abbr.csv",
-        ),     
+        ),        
     output:
-        cool_demand_path=expand(
-            pathlib.Path(
-                SECDIR_path,
-                #"cooling_demand_DF_s_100_2050_ep.csv"
-                "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
-            ), ** config["scenario"]
-        ),
-        heat_demand_path=expand(
-            pathlib.Path(
-                SECDIR_path,
-                "demand",
-                "heat",
-                "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
-            ), ** config["scenario"]
-        ),
+        # cool_demand_path=pathlib.Path(
+        #     "workflow",
+        #     "pypsa-earth",
+        #     "resources",
+        #     SECDIR,
+        #     "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        # ),
+        # heat_demand_path=pathlib.Path(
+        #     "workflow",
+        #     "pypsa-earth",
+        #     "resources",
+        #     SECDIR,
+        #     "demand/heat/heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+        # )
+        heat_demand_path="/Users/ekaterina/Documents/_github_/pypsa-earth/resources/US_sec/demand/heat/heat_demand_AB_s_10_2030_ep.csv",
+        cool_demand_path="/Users/ekaterina/Documents/_github_/pypsa-earth/resources/US_sec/demand/heat/cooling_demand_AB_s_10_2030_ep.csv",
     script:
         "analysis/scripts/aggregate_energyplus.py"
 

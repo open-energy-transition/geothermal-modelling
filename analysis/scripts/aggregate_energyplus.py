@@ -272,7 +272,8 @@ if __name__ == "__main__":
     cooling_load_aggreg_df = pd.concat(pumas_cooling_list, axis=1)
 
     if SIMPLIFIED_WRMWATER:
-        # A temporally solution for warm water
+        # filtering by islands is not needed as it's still accounted
+        # in the heating load time-series
         resstock_wrmwater_load_aggreg_df = pd.DataFrame(
             index=resstock_heating_load_aggreg_df.index,
             data=[SHARE_WATER_SH_DEMAND * resstock_heating_load_aggreg_df.sum(axis=0)]
@@ -390,3 +391,13 @@ if __name__ == "__main__":
 
     heating_overall_load.to_csv(heat_demand_path)
     cooling_load_aggreg_df.to_csv(cool_demand_path)
+
+    print("The final loads")
+    print(resstock_heating_load_aggreg_df.sum().sum())
+    print(comstock_heating_load_aggreg_df.sum().sum())
+    print(cooling_load_aggreg_df.sum().sum())
+    print("Reference loads")
+    print(resstock_heating_ts_national_df.sum().sum())
+    print(comstock_heating_ts_national_df.sum().sum())
+    print(resstock_cooling_ts_national_df.sum().sum() + comstock_cooling_ts_national_df.sum().sum())
+    
