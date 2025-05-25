@@ -874,6 +874,8 @@ rule aggregate_energyplus:
     params: 
         snapshot_start=config["snapshots"]["start"]
     input:
+        thermal_proj_year=2035,
+        thermal_scenario="reference case",
         # The clean ResStock & ComStock outputs are currently available via
         # `3. Project Delivery/2- Working Files/resstock | comstock`
         state_resstock_heat_dir=pathlib.Path(

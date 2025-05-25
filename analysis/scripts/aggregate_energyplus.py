@@ -120,7 +120,10 @@ if __name__ == "__main__":
         from _helpers_usa import mock_snakemake
 
         snakemake = mock_snakemake("aggregate_energyplus")
-
+        
+    scenario = snakemake.params.thermal_scenario
+    heat_year = snakemake.params.thermal_proj_year
+    
     default_path = pathlib.Path(__file__).parent.parent.parent
 
     state_resstock_heat_dir = pathlib.Path(
