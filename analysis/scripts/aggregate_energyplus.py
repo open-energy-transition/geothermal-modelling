@@ -152,6 +152,7 @@ if __name__ == "__main__":
 
     heat_demand_path = pathlib.Path(default_path, snakemake.output.heat_demand_path[0])
     cool_demand_path = pathlib.Path(default_path, snakemake.output.cool_demand_path[0])
+    growth_rates_path = pathlib.Path(default_path, snakemake.input.growth_path)
 
     # gis information is processed for the model and PUMA regions
     # to match demand time series for the model bus regions
@@ -167,6 +168,8 @@ if __name__ == "__main__":
     puma_centroid_merged = gpd.sjoin_nearest(
         puma_centroid, model_gdf, how="left", distance_col="distances"
     )
+
+    growth_rates_df = pd.read_csv(growth_rates_path)
 
     # consolidating load profiles
     resstock_heating_ts_national_df = consolidate_pumas(
