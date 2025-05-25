@@ -114,6 +114,17 @@ def add_level_column(df, level_name="residential space"):
     df.columns = pd.MultiIndex.from_product([[level_name], list(df.columns)])
     return df
 
+# Implies that years are not duplicated each feature
+def extract_growth_rates(
+        scenario,
+        growth_df,
+        year,
+        feature
+    ):
+    growth_rate = (
+        growth_rates_df.query("(year == @year) & feature == @feature")[scenario]
+    )
+    return growth_rate
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
