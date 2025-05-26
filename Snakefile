@@ -981,7 +981,13 @@ rule aggregate_energyplus:
             "/Users/ekaterina/Documents/_github_/pypsa-africa-aux/",
             "_heating implementation_/_workflow_/data_inputs",
             "states_centroids_abbr.csv",
-        ),        
+        ),
+        growth_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "growth_rates_normal_data.csv"
+        )
     output:
         # cool_demand_path=pathlib.Path(
         #     "workflow",
