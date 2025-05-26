@@ -240,7 +240,22 @@ if __name__ == "__main__":
         )  
         comstock_cooling_ts_national_df = filter_by_island_pumas(
             puma_centroid_merged, data_df=comstock_cooling_ts_national_df
-        )    
+        )
+
+    # Scaling is needed to account for the effect of scenarios
+    # on the thermal load
+    resstock_heating_ts_national_df = (
+        (growth_rates_dict["residential heating"].iloc[0]) * resstock_heating_ts_national_df
+    )
+    resstock_cooling_ts_national_df = (
+        (growth_rates_dict["residential cooling"].iloc[0]) * resstock_cooling_ts_national_df
+    )
+    comstock_heating_ts_national_df = (
+        (growth_rates_dict["services heating"].iloc[0]) * comstock_heating_ts_national_df
+    )
+    comstock_cooling_ts_national_df = (
+        (growth_rates_dict["services cooling"].iloc[0]) * comstock_cooling_ts_national_df
+    )       
 
     # time-series for each PUMA should be aggregated ------------------------------
     load_buses = puma_centroid_merged.name.unique()
@@ -340,6 +355,16 @@ if __name__ == "__main__":
                 puma_centroid_merged, data_df=comstock_wrmwater_ts_national_df
             )        
 
+        # Scaling is needed to account for the effect of scenarios
+        # on the thermal load
+        resstock_wrmwater_ts_national_df = (
+            (growth_rates_dict["residential water"].iloc[0]) * resstock_wrmwater_ts_national_df
+        )
+        
+        comstock_wrmwater_ts_national_df = (
+            (growth_rates_dict["services water"].iloc[0]) * comstock_wrmwater_ts_national_df
+        )
+        
         resstock_pumas_wrmwater_list = [None] * len(load_buses)
         comstock_pumas_wrmwater_list = [None] * len(load_buses)
 
