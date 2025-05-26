@@ -123,7 +123,9 @@ def add_level_column(df, level_name="residential space"):
     df.columns = pd.MultiIndex.from_product([[level_name], list(df.columns)])
     return df
 
-# Implies that years are not duplicated each feature
+# Implies that years are not duplicated each feature 
+# & `scenario` column is present
+# TODO add sanity-checks
 def extract_growth_rates(
         scenario,
         growth_df,
