@@ -28,6 +28,15 @@ RESID_COOLING_TOTAL = 0.25 * 3.3e9  # [MWh]
 SERVICE_HEATING_TOTAL = 0.25 * 3.3e9  # [MWh]
 SERVICE_COOLING_TOTAL = 0.25 * 3.3e9  # [MWh]
 
+THERM_LOAD_SECTORS = [
+    "residential heating",
+    "services heating",
+    "residential water",
+    "services water",
+    "residential cooling",
+    "services cooling"
+]
+
 
 def get_state_id(
     state_fl_name,
