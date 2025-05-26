@@ -182,6 +182,15 @@ if __name__ == "__main__":
 
     growth_rates_df = pd.read_csv(growth_rates_path)
 
+    growth_rates_dict = {
+        x: extract_growth_rates(
+            scenario="reference case",
+            growth_df=growth_rates_df,
+            year=heat_year,
+            feature=x
+        ) for x in THERM_LOAD_SECTORS
+    }
+
     # consolidating load profiles
     resstock_heating_ts_national_df = consolidate_pumas(
         data_path=state_resstock_heat_dir,
