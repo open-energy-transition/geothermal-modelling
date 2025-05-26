@@ -228,7 +228,7 @@ if __name__ == "__main__":
     )
 
     if FILTER_ISLAND_PUMAS:
-        # assuming that islands are not nessecarily connected 
+        # assuming that islands are not necessarily connected 
         # with the mainland power system
         resstock_heating_ts_national_df = filter_by_island_pumas(
             puma_centroid_merged, data_df=resstock_heating_ts_national_df
