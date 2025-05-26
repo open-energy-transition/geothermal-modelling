@@ -960,7 +960,13 @@ rule aggregate_energyplus:
         states_path=pathlib.Path(
             "data",
             "states_centroids_abbr.csv",
-        ),     
+        ),
+        growth_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "growth_rates_normal_data.csv"
+        ),
     output:
         cool_demand_path=expand(
             pathlib.Path(
