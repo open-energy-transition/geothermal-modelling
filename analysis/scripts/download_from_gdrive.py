@@ -10,7 +10,7 @@ import pathlib
 import requests
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import shutil 
+import shutil
 import os
 
 if __name__ == "__main__":
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         pass
 
     if snakemake.params.merge_files:
-        extra_dir_path = pathlib.Path(download_path,"Set2")
+        extra_dir_path = pathlib.Path(download_path, "Set2")
         move_files = os.listdir(extra_dir_path)
 
         for file in move_files:

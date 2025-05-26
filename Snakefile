@@ -311,11 +311,18 @@ if config["US"].get("retrieve_US_databundle", True):
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
                 filename=[
                     "use_es_capita.xlsx",
-                    "EIA930_2021_Jan_Jun_opt.csv",
-                    "EIA930_2021_Jul_Dec_opt.csv",
                     "HS861 2010-.xlsx",
+                    "demand_data/table_10_EIA_utility_sales.xlsx",
+                    "demand_data/Electric_Retail_Service_Territories.geojson",
                 ],
+            ), 
+            expand(
+                pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","EIA930_{demand_year}_Jan_Jun_opt.csv"), **config["US"], 
+            ), 
+            expand(
+                pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","EIA930_{demand_year}_Jul_Dec_opt.csv"), **config["US"], 
             ),
+
             directory(
                 pathlib.Path(
                     "analysis",
@@ -338,28 +345,28 @@ if config["US"].get("retrieve_US_databundle", True):
             delta_months=5,
             merge_files=False,            
         output:
-            expand(
-                "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
-                filename=[
-                    "ipums_puma_2010.CPG",
-                    "ipums_puma_2010.sbn",
-                    "ipums_puma_2010.shp.xml",
-                    "ipums_puma_2010.dbf",
-                    "ipums_puma_2010.sbx",
-                    "ipums_puma_2010.shx",
-                    "ipums_puma_2010.prj",
-                    "ipums_puma_2010.shp",
-                ],
-            ),
-#            directory(
-#                pathlib.Path(
-#                    "analysis",
-#                    "gdrive_data",
-#                    "data",
-#                    "utilities",
-#                    "ipums_puma_2010",
-#                )
+#            expand(
+#                "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
+#                filename=[
+#                    "ipums_puma_2010.CPG",
+#                    "ipums_puma_2010.sbn",
+#                    "ipums_puma_2010.shp.xml",
+#                    "ipums_puma_2010.dbf",
+#                    "ipums_puma_2010.sbx",
+#                    "ipums_puma_2010.shx",
+#                    "ipums_puma_2010.prj",
+#                    "ipums_puma_2010.shp",
+#                ],
 #            ),
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "utilities",
+                    "ipums_puma_2010",
+                )
+            ),
         script:
             "analysis/scripts/download_from_gdrive.py"
 
@@ -467,6 +474,7 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1p24dXnYSi4eYNOCkc6CjXahiaUm_9mG_?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_warm_water",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
             delta_months=5,
             merge_files=True,            
@@ -491,6 +499,7 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1-vKF6YFk4T0xklvNszwxYD-nxvUsrhPR?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_space_cooling",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
             delta_months=5,
             merge_files=True,            
@@ -865,6 +874,8 @@ rule build_demand_profiles_from_eia:
 
 
 rule aggregate_energyplus:
+    params: 
+        snapshot_start=config["snapshots"]["start"]
     input:
         # The clean ResStock & ComStock outputs are currently available via
         # `3. Project Delivery/2- Working Files/resstock | comstock`
