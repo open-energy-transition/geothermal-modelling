@@ -34,7 +34,7 @@ THERM_LOAD_SECTORS = [
     "residential water",
     "services water",
     "residential cooling",
-    "services cooling"
+    "services cooling",
 ]
 
 
@@ -96,20 +96,25 @@ def consolidate_pumas(
 
     return data_ts_national_df
 
+
 def find_onshore_pumas(puma_centroid_merged):
     if "distances" in puma_centroid_merged.columns:
         i_pumas_inside_onshore = puma_centroid_merged.distances == 0
         codes_pumas_inside_onshore = (
-            puma_centroid_merged[i_pumas_inside_onshore].STATEFIP 
+            puma_centroid_merged[i_pumas_inside_onshore].STATEFIP
             + puma_centroid_merged[i_pumas_inside_onshore].PUMA
         )
     return codes_pumas_inside_onshore
 
+
 def filter_by_island_pumas(puma_centroid_merged, data_df):
     onshore_codes = find_onshore_pumas(puma_centroid_merged)
-    onshore_data_cols = resstock_heating_ts_national_df.columns.intersection(onshore_codes)
-    
+    onshore_data_cols = resstock_heating_ts_national_df.columns.intersection(
+        onshore_codes
+    )
+
     return data_df[onshore_data_cols]
+
 
 def lookup_bus_pumas(data_ts_national_df, bus, bus_pumas):
     # some PUMAs can be missed from the time-series data columns
@@ -123,29 +128,26 @@ def add_level_column(df, level_name="residential space"):
     df.columns = pd.MultiIndex.from_product([[level_name], list(df.columns)])
     return df
 
-# Implies that years are not duplicated each feature 
+
+# Implies that years are not duplicated each feature
 # & `scenario` column is present
 # TODO add sanity-checks
-def extract_growth_rates(
-        scenario,
-        growth_df,
-        year,
-        feature
-    ):
-    growth_rate = (
-        growth_rates_df.query("(year == @year) & feature == @feature")[scenario]
-    )
+def extract_growth_rates(scenario, growth_df, year, feature):
+    growth_rate = growth_rates_df.query("(year == @year) & feature == @feature")[
+        scenario
+    ]
     return growth_rate
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
         from _helpers_usa import mock_snakemake
 
         snakemake = mock_snakemake("aggregate_energyplus")
-        
+
     scenario = snakemake.params.thermal_scenario
     heat_year = snakemake.params.thermal_proj_year
-    
+
     default_path = pathlib.Path(__file__).parent.parent.parent
 
     state_resstock_heat_dir = pathlib.Path(
@@ -198,8 +200,9 @@ if __name__ == "__main__":
             scenario="reference case",
             growth_df=growth_rates_df,
             year=heat_year,
-            feature=x
-        ) for x in THERM_LOAD_SECTORS
+            feature=x,
+        )
+        for x in THERM_LOAD_SECTORS
     }
 
     # consolidating load profiles
@@ -228,18 +231,18 @@ if __name__ == "__main__":
     )
 
     if FILTER_ISLAND_PUMAS:
-        # assuming that islands are not nessecarily connected 
+        # assuming that islands are not nessecarily connected
         # with the mainland power system
         resstock_heating_ts_national_df = filter_by_island_pumas(
             puma_centroid_merged, data_df=resstock_heating_ts_national_df
-        ) 
+        )
         resstock_cooling_ts_national_df = filter_by_island_pumas(
             puma_centroid_merged, data_df=resstock_cooling_ts_national_df
         )
 
         comstock_heating_ts_national_df = filter_by_island_pumas(
             puma_centroid_merged, data_df=comstock_heating_ts_national_df
-        )  
+        )
         comstock_cooling_ts_national_df = filter_by_island_pumas(
             puma_centroid_merged, data_df=comstock_cooling_ts_national_df
         )
@@ -247,17 +250,21 @@ if __name__ == "__main__":
     # Scaling is needed to account for the effect of scenarios
     # on the thermal load
     resstock_heating_ts_national_df = (
-        (growth_rates_dict["residential heating"].iloc[0]) * resstock_heating_ts_national_df
+        (growth_rates_dict["residential heating"].iloc[0])
+        * resstock_heating_ts_national_df
     )
     resstock_cooling_ts_national_df = (
-        (growth_rates_dict["residential cooling"].iloc[0]) * resstock_cooling_ts_national_df
+        (growth_rates_dict["residential cooling"].iloc[0])
+        * resstock_cooling_ts_national_df
     )
     comstock_heating_ts_national_df = (
-        (growth_rates_dict["services heating"].iloc[0]) * comstock_heating_ts_national_df
+        (growth_rates_dict["services heating"].iloc[0])
+        * comstock_heating_ts_national_df
     )
     comstock_cooling_ts_national_df = (
-        (growth_rates_dict["services cooling"].iloc[0]) * comstock_cooling_ts_national_df
-    )       
+        (growth_rates_dict["services cooling"].iloc[0])
+        * comstock_cooling_ts_national_df
+    )
 
     # time-series for each PUMA should be aggregated ------------------------------
     load_buses = puma_centroid_merged.name.unique()
@@ -349,25 +356,27 @@ if __name__ == "__main__":
         )
 
         if FILTER_ISLAND_PUMAS:
-            # Assuming that islands are not nessecarily connected 
+            # Assuming that islands are not nessecarily connected
             # with the mainland power system
             resstock_wrmwater_ts_national_df = filter_by_island_pumas(
                 puma_centroid_merged, data_df=resstock_wrmwater_ts_national_df
             )
             comstock_wrmwater_ts_national_df = filter_by_island_pumas(
                 puma_centroid_merged, data_df=comstock_wrmwater_ts_national_df
-            )        
+            )
 
         # Scaling is needed to account for the effect of scenarios
         # on the thermal load
         resstock_wrmwater_ts_national_df = (
-            (growth_rates_dict["residential water"].iloc[0]) * resstock_wrmwater_ts_national_df
+            (growth_rates_dict["residential water"].iloc[0])
+            * resstock_wrmwater_ts_national_df
         )
-        
+
         comstock_wrmwater_ts_national_df = (
-            (growth_rates_dict["services water"].iloc[0]) * comstock_wrmwater_ts_national_df
+            (growth_rates_dict["services water"].iloc[0])
+            * comstock_wrmwater_ts_national_df
         )
-        
+
         resstock_pumas_wrmwater_list = [None] * len(load_buses)
         comstock_pumas_wrmwater_list = [None] * len(load_buses)
 
@@ -461,5 +470,7 @@ if __name__ == "__main__":
     print("Reference loads")
     print(resstock_heating_ts_national_df.sum().sum())
     print(comstock_heating_ts_national_df.sum().sum())
-    print(resstock_cooling_ts_national_df.sum().sum() + comstock_cooling_ts_national_df.sum().sum())
-    
+    print(
+        resstock_cooling_ts_national_df.sum().sum()
+        + comstock_cooling_ts_national_df.sum().sum()
+    )
