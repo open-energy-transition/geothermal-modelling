@@ -26,12 +26,188 @@ module pypsa_earth:
 
 
 use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles
+# A temporaly solution to switch-on custom inputs for heating/cooling
+USE_ENERGY_PLUS = True
 
 
 demand_year = config["US"]["demand_year"]
 run = config["run"]
 run_name = run["name"]
 SECDIR = run["sector_name"] + "/" if run.get("sector_name") else ""
+
+RDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "resources",
+    run_name,
+
+)
+SECDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "resources",
+    SECDIR,
+
+)
+RESDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "results",
+    SECDIR,
+)
+DATDIR_path = pathlib.Path(
+    "workflow",
+    "pypsa-earth",
+    "data",
+)
+
+if USE_ENERGY_PLUS:
+    use rule prepare_sector_network from pypsa_earth as prepare_sector_network with:
+        input:
+            network=pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "results",
+                SECDIR,
+                "prenetworks",
+                "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_presec.nc",
+            ),
+            costs=pathlib.Path(
+                RDIR_path,
+                "costs_{planning_horizons}.csv"
+            ),
+            cooling_costs=pathlib.Path(
+                DATDIR_path,
+                "costs_cooling.csv"
+            ),
+            h2_cavern=pathlib.Path(
+                DATDIR_path,
+                "hydrogen_salt_cavern_potentials.csv",
+            ),
+            nodal_energy_totals=pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "nodal_energy_heat_totals_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            ),
+            transport=pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "transport_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            ),
+            avail_profile=pathlib.Path(
+                SECDIR_path,
+                "pattern_profiles",
+                "avail_profile_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            ),
+            dsm_profile=pathlib.Path(
+                SECDIR_path,
+                "pattern_profiles",
+                "dsm_profile_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            ),
+            nodal_transport_data=pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "nodal_transport_data_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+            ),
+            overrides=pathlib.Path(DATDIR_path, "override_component_attrs"),
+            clustered_pop_layout = pathlib.Path(
+                SECDIR_path,
+                "population_shares",
+                "pop_layout_elec_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            industrial_demand = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
+            ),
+            energy_totals = pathlib.Path(
+                SECDIR_path,
+                "energy_totals_{demand}_{planning_horizons}.csv"
+            ),
+            airports = pathlib.Path(
+                SECDIR_path,
+                "airports.csv"
+            ),
+            ports = pathlib.Path(
+                SECDIR_path,
+                "ports.csv"
+            ),
+            heat_demand=pathlib.Path(
+                SECDIR_path,
+                "demand", 
+                "heat",    
+                "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+                # "heat_demand_AB_s_10_2030_ep.csv",
+            ),
+            cooling_demand=pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+                # "cooling_demand_AB_s_10_2030_ep.csv",
+            ),        
+            ashp_cop = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "ashp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            gshp_cop = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "gshp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            solar_thermal = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "solar_thermal_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            cop_hp_cooling_total = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "cop_hp_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            cop_ac_cooling_total = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "cop_ac_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            capft_abch_cooling_total = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "capft_abch_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            district_heat_share = pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "district_heat_share_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            biomass_transport_costs = pathlib.Path(
+                DATDIR_path,
+                "temp_hard_coded",
+                "biomass_transport_costs.csv"
+            ),
+            shapes_path = pathlib.Path(
+                RDIR_path,
+                "bus_regions",
+                "regions_onshore_elec_s{simpl}_{clusters}.geojson"
+            ),
+            pipelines = (
+                pathlib.Path("data", "custom", "pipelines.csv")
+                if config["custom_data"]["gas_network"]
+                else pathlib.Path(
+                    SECDIR_path,
+                    "gas_networks",
+                    "gas_network_elec_s{simpl}_{clusters}.csv"
+                )
+            ),
 
 
 localrules:
@@ -79,15 +255,16 @@ rule build_custom_powerplants:
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
-
 if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_data:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
             cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename="geothermal_data",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
+            merge_files=False,            
         output:
             expand(
                 "analysis/gdrive_data/data/powerplant_data/{filename}",
@@ -134,11 +311,18 @@ if config["US"].get("retrieve_US_databundle", True):
                 "analysis/gdrive_data/data/electricity_demand_data/{filename}",
                 filename=[
                     "use_es_capita.xlsx",
-                    "EIA930_2023_Jan_Jun_opt.csv",
-                    "EIA930_2023_Jul_Dec_opt.csv",
                     "HS861 2010-.xlsx",
+                    "demand_data/table_10_EIA_utility_sales.xlsx",
+                    "demand_data/Electric_Retail_Service_Territories.geojson",
                 ],
+            ), 
+            expand(
+                pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","EIA930_{demand_year}_Jan_Jun_opt.csv"), **config["US"], 
+            ), 
+            expand(
+                pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","EIA930_{demand_year}_Jul_Dec_opt.csv"), **config["US"], 
             ),
+
             directory(
                 pathlib.Path(
                     "analysis",
@@ -150,6 +334,191 @@ if config["US"].get("retrieve_US_databundle", True):
             ),
         script:
             "analysis/scripts/download_from_gdrive.py"
+
+    rule retrieve_pumas:
+        params:
+            #gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
+            gdrive_url="https://drive.google.com/drive/folders/1A8rA2p1a1cv1poPYlBRvAuLeYxENA-KK?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "pumas",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "utilities","ipums_puma_2010"),
+            delta_months=5,
+            merge_files=False,            
+        output:
+#            expand(
+#                "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
+#                filename=[
+#                    "ipums_puma_2010.CPG",
+#                    "ipums_puma_2010.sbn",
+#                    "ipums_puma_2010.shp.xml",
+#                    "ipums_puma_2010.dbf",
+#                    "ipums_puma_2010.sbx",
+#                    "ipums_puma_2010.shx",
+#                    "ipums_puma_2010.prj",
+#                    "ipums_puma_2010.shp",
+#                ],
+#            ),
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "utilities",
+                    "ipums_puma_2010",
+                )
+            ),
+        script:
+            "analysis/scripts/download_from_gdrive.py"
+
+    rule retrieve_resstock_space_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1AMsr9bs9klMVdFYJDhevSW6M9ezLc_Gr?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "restock_space_heating",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus","resstock","heating_cooling_summaries","heating","2018"),
+            delta_months=5,
+            merge_files=True,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "heating",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"
+    
+    rule retrieve_resstock_warmwater_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1Xu3774JF8MeZPuNjzGo_zxXhiZSSeQkG?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "restock_warmwater_heating",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","warm_water","2018"),
+            delta_months=5,
+            merge_files=True,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "warm_water",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"            
+
+    rule retrieve_resstock_space_cooling:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1XR6oGSi98y08nwWPyninnh0MNVwTM4GJ?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "restock_space_cooling",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","cooling","2018"),
+            delta_months=5,
+            merge_files=True,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "resstock",
+                    "heating_cooling_summaries",
+                    "cooling",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"            
+
+    rule retrieve_comstock_space_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/13KzCy6on4ZQt9mkNX0s1wJC2fGIon2mY?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_space_heating",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","heating","2018"),
+            delta_months=5,
+            merge_files=True,
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "comstock",
+                    "heating_cooling_summaries",
+                    "heating",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"
+    
+    rule retrieve_comstock_warmwater_heating:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1p24dXnYSi4eYNOCkc6CjXahiaUm_9mG_?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_warm_water",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
+            delta_months=5,
+            merge_files=True,            
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "comstock",
+                    "heating_cooling_summaries",
+                    "warm_water",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"         
+
+    rule retrieve_comstock_space_cooling:
+        params:
+            gdrive_url="https://drive.google.com/drive/folders/1-vKF6YFk4T0xklvNszwxYD-nxvUsrhPR?usp=drive_link",
+            cookies_path=pathlib.Path(".cache", "gdown"),
+            cookie_filename = "comstock_space_cooling",
+            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
+            delta_months=5,
+            merge_files=True,            
+        # TODO check that recursive retrieval works    
+        output:
+            directory(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "EnergyPlus",
+                    "comstock",
+                    "heating_cooling_summaries",
+                    "cooling",
+                    "2018",                     
+                )
+            ),         
+        script:
+            "analysis/scripts/download_from_gdrive.py"            
 
 
 if config["US"].get("network_comparison", True):
@@ -502,6 +871,115 @@ rule build_demand_profiles_from_eia:
         ),
     script:
         "analysis/scripts/build_demand_profiles_from_eia.py"
+
+
+rule aggregate_energyplus:
+    params: 
+        snapshot_start=config["snapshots"]["start"]
+    input:
+        # The clean ResStock & ComStock outputs are currently available via
+        # `3. Project Delivery/2- Working Files/resstock | comstock`
+        state_resstock_heat_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            "resstock",
+            "heating_cooling_summaries",
+            "heating",
+            "2018",
+        ),
+        state_resstock_wrmwater_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            "resstock",
+            "heating_cooling_summaries",
+            "warm_water",
+            "2018",
+        ),        
+        state_resstock_cool_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            "resstock",            
+            "heating_cooling_summaries",
+            "cooling",
+            "2018",
+        ),
+        state_comstock_heat_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            "comstock",
+            "heating_cooling_summaries",
+            "heating",
+            "2018",
+        ),
+        state_comstock_wrmwater_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            "comstock",
+            "heating_cooling_summaries",
+            "warm_water",
+            "2018",
+        ),        
+        state_comstock_cool_dir=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "EnergyPlus",
+            "comstock",
+            "heating_cooling_summaries",
+            "cooling",
+            "2018",
+        ),
+        shapes_path=expand(
+            pathlib.Path(
+                "workflow",
+                "pypsa-earth",
+                "resources",
+                run_name,
+                "bus_regions",
+                "regions_onshore_elec_s{simpl}_{clusters}.geojson",
+                ),
+            **config["scenario"],
+        ),
+        puma_path=pathlib.Path(
+            "analysis",
+            "gdrive_data",
+            "data",
+            "utilities",
+            "ipums_puma_2010",
+            #r"ipums_puma_2010.shp",
+        ),
+        states_path=pathlib.Path(
+            "data",
+            "states_centroids_abbr.csv",
+        ),     
+    output:
+        cool_demand_path=expand(
+            pathlib.Path(
+                SECDIR_path,
+                #"cooling_demand_DF_s_100_2050_ep.csv"
+                "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+            ), ** config["scenario"]
+        ),
+        heat_demand_path=expand(
+            pathlib.Path(
+                SECDIR_path,
+                "demand",
+                "heat",
+                "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
+            ), ** config["scenario"]
+        ),
+    script:
+        "analysis/scripts/aggregate_energyplus.py"
 
 
 rule modify_energy_totals:

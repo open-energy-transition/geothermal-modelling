@@ -10,6 +10,8 @@ import pathlib
 import requests
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import shutil
+import os
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -20,6 +22,7 @@ if __name__ == "__main__":
     url = snakemake.params["gdrive_url"]
     default_path = pathlib.Path(__file__).parent.parent.parent
     cookies_path = pathlib.Path(pathlib.Path.home(), snakemake.params["cookies_path"])
+    cookie_filename = snakemake.params["cookie_filename"]
     pathlib.Path(cookies_path).mkdir(parents=True, exist_ok=True)
     cookies_file_path = pathlib.Path(cookies_path, "cookies.txt")
     cookies_file_path.touch(exist_ok=True)
@@ -76,3 +79,12 @@ if __name__ == "__main__":
     except Exception as e:
         print("Error", e)
         pass
+
+    if snakemake.params.merge_files:
+        extra_dir_path = pathlib.Path(download_path, "Set2")
+        move_files = os.listdir(extra_dir_path)
+
+        for file in move_files:
+            shutil.move(pathlib.Path(extra_dir_path, file), download_path)
+
+        os.rmdir(extra_dir_path)
