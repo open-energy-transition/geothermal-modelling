@@ -445,6 +445,7 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
     """
 
     installed_capacities = get_capacities(pypsa_network, energy_carriers_array)
+    breakpoint()
 
     fig = px.bar(
         installed_capacities,
@@ -490,6 +491,24 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
         yref="paper",
     )
     fig.write_image(f"{plot_base_path}/installed_capacity_facet_energy_carriers_GW.png")
+
+    for car in installed_capacities.carrier.unique():
+        cap = installed_capacities.query("carrier == @car")
+        fig = px.bar(
+            cap,
+            y="p_nom_opt",
+            color="carrier",
+            barmode="stack",
+            text_auto="0.2f",
+            width=1200,
+            height=800,
+        )
+        fig.update_layout(
+            uniformtext_minsize=5,
+            uniformtext_mode="show",
+        )
+        fig.update_traces(textposition="outside")
+        fig.write_image(f"{plot_base_path}/installed_capacity_{car}_GW.png")
 
     return installed_capacities
 
@@ -555,6 +574,24 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
     fig.write_image(
         f"{plot_base_path}/energy_generation_facet_energy_carriers_TWh.png", scale=3
     )
+
+    for car in energy_generations.carrier.unique():
+        gen = energy_generations.query("carrier == @car")
+        fig = px.bar(
+            gen,
+            y="Energy_TWh",
+            color="carrier",
+            barmode="stack",
+            text_auto="0.2f",
+            width=1200,
+            height=800,
+        )
+        fig.update_layout(
+            uniformtext_minsize=5,
+            uniformtext_mode="show",
+        )
+        fig.update_traces(textposition="outside")
+        fig.write_image(f"{plot_base_path}/energy_gen_{car}_TWh.png")
 
     return energy_generations
 
@@ -644,7 +681,7 @@ def energy_balance_plot(plot_base_path, output_path, energy_carriers_array):
                 name=f"{energy_carriers} demand",
             )
         )
-        fig.update_layout(yaxis_title="Energy in TWh", title=energy_carriers)
+        fig.update_layout(yaxis_title="Power (GW)", title=energy_carriers)
         fig.update_layout(
             uniformtext_minsize=5,
             # uniformtext_mode="show",
