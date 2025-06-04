@@ -62,6 +62,12 @@ DATDIR_path = pathlib.Path(
     "data",
 )
 
+ENEPL_path = pathlib.Path("analysis",
+    "gdrive_data",
+    "data",
+    "EnergyPlus",
+)
+
 if USE_ENERGY_PLUS:
     use rule prepare_sector_network from pypsa_earth as prepare_sector_network with:
         input:
@@ -376,17 +382,14 @@ if config["US"].get("retrieve_US_databundle", True):
             gdrive_url="https://drive.google.com/drive/folders/1AMsr9bs9klMVdFYJDhevSW6M9ezLc_Gr?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_space_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus","resstock","heating_cooling_summaries","heating","2018"),
+            output_directory=pathlib.Path(ENEPL_path,"resstock","heating_cooling_summaries","heating","2018"),
             delta_months=5,
             merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
                 pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "EnergyPlus",
+                    ENEPL_path,
                     "resstock",
                     "heating_cooling_summaries",
                     "heating",
@@ -401,17 +404,14 @@ if config["US"].get("retrieve_US_databundle", True):
             gdrive_url="https://drive.google.com/drive/folders/1Xu3774JF8MeZPuNjzGo_zxXhiZSSeQkG?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_warmwater_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","warm_water","2018"),
+            output_directory=pathlib.Path(ENEPL_path,"resstock","heating_cooling_summaries","warm_water","2018"),
             delta_months=5,
             merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
                 pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "EnergyPlus",
+                    ENEPL_path,
                     "resstock",
                     "heating_cooling_summaries",
                     "warm_water",
@@ -426,17 +426,14 @@ if config["US"].get("retrieve_US_databundle", True):
             gdrive_url="https://drive.google.com/drive/folders/1XR6oGSi98y08nwWPyninnh0MNVwTM4GJ?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_space_cooling",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","cooling","2018"),
+            output_directory=pathlib.Path(ENEPL_path,"resstock","heating_cooling_summaries","cooling","2018"),
             delta_months=5,
             merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
                 pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "EnergyPlus",
+                    ENEPL_path,
                     "resstock",
                     "heating_cooling_summaries",
                     "cooling",
@@ -451,17 +448,14 @@ if config["US"].get("retrieve_US_databundle", True):
             gdrive_url="https://drive.google.com/drive/folders/13KzCy6on4ZQt9mkNX0s1wJC2fGIon2mY?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_space_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","heating","2018"),
+            output_directory=pathlib.Path(ENEPL_path,"comstock","heating_cooling_summaries","heating","2018"),
             delta_months=5,
             merge_files=True,
         # TODO check that recursive retrieval works    
         output:
             directory(
                 pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "EnergyPlus",
+                    ENEPL_path,
                     "comstock",
                     "heating_cooling_summaries",
                     "heating",
@@ -476,17 +470,14 @@ if config["US"].get("retrieve_US_databundle", True):
             gdrive_url="https://drive.google.com/drive/folders/1p24dXnYSi4eYNOCkc6CjXahiaUm_9mG_?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_warm_water",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
+            output_directory=pathlib.Path(ENEPL_path,"comstock","heating_cooling_summaries","warm_water","2018"),
             delta_months=5,
             merge_files=True,            
         # TODO check that recursive retrieval works    
         output:
             directory(
                 pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "EnergyPlus",
+                    ENEPL_path,
                     "comstock",
                     "heating_cooling_summaries",
                     "warm_water",
@@ -501,17 +492,14 @@ if config["US"].get("retrieve_US_databundle", True):
             gdrive_url="https://drive.google.com/drive/folders/1-vKF6YFk4T0xklvNszwxYD-nxvUsrhPR?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_space_cooling",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
+            output_directory=pathlib.Path(ENEPL_path,"comstock","heating_cooling_summaries","cooling","2018"),
             delta_months=5,
             merge_files=True,            
         # TODO check that recursive retrieval works    
         output:
             directory(
                 pathlib.Path(
-                    "analysis",
-                    "gdrive_data",
-                    "data",
-                    "EnergyPlus",
+                    ENEPL_path,
                     "comstock",
                     "heating_cooling_summaries",
                     "cooling",
@@ -881,60 +869,42 @@ rule aggregate_energyplus:
         # The clean ResStock & ComStock outputs are currently available via
         # `3. Project Delivery/2- Working Files/resstock | comstock`
         state_resstock_heat_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            ENEPL_path,
             "resstock",
             "heating_cooling_summaries",
             "heating",
             "2018",
         ),
         state_resstock_wrmwater_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            ENEPL_path,
             "resstock",
             "heating_cooling_summaries",
             "warm_water",
             "2018",
         ),        
         state_resstock_cool_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            ENEPL_path,
             "resstock",            
             "heating_cooling_summaries",
             "cooling",
             "2018",
         ),
         state_comstock_heat_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            ENEPL_path,
             "comstock",
             "heating_cooling_summaries",
             "heating",
             "2018",
         ),
         state_comstock_wrmwater_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            ENEPL_path,
             "comstock",
             "heating_cooling_summaries",
             "warm_water",
             "2018",
         ),        
         state_comstock_cool_dir=pathlib.Path(
-            "analysis",
-            "gdrive_data",
-            "data",
-            "EnergyPlus",
+            ENEPL_path,
             "comstock",
             "heating_cooling_summaries",
             "cooling",
