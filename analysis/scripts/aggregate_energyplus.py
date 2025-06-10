@@ -65,9 +65,10 @@ def consolidate_pumas(
     data_ts_national_list = [None] * len(data_state_fls_clean)
 
     logger.info(
-        "Build a consolidated national-wide load dataframe for " +
-        str(data_path.parents[0].stem) + " " +
-        str(data_path.parents[2].stem)
+        "Build a consolidated national-wide load dataframe for "
+        + str(data_path.parents[0].stem)
+        + " "
+        + str(data_path.parents[2].stem)
     )
     for i, st_fl_path in enumerate(data_state_fls_clean):
         logger.info("Consolidation for " + str(st_fl_path.name))
@@ -81,11 +82,12 @@ def consolidate_pumas(
             state_heat_df.columns[~state_heat_df.columns.str.contains("Unnamed")]
         ]
 
-        if ( state_heat_df.index[len(state_heat_df.index) - 1] != "2019-01-01 00:00:00" ):
+        if state_heat_df.index[len(state_heat_df.index) - 1] != "2019-01-01 00:00:00":
             logger.warning(
-                "The timeseries incomplete for " + 
-                str(st_fl_path.parents[3].stem) + " "  + 
-                str(st_fl_path.name)
+                "The timeseries incomplete for "
+                + str(st_fl_path.parents[3].stem)
+                + " "
+                + str(st_fl_path.name)
             )
 
         # the column names should correspond to GEOID to make further lookup work
