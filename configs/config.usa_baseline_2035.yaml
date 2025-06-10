@@ -90,7 +90,7 @@ build_shape_options:
 
 
 build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetMap
-  group_tolerance_buses: 5000  # [m] (default 5000) Tolerance in meters of the close buses to merge
+  group_tolerance_buses: 10000  # [m] (default 5000) Tolerance in meters of the close buses to merge
 
 electricity:
   extendable_carriers:
@@ -99,13 +99,28 @@ electricity:
     Store: [battery, H2]
     Link: []  # H2 pipeline
 
-  powerplants_filter: (DateOut >= 2035 or DateOut != DateOut)
+  powerplants_filter: (DateOut >= 2035 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1975)
   custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
-  conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
+  conventional_carriers: [nuclear, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
 
 renewable:
+  onwind:
+    capacity_per_sqkm: 5.9 # conservative, ScholzPhd Tab 4.3.1: 10MW/km^2
+    # correction_factor: 0.93
+  offwind-ac:
+    capacity_per_sqkm: 4
+
+  offwind-dc:
+    capacity_per_sqkm: 4
+
+  solar:
+    capacity_per_sqkm: 87 # From 1.7 to 4.6 addresses issue #361
+
+  csp:
+    csp_model: simple # simple or advanced
+    
   enhanced_geothermal:
     power_heat_ratio_steps: 3
     lifetime: 25
@@ -115,6 +130,7 @@ renewable:
     piping_cost: 1_300_000 # $/km
     industrial_heating_n_cost_steps: 2
     heat_distribution_network_efficiency: 0.9
+    supply_curve_steps: 10
 
 # TODO: Needs to be adjusted for Africa.
 # Costs Configuration (Do not remove, needed for Sphynx documentation).
@@ -122,9 +138,30 @@ costs:
   year: 2035
   version: v0.11.0
   financial_case: "Market"
-  scenario: "Moderate"
+  scenario: "Advanced"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
+  fill_values:
+    FOM: 0
+    VOM: 0
+    efficiency: 1
+    fuel: 0
+    investment: 0
+    lifetime: 25
+    CO2 intensity: 0
+    discount rate: 0.07
+  marginal_cost: # EUR/MWh
+    #solar: 0.01
+      #onwind: 0.015
+      #offwind: 0.015
+      #hydro: 0.
+      H2: 1000.
+      #electrolysis: 0.
+      fuel cell: 1000.
+      #battery: 0.
+    #battery inverter: 0.
+  emission_prices: # in currency per tonne emission, only used with the option Ep
+    co2: 0.
 
 
 # ------------------- SECTOR OPTIONS -------------------
@@ -137,7 +174,6 @@ existing_capacities:
   conventional_carriers:
   - lignite
   - coal
-  - oil
   - uranium
 
 sector:
@@ -170,6 +206,10 @@ sector:
   keep_existing_capacities: true
 
 solving:
+  options:
+    load_shedding: true
+    #nhours: 10
+    
   solver:
     name: gurobi
     threads: 8
