@@ -120,7 +120,6 @@ renewable:
 
   csp:
     csp_model: simple # simple or advanced
-    
   enhanced_geothermal:
     power_heat_ratio_steps: 3
     lifetime: 25
@@ -155,9 +154,9 @@ costs:
       #onwind: 0.015
       #offwind: 0.015
       #hydro: 0.
-      H2: 1000.
+    H2: 1000.
       #electrolysis: 0.
-      fuel cell: 1000.
+    fuel cell: 1000.
       #battery: 0.
     #battery inverter: 0.
   emission_prices: # in currency per tonne emission, only used with the option Ep
@@ -209,7 +208,6 @@ solving:
   options:
     load_shedding: true
     #nhours: 10
-    
   solver:
     name: gurobi
     threads: 8

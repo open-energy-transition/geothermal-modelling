@@ -376,10 +376,15 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
             reqd_carriers = np.append(reqd_carriers, charger_carriers)
 
             generators_ts = get_component(pypsa_network, comp + "_t")
-            
+
             for car in reqd_carriers:
                 if "degC" in car:
-                    generations = generators_ts.p1.filter(like=car).sum(axis=1).div(1e3) + generators_ts.p2.filter(like=car).sum(axis=1).div(1e3) + generators_ts.p3.filter(like=car).sum(axis=1).div(1e3) + generators_ts.p4.filter(like=car).sum(axis=1).div(1e3) #chk if p4 required
+                    generations = (
+                        generators_ts.p1.filter(like=car).sum(axis=1).div(1e3)
+                        + generators_ts.p2.filter(like=car).sum(axis=1).div(1e3)
+                        + generators_ts.p3.filter(like=car).sum(axis=1).div(1e3)
+                        + generators_ts.p4.filter(like=car).sum(axis=1).div(1e3)
+                    )  # chk if p4 required
                     generations *= -1
                     generations.name = car
                     generations = pd.DataFrame(generations)

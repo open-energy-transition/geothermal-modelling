@@ -198,7 +198,7 @@ if __name__ == "__main__":
             bus=bus,
             bus_pumas=bus_pumas,
         )
-        
+
         # comstock ------------------------------------------------------------
         comstock_pumas_heating_df = lookup_bus_pumas(
             data_ts_national_df=comstock_heating_ts_national_df,
@@ -286,7 +286,6 @@ if __name__ == "__main__":
         comstock_wrmwater_load_aggreg_df = pd.concat(
             comstock_pumas_wrmwater_list, axis=1
         )
-        
 
     if not DATA_IS_SCALED:
         # Scaling is needed to be consistent with the overall energy balanse
@@ -312,11 +311,15 @@ if __name__ == "__main__":
         df=resstock_wrmwater_load_aggreg_df, level_name="residential water"
     )
     add_level_column(df=comstock_wrmwater_load_aggreg_df, level_name="services water")
-    
-    resstock_wrmwater_load_aggreg_df = resstock_wrmwater_load_aggreg_df.groupby(np.arange(len(resstock_wrmwater_load_aggreg_df.index)) // 4).sum()
+
+    resstock_wrmwater_load_aggreg_df = resstock_wrmwater_load_aggreg_df.groupby(
+        np.arange(len(resstock_wrmwater_load_aggreg_df.index)) // 4
+    ).sum()
     resstock_wrmwater_load_aggreg_df.index = resstock_heating_load_aggreg_df.index
 
-    comstock_wrmwater_load_aggreg_df = comstock_wrmwater_load_aggreg_df.groupby(np.arange(len(comstock_wrmwater_load_aggreg_df.index)) // 4).sum()
+    comstock_wrmwater_load_aggreg_df = comstock_wrmwater_load_aggreg_df.groupby(
+        np.arange(len(comstock_wrmwater_load_aggreg_df.index)) // 4
+    ).sum()
     comstock_wrmwater_load_aggreg_df.index = resstock_heating_load_aggreg_df.index
 
     heating_overall_load = pd.concat(
