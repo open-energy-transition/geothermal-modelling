@@ -75,6 +75,11 @@ def consolidate_pumas(
             pathlib.Path(st_fl_path),
         ).set_index("time")
 
+        # There may be `Unnamed` columns in ComStock data
+        # due to some time-processing procedures
+        state_heat_df = state_heat_df[
+            state_heat_df.columns[~state_heat_df.columns.str.contains("Unnamed")]
+        ]
         # the column names should correspond to GEOID to make further lookup work
         state_geoid = get_state_id(
             st_fl_path.name,
