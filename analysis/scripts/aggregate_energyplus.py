@@ -64,7 +64,11 @@ def consolidate_pumas(
     # a single time-series dataframe is needed to look-up for each PUMA -----------
     data_ts_national_list = [None] * len(data_state_fls_clean)
 
-    logger.info("Build a consolidated national-wide load dataframe")
+    logger.info(
+        "Build a consolidated national-wide load dataframe for " +
+        str(data_path.parents[0].stem) + " " +
+        str(data_path.parents[2].stem)
+    )
     for i, st_fl_path in enumerate(data_state_fls_clean):
         logger.info("Consolidation for " + str(st_fl_path.name))
         state_heat_df = pd.read_csv(
