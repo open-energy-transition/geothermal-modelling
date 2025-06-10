@@ -80,6 +80,14 @@ def consolidate_pumas(
         state_heat_df = state_heat_df[
             state_heat_df.columns[~state_heat_df.columns.str.contains("Unnamed")]
         ]
+
+        if ( state_heat_df.index[len(state_heat_df.index) - 1] != "2019-01-01 00:00:00" ):
+            logger.warning(
+                "The timeseries incomplete for " + 
+                str(st_fl_path.parents[3].stem) + " "  + 
+                str(st_fl_path.name)
+            )
+
         # the column names should correspond to GEOID to make further lookup work
         state_geoid = get_state_id(
             st_fl_path.name,
@@ -91,6 +99,7 @@ def consolidate_pumas(
         data_ts_national_list[i] = state_heat_df
 
     data_ts_national_df = pd.concat(data_ts_national_list, axis=1)
+    data_ts_national_df.fillna(0, inplace=True)
 
     return data_ts_national_df
 
