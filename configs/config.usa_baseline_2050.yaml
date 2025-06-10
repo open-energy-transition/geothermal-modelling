@@ -46,8 +46,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050" # use this to keep track of runs with different settings
-  sector_name: "US_2050"
+  name: "US_2050_iter1" # use this to keep track of runs with different settings
+  sector_name: "US_2050_iter1"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -55,11 +55,11 @@ scenario:
   simpl: ['']
   ll: ['copt']
   clusters: [100]
-  opts: [24H]
+  opts: [3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "144H"
+  - "12H"
   demand:
   - "DF"
 
@@ -186,10 +186,10 @@ electricity:
     Store: [battery, H2]
     Link: []  # H2 pipeline
 
-  powerplants_filter: (DateOut >= 2040 or DateOut != DateOut)
+  powerplants_filter: (DateOut > 2050 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1990) 
   custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
-  conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
+  conventional_carriers: [nuclear, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
 
   estimate_renewable_capacities:
@@ -377,6 +377,7 @@ renewable:
     piping_cost: 1_300_000 # $/km
     industrial_heating_n_cost_steps: 2
     heat_distribution_network_efficiency: 0.9
+    supply_curve_steps: 10
 
 # TODO: Needs to be adjusted for Africa.
 # Costs Configuration (Do not remove, needed for Sphynx documentation).

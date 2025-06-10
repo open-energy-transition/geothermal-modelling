@@ -25,10 +25,10 @@ US:
     planning_horizon: 2035
     scenario: "Reference"
   summary:
-    installed_capacity_comparison: true
-    generation_comparison: true
-    network_comparison: true
-    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery, cooling]
+    installed_capacity_comparison: false
+    generation_comparison: false
+    network_comparison: false
+    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery, cooling, egs]
   area_crs: 6372
 
 
@@ -46,8 +46,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2035" # use this to keep track of runs with different settings
-  sector_name: "US_2035"
+  name: "US_2035_iter10" # use this to keep track of runs with different settings
+  sector_name: "US_2035_iter10"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -98,7 +98,7 @@ cluster_options:
     algorithm: kmeans
     feature: solar+onwind-time
     exclude_carriers: []
-  alternative_clustering: true  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering: False  # "False" use Voronoi shapes, "True" use GADM shapes
   distribute_cluster: ['load'] # Distributes cluster nodes per country according to ['load'],['pop'] or ['gdp']
   out_logging: true  # When "True", logging is printed to console
   aggregation_strategies:
@@ -142,7 +142,7 @@ clean_osm_data_options:  # osm = OpenStreetMap
 
 build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetMap
   group_close_buses: true  # When "True", close buses are merged and guarantee the voltage matching among line endings
-  group_tolerance_buses: 5000  # [m] (default 5000) Tolerance in meters of the close buses to merge
+  group_tolerance_buses: 10000  # [m] (default 5000) Tolerance in meters of the close buses to merge
   split_overpassing_lines: true  # When True, lines overpassing buses are splitted and connected to the bueses
   overpassing_lines_tolerance: 1  # [m] (default 1) Tolerance to identify lines overpassing buses
   force_ac: false  # When true, it forces all components (lines and substation) to be AC-only. To be used if DC assets create problem.
@@ -164,7 +164,7 @@ electricity:
   # co2base: 1.487e+9  # European default, adjustment to Africa necessary
   # co2limit: 1.4728e+9 # 0.8 * 1.841e+9
   # co2limit_enable: false # For sector coupled studies
-  # co2base: 226.86e+6 #base_from_2020 Locations of the 250 MMmt of CO2 emissions from the WECC 2021.
+  co2base: 226.86e+6 #base_from_2020 Locations of the 250 MMmt of CO2 emissions from the WECC 2021.
   agg_p_nom_limits: data/agg_p_nom_minmax.csv
   hvdc_as_lines: false  # should HVDC lines be modeled as `Line` or as `Link` component?
   automatic_emission: false
@@ -186,10 +186,10 @@ electricity:
     Store: [battery, H2]
     Link: []  # H2 pipeline
 
-  powerplants_filter: (DateOut >= 2030 or DateOut != DateOut)
+  powerplants_filter: (DateOut >= 2035 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1975)
   custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
-  conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
+  conventional_carriers: [nuclear, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
 
   estimate_renewable_capacities:
@@ -249,7 +249,7 @@ renewable:
     resource:
       method: wind
       turbine: Vestas_V112_3MW
-    capacity_per_sqkm: 3 # conservative, ScholzPhd Tab 4.3.1: 10MW/km^2
+    capacity_per_sqkm: 5.9 # conservative, ScholzPhd Tab 4.3.1: 10MW/km^2
     # correction_factor: 0.93
     copernicus:
       # Scholz, Y. (2012). Renewable energy based electricity supply at low costs:
@@ -276,7 +276,7 @@ renewable:
     resource:
       method: wind
       turbine: NREL_ReferenceTurbine_5MW_offshore
-    capacity_per_sqkm: 2
+    capacity_per_sqkm: 4
     correction_factor: 0.8855
     # proxy for wake losses
     # from 10.1016/j.energy.2018.08.153
@@ -295,7 +295,7 @@ renewable:
       method: wind
       turbine: NREL_ReferenceTurbine_5MW_offshore
     # ScholzPhd Tab 4.3.1: 10MW/km^2
-    capacity_per_sqkm: 3
+    capacity_per_sqkm: 4
     correction_factor: 0.8855
     # proxy for wake losses
     # from 10.1016/j.energy.2018.08.153
@@ -316,13 +316,13 @@ renewable:
       orientation: latitude_optimal # will lead into optimal design
         # slope: 0.  # slope: 0 represent a flat panel
         # azimuth: 180.  # azimuth: 180 south orientation
-    capacity_per_sqkm: 4.6 # From 1.7 to 4.6 addresses issue #361
+    capacity_per_sqkm: 87 # From 1.7 to 4.6 addresses issue #361
     # Determined by comparing uncorrected area-weighted full-load hours to those
     # published in Supplementary Data to
     # Pietzcker, Robert Carl, et al. "Using the sun to decarbonize the power
     # sector: The economic potential of photovoltaics and concentrating solar
     # power." Applied Energy 135 (2014): 704-720.
-    correction_factor: 0.854337
+    # correction_factor: 0.854337
     copernicus:
       grid_codes: [20, 30, 40, 50, 60, 90, 100]
     natura: true
@@ -367,7 +367,7 @@ renewable:
     potential: simple # or conservative
     clip_p_max_pu: 1.e-2
     extendable: true
-    csp_model: advanced # simple or advanced
+    csp_model: simple # simple or advanced
   enhanced_geothermal:
     power_heat_ratio_steps: 3
     lifetime: 25
@@ -377,6 +377,7 @@ renewable:
     piping_cost: 1_300_000 # $/km
     industrial_heating_n_cost_steps: 2
     heat_distribution_network_efficiency: 0.9
+    supply_curve_steps: 10
 
 # TODO: Needs to be adjusted for Africa.
 # Costs Configuration (Do not remove, needed for Sphynx documentation).
@@ -384,7 +385,7 @@ costs:
   year: 2035
   version: v0.11.0
   financial_case: "Market"
-  scenario: "Moderate"
+  scenario: "Advanced"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
   fill_values:
@@ -397,15 +398,15 @@ costs:
     CO2 intensity: 0
     discount rate: 0.07
   marginal_cost: # EUR/MWh
-    solar: 0.01
-    onwind: 0.015
-    offwind: 0.015
-    hydro: 0.
-    H2: 0.
-    electrolysis: 0.
-    fuel cell: 0.
-    battery: 0.
-    battery inverter: 0.
+    #solar: 0.01
+      #onwind: 0.015
+      #offwind: 0.015
+      #hydro: 0.
+      H2: 1000.
+      #electrolysis: 0.
+      fuel cell: 1000.
+      #battery: 0.
+    #battery inverter: 0.
   emission_prices: # in currency per tonne emission, only used with the option Ep
     co2: 0.
 
@@ -513,7 +514,6 @@ existing_capacities:
   conventional_carriers:
   - lignite
   - coal
-  - oil
   - uranium
 
 sector:
@@ -542,7 +542,7 @@ sector:
   international_bunkers: false #Whether or not to count the emissions of international aviation and navigation
 
   oil:
-    spatial_oil: true
+    spatial_oil: false
 
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
@@ -653,7 +653,7 @@ sector:
     NZ_2030: 0.02
     DF_2030: 0.01
     AB_2030: 0.01
-    DF_2035: 0.01 #same share as DF_2030 -> needs to be updated (interpolate?)
+    DF_2035: 0.00 #same share as DF_2030 -> needs to be updated (interpolate?)
     BU_2050: 0.00
     AP_2050: 0.06
     NZ_2050: 0.28
@@ -665,7 +665,7 @@ sector:
     NZ_2030: 0.13
     DF_2030: 0.01
     AB_2030: 0.01
-    DF_2035: 0.053 # 0.053 (Reference) 0.275 (Medium) 0.332 (High)
+    DF_2035: 0.00 # 0.053 (Reference) 0.275 (Medium) 0.332 (High)
     BU_2050: 0.00
     AP_2050: 0.42
     NZ_2050: 0.68
@@ -683,7 +683,7 @@ sector:
     NZ_2030: 0.10
     DF_2030: 0.05
     AB_2030: 0.05
-    DF_2035: 0.05 #same share as DF_2030 -> needs to be updated (interpolate?)
+    DF_2035: 0.00 #same share as DF_2030 -> needs to be updated (interpolate?)
     BU_2050: 0.00
     AP_2050: 0.25
     NZ_2050: 0.36
@@ -715,7 +715,7 @@ sector:
 solving:
   options:
     formulation: kirchhoff
-    load_shedding: false
+    load_shedding: true
     noisy_costs: true
     min_iterations: 4
     max_iterations: 6
