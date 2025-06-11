@@ -14,7 +14,7 @@ logging.basicConfig(
 # TODO Put the parameters into the config
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
-SIMPLIFIED_WRMWATER = True
+SIMPLIFIED_WRMWATER = False
 DATA_IS_SCALED = (
     True  # post processing was done externally to workflow, presented as MWh
 )
@@ -250,7 +250,7 @@ if __name__ == "__main__":
         )
     else:
         resstock_wrmwater_ts_national_df = consolidate_pumas(
-            data_path=state_comstock_wrmwater_dir,
+            data_path=state_resstock_wrmwater_dir,
             states_abbr_df=states_abbr_df,
             puma_centroid_merged=puma_centroid_merged,
         )
@@ -312,6 +312,11 @@ if __name__ == "__main__":
     )
     add_level_column(df=comstock_wrmwater_load_aggreg_df, level_name="services water")
 
+    comstock_wrmwater_load_aggreg_df = comstock_wrmwater_load_aggreg_df.groupby(
+        np.arange(len(comstock_wrmwater_load_aggreg_df.index)) // 4
+    ).sum()
+    comstock_wrmwater_load_aggreg_df.index = resstock_heating_load_aggreg_df.index
+
     heating_overall_load = pd.concat(
         [
             resstock_wrmwater_load_aggreg_df,
@@ -321,7 +326,6 @@ if __name__ == "__main__":
         ],
         axis=1,
     )
-
     if not DATA_IS_SCALED:
         # 2) cooling
         cooling_scale = (
@@ -342,5 +346,5 @@ if __name__ == "__main__":
         cooling_load_aggreg_df.index
     ) - pd.DateOffset(years=year_offset)
 
-    heating_overall_load.to_csv(heat_demand_path)
-    cooling_load_aggreg_df.to_csv(cool_demand_path)
+    heating_overall_load.reset_index().to_csv(heat_demand_path, index=False)
+    cooling_load_aggreg_df.reset_index().to_csv(cool_demand_path, index=False)

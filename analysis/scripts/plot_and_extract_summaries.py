@@ -378,7 +378,18 @@ def get_generation_demands_by_energy_carriers(pypsa_network, energy_carrier):
             generators_ts = get_component(pypsa_network, comp + "_t")
 
             for car in reqd_carriers:
-                if "CHP" in car or "Fuel cell" in car:
+                if "degC" in car:
+                    generations = (
+                        generators_ts.p1.filter(like=car).sum(axis=1).div(1e3)
+                        + generators_ts.p2.filter(like=car).sum(axis=1).div(1e3)
+                        + generators_ts.p3.filter(like=car).sum(axis=1).div(1e3)
+                        + generators_ts.p4.filter(like=car).sum(axis=1).div(1e3)
+                    )  # chk if p4 required
+                    generations *= -1
+                    generations.name = car
+                    generations = pd.DataFrame(generations)
+
+                elif "CHP" in car or "Fuel cell" in car:
                     intersecting_columns = indices.intersection(
                         generators_ts.p2.columns
                     )
@@ -491,6 +502,24 @@ def installed_capacity_plots(pypsa_network, energy_carriers_array, plot_base_pat
     )
     fig.write_image(f"{plot_base_path}/installed_capacity_facet_energy_carriers_GW.png")
 
+    for car in installed_capacities.carrier.unique():
+        cap = installed_capacities.query("carrier == @car")
+        fig = px.bar(
+            cap,
+            y="p_nom_opt",
+            color="carrier",
+            barmode="stack",
+            text_auto="0.2f",
+            width=1200,
+            height=800,
+        )
+        fig.update_layout(
+            uniformtext_minsize=5,
+            uniformtext_mode="show",
+        )
+        fig.update_traces(textposition="outside")
+        fig.write_image(f"{plot_base_path}/installed_capacity_{car}_GW.png")
+
     return installed_capacities
 
 
@@ -555,6 +584,24 @@ def energy_generation_plots(pypsa_network, energy_carriers_array, plot_base_path
     fig.write_image(
         f"{plot_base_path}/energy_generation_facet_energy_carriers_TWh.png", scale=3
     )
+
+    for car in energy_generations.carrier.unique():
+        gen = energy_generations.query("carrier == @car")
+        fig = px.bar(
+            gen,
+            y="Energy_TWh",
+            color="carrier",
+            barmode="stack",
+            text_auto="0.2f",
+            width=1200,
+            height=800,
+        )
+        fig.update_layout(
+            uniformtext_minsize=5,
+            uniformtext_mode="show",
+        )
+        fig.update_traces(textposition="outside")
+        fig.write_image(f"{plot_base_path}/energy_gen_{car}_TWh.png")
 
     return energy_generations
 
@@ -644,9 +691,9 @@ def energy_balance_plot(plot_base_path, output_path, energy_carriers_array):
                 name=f"{energy_carriers} demand",
             )
         )
-        fig.update_layout(yaxis_title="Energy in TWh", title=energy_carriers)
+        fig.update_layout(yaxis_title="Power (GW)", title=energy_carriers)
         fig.update_layout(
-            uniformtext_minsize=5,
+            uniformtext_minsize=3,
             # uniformtext_mode="show",
         )
         fig.write_image(f"{plot_base_path}/energy_balance_ts_{energy_carriers}.png")

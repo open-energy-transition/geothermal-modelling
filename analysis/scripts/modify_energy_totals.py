@@ -106,7 +106,8 @@ def modify_electricity_totals(df_demand, energy_totals, industry_demand, country
     elec_residential_ratio = elec_residential / (elec_services + elec_residential)
 
     # industry_electricity_demand = industry_demand["electricity"].sum() / 1e6  # in TWh
-    industry_electricity_demand = 0
+    industry_electricity_demand = 0  # already included in the demand from EIA
+
     # demand profiles have one hour granularity
     total_electricity_demand = df_demand.sum().sum() / 1e6  # in TWh
     replace_demand = (

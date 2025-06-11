@@ -116,11 +116,11 @@ if USE_ENERGY_PLUS:
                 "population_shares",
                 "pop_layout_elec_s{simpl}_{clusters}_{planning_horizons}.csv"
             ),
-            industrial_demand = pathlib.Path(
-                SECDIR_path,
-                "demand",
-                "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
-            ),
+            #industrial_demand = pathlib.Path(
+            #    SECDIR_path,
+            #    "demand",
+            #    "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
+            #),
             energy_totals = pathlib.Path(
                 SECDIR_path,
                 "energy_totals_{demand}_{planning_horizons}.csv"
@@ -208,6 +208,20 @@ if USE_ENERGY_PLUS:
                     "gas_network_elec_s{simpl}_{clusters}.csv"
                 )
             ),
+            industrial_heating_egs_supply_curves=pathlib.Path(
+                SECDIR_path,
+                "industrial_heating_egs_supply_curves_s{simpl}_{clusters}.csv"
+            ),
+            industrial_heating_demands=pathlib.Path(
+                SECDIR_path,
+                "industrial_heating_demands_s{simpl}_{clusters}.csv"
+            ),
+            industrial_heating_costs=pathlib.Path(
+                SECDIR_path,
+                "industrial_heating_costs.csv"
+            ),
+            egs_potentials_egs=pathlib.Path(SECDIR_path,"geothermal_data/potential_egs_s{simpl}_{clusters}.csv"),
+            egs_potentials_hs=pathlib.Path(SECDIR_path,"geothermal_data/potential_hs_s{simpl}_{clusters}.csv"),
 
 
 localrules:
