@@ -250,7 +250,7 @@ if __name__ == "__main__":
         )
     else:
         resstock_wrmwater_ts_national_df = consolidate_pumas(
-            data_path=state_comstock_wrmwater_dir,
+            data_path=state_resstock_wrmwater_dir,
             states_abbr_df=states_abbr_df,
             puma_centroid_merged=puma_centroid_merged,
         )
@@ -311,11 +311,6 @@ if __name__ == "__main__":
         df=resstock_wrmwater_load_aggreg_df, level_name="residential water"
     )
     add_level_column(df=comstock_wrmwater_load_aggreg_df, level_name="services water")
-
-    resstock_wrmwater_load_aggreg_df = resstock_wrmwater_load_aggreg_df.groupby(
-        np.arange(len(resstock_wrmwater_load_aggreg_df.index)) // 4
-    ).sum()
-    resstock_wrmwater_load_aggreg_df.index = resstock_heating_load_aggreg_df.index
 
     comstock_wrmwater_load_aggreg_df = comstock_wrmwater_load_aggreg_df.groupby(
         np.arange(len(comstock_wrmwater_load_aggreg_df.index)) // 4
