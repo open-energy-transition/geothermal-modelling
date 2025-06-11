@@ -137,7 +137,7 @@ if USE_ENERGY_PLUS:
                 SECDIR_path,
                 "demand", 
                 "heat",    
-                "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
+                "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
                 # "heat_demand_AB_s_10_2030_ep.csv",
             ),
             cooling_demand=pathlib.Path(
@@ -208,7 +208,7 @@ if USE_ENERGY_PLUS:
                     "gas_network_elec_s{simpl}_{clusters}.csv"
                 )
             ),
-	        industrial_heating_egs_supply_curves=pathlib.Path(
+            industrial_heating_egs_supply_curves=pathlib.Path(
                 SECDIR_path,
                 "industrial_heating_egs_supply_curves_s{simpl}_{clusters}.csv"
             ),
