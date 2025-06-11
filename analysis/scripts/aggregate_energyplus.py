@@ -64,12 +64,31 @@ def consolidate_pumas(
     # a single time-series dataframe is needed to look-up for each PUMA -----------
     data_ts_national_list = [None] * len(data_state_fls_clean)
 
-    logger.info("Build a consolidated national-wide load dataframe")
+    logger.info(
+        "Build a consolidated national-wide load dataframe for "
+        + str(data_path.parents[0].stem)
+        + " "
+        + str(data_path.parents[2].stem)
+    )
     for i, st_fl_path in enumerate(data_state_fls_clean):
         logger.info("Consolidation for " + str(st_fl_path.name))
         state_heat_df = pd.read_csv(
             pathlib.Path(st_fl_path),
         ).set_index("time")
+
+        # There may be `Unnamed` columns in ComStock data
+        # due to some time-processing procedures
+        state_heat_df = state_heat_df[
+            state_heat_df.columns[~state_heat_df.columns.str.contains("Unnamed")]
+        ]
+
+        if state_heat_df.index[len(state_heat_df.index) - 1] != "2019-01-01 00:00:00":
+            logger.warning(
+                "The timeseries incomplete for "
+                + str(st_fl_path.parents[3].stem)
+                + " "
+                + str(st_fl_path.name)
+            )
 
         # the column names should correspond to GEOID to make further lookup work
         state_geoid = get_state_id(
@@ -82,6 +101,7 @@ def consolidate_pumas(
         data_ts_national_list[i] = state_heat_df
 
     data_ts_national_df = pd.concat(data_ts_national_list, axis=1)
+    data_ts_national_df.fillna(0, inplace=True)
 
     return data_ts_national_df
 
