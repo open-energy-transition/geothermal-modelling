@@ -61,11 +61,19 @@ Geothermal exclusive parameters             |                                   
 geothermal -> retrieve_geothermal_databundle|true                                    |false                       |
 geothermal -> demand_year                   |2021 (baseline run)            |2021 (baseline run)                  |
 
+## Config files
+
+Config file                                     |   Description                                        |
+------------------------------------------------|------------------------------------------------------|
+configs/config.usa_baseline_2035.yaml           | 2035 Baseline model                                  |
+configs/config.usa_baseline_2050.yaml           | 2050 Baseline model                                  |
+
+
 ## Running the workflow
 
 To run the workflow use the following snakemake rule
         
-        snakemake -call summary
+        snakemake -call summary --configfile <config file>
 
 This rule triggers all the rules in the geothermal repository as well as PyPSA-Earth imported rules
 
