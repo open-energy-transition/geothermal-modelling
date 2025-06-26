@@ -222,6 +222,7 @@ if USE_ENERGY_PLUS:
             ),
             egs_potentials_egs=pathlib.Path(SECDIR_path,"geothermal_data/potential_egs_s{simpl}_{clusters}.csv"),
             egs_potentials_hs=pathlib.Path(SECDIR_path,"geothermal_data/potential_hs_s{simpl}_{clusters}.csv"),
+	    district_heating_geothermal_supply_curves=pathlib.Path(SECDIR_path,"district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"),
 
 
 localrules:
@@ -402,8 +403,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "heating",
-                    "2018",                     
+                    "heating",         
+		    "2018",            
                 )
             ),         
         script:
@@ -427,8 +428,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "warm_water",
-                    "2018",                     
+                    "warm_water",     
+		    "2018",              
                 )
             ),         
         script:
@@ -452,8 +453,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "cooling",
-                    "2018",                     
+                    "cooling",    
+		    "2018",               
                 )
             ),         
         script:
@@ -477,8 +478,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "heating",
-                    "2018",                     
+                    "heating",   
+	 	    "2018",              
                 )
             ),         
         script:
@@ -502,8 +503,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "warm_water",
-                    "2018",                     
+                    "warm_water", 
+		    "2018",                   
                 )
             ),         
         script:
@@ -527,8 +528,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "cooling",
-                    "2018",                     
+                    "cooling",     
+		    "2018",           
                 )
             ),         
         script:
