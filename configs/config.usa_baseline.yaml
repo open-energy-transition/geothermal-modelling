@@ -24,6 +24,7 @@ US:
   demand_projection:
     planning_horizon: 2050
     scenario: "Reference"
+    thermal_scenario: "reference case"
   summary:
     installed_capacity_comparison: true
     generation_comparison: true
