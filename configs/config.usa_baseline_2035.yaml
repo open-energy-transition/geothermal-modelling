@@ -72,7 +72,7 @@ crs:
   area_crs: ESRI:54009  # projection for area measurements only. Possible recommended values are Global Mollweide "ESRI:54009"
 
 cluster_options:
-  alternative_clustering: true  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
 
 build_shape_options:
   gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
@@ -120,6 +120,7 @@ renewable:
 
   csp:
     csp_model: simple # simple or advanced
+
   enhanced_geothermal:
     power_heat_ratio_steps: 3
     lifetime: 25
@@ -175,7 +176,13 @@ existing_capacities:
   - coal
   - uranium
 
+export:
+  h2export: [0]
+
 sector:
+  hydrogen:
+    gas_network_repurposing: false
+
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share
