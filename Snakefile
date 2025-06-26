@@ -873,8 +873,8 @@ rule build_demand_profiles_from_eia:
 rule aggregate_energyplus:
     params: 
         snapshot_start=config["snapshots"]["start"],
-        thermal_proj_year=2035,
-        thermal_scenario="reference case",
+        thermal_proj_year=config["US"]["demand_projection"]["planning_horizon"],
+        thermal_scenario=config["US"]["demand_projection"]["thermal_scenario"],
     input:
         # The clean ResStock & ComStock outputs are currently available via
         # `3. Project Delivery/2- Working Files/resstock | comstock`
@@ -962,8 +962,6 @@ rule aggregate_energyplus:
             "states_centroids_abbr.csv",
         ),
         growth_path=pathlib.Path(
-            "analysis",
-            "gdrive_data",
             "data",
             "growth_rates_normal_data.csv"
         ),
