@@ -48,8 +48,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050_iter5" # use this to keep track of runs with different settings
-  sector_name: "US_2050_iter5"
+  name: "US_2050" # use this to keep track of runs with different settings
+  sector_name: "US_2050"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
