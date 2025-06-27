@@ -25,6 +25,7 @@ US:
   demand_projection:
     planning_horizon: 2050 # Year to be considered for future demand projections between 2030-2050
     scenario: "Reference" # Choices - [Reference, Moderate, High]
+    thermal_scenario: "reference case"
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
     generation_comparison: false # to validate energy generations in electricity only model
@@ -47,8 +48,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050" # use this to keep track of runs with different settings
-  sector_name: "US_2050"
+  name: "US_2050_iter5" # use this to keep track of runs with different settings
+  sector_name: "US_2050_iter5"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -65,8 +66,8 @@ scenario:
   - "DF"
 
 snapshots:
-  start: "2013-01-01"
-  end: "2014-01-01"
+  start: "2018-01-01"
+  end: "2019-01-01"
   inclusive: "left" # end is not inclusive
 
 # definition of the Coordinate Reference Systems
@@ -76,7 +77,7 @@ crs:
   area_crs: ESRI:54009  # projection for area measurements only. Possible recommended values are Global Mollweide "ESRI:54009"
 
 cluster_options:
-  alternative_clustering: true  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
 
 build_shape_options:
   gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
@@ -93,24 +94,57 @@ build_shape_options:
   gadm_url_prefix: "https://geodata.ucdavis.edu/gadm/gadm4.1/gpkg/"
 
 build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetMap
-  group_tolerance_buses: 5000  # [m] (default 5000) Tolerance in meters of the close buses to merge
+  group_tolerance_buses: 10000  # [m] (default 5000) Tolerance in meters of the close buses to merge
 
 electricity:
   extendable_carriers:
-    Generator: [solar, onwind, offwind-ac, offwind-dc]
+    Generator: [solar, onwind, offwind-ac, offwind-dc, nuclear, CCGT]
     StorageUnit: []  # battery, H2
     Store: [battery, H2]
     Link: []  # H2 pipeline
 
-  powerplants_filter: (DateOut > 2050 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1990)
+  powerplants_filter: (DateOut > 2050 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1990) and (Fueltype != 'CCGT' or DateIn >= 2015) and (Fueltype != 'OCGT' or DateIn >= 2015)
   custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
   conventional_carriers: [nuclear, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
 
 
+atlite:
+  nprocesses: 4
+  cutouts:
+    cutout-2018-era5:
+      module: era5
+      dx: 0.3
+      dy: 0.3
+
 renewable:
+  onwind:
+    cutout: cutout-2018-era5
+    capacity_per_sqkm: 5.9 # conservative, ScholzPhd Tab 4.3.1: 10MW/km^2
+    # correction_factor: 0.93
+    #
+  offwind-ac:
+    cutout: cutout-2018-era5
+    capacity_per_sqkm: 4
+
+  offwind-dc:
+    cutout: cutout-2018-era5
+    capacity_per_sqkm: 4
+
+  solar:
+    cutout: cutout-2018-era5
+    capacity_per_sqkm: 87 # From 1.7 to 4.6 addresses issue #361
+
+  csp:
+    cutout: cutout-2018-era5
+    csp_model: simple # simple or advanced
+
+  hydro:
+    cutout: cutout-2018-era5
+
   enhanced_geothermal:
+    cutout: cutout-2018-era5
     power_heat_ratio_steps: 3
     lifetime: 25
     max_network_diameter: 20. # km
@@ -129,8 +163,9 @@ costs:
   financial_case: "Market"
   scenario: "Moderate"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
-  USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
-
+  USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
+  fuel:
+    biogas: 72.864 #79.2 $/MWhth , conversion rate considered USD_to_EUR = 0.92
 
 
 # ------------------- SECTOR OPTIONS -------------------
@@ -143,6 +178,9 @@ existing_capacities:
   - coal
   - oil
   - uranium
+
+export:
+  h2export: [0]
 
 sector:
   district_heating:
@@ -158,7 +196,7 @@ sector:
     DF_2050: 0.00
 
   shipping_hydrogen_share: #1.0
-    DF_2050: 0.10
+    DF_2050: 0.00
 
   conventional_generation: # generator : carrier
     OCGT: gas
@@ -182,7 +220,9 @@ solving:
     #nhours: 10
   solver:
     name: gurobi
-    threads: 8
+  solver_options:
+    gurobi-default:
+      threads: 8
     # method: 2 # barrier (=ipm)
     # crossover: 0
     # BarConvTol: 1.e-5
