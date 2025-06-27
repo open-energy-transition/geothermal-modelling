@@ -125,18 +125,20 @@ def modify_electricity_totals(df_demand, energy_totals, industry_demand, country
 
     return energy_totals
 
+
 def drop_unrequired_sector_totals(energy_totals):
     """
     To drop all demands except electricity/heat related ones
     """
-    sector_keys = ["oil","gas","biomass","aviation","navigation","road","rail"]
+    sector_keys = ["oil", "gas", "biomass", "aviation", "navigation", "road", "rail"]
     for key in sector_keys:
         filtered_cols = energy_totals.filter(like=key)
         checked_cols = [x for x in filtered_cols if "heat" not in x]
         checked_cols = [x for x in checked_cols if "electricity" not in x]
-        energy_totals.loc['US',checked_cols] = 0
+        energy_totals.loc["US", checked_cols] = 0
 
     return energy_totals
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
