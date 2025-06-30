@@ -23,6 +23,12 @@ US:
   demand_projection:
     planning_horizon: 2035 # Year to be considered for future demand projections between 2030-2050
     scenario: "Reference" # Choices - [Reference, Moderate, High]
+    # Source: IEA (2025) Annual Energy Outlook, Tables 4 and 5
+    # Choices - ["reference case","high economic growth","low economic growth",
+    # "high oil price", "low oil price","high oil and gas supply",
+    # "low oil and gas supply","high zero-carbon technology cost",
+    # "low zero-carbon technology cost","alternative electricity",
+    # "alternative transportation"]
     thermal_scenario: "reference case"
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
