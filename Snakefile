@@ -11,7 +11,9 @@ sys.path.append("workflow/pypsa-earth/scripts")
 
 configfile: "workflow/pypsa-earth/config.default.yaml"
 configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
-configfile: "configs/config.usa_baseline.yaml"
+
+
+# configfile: "configs/config.usa_baseline.yaml"
 
 
 module pypsa_earth:
@@ -29,8 +31,9 @@ USE_ENERGY_PLUS = True
 
 
 demand_year = config["US"]["demand_year"]
-run_name = config["run"]["name"]
-SECDIR = config["sector_name"] + "/" if config.get("sector_name") else ""
+run = config["run"]
+run_name = run["name"]
+SECDIR = run["sector_name"] + "/" if run.get("sector_name") else ""
 
 RDIR_path = pathlib.Path(
     "workflow",
@@ -113,11 +116,11 @@ if USE_ENERGY_PLUS:
                 "population_shares",
                 "pop_layout_elec_s{simpl}_{clusters}_{planning_horizons}.csv"
             ),
-            industrial_demand = pathlib.Path(
-                SECDIR_path,
-                "demand",
-                "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
-            ),
+            #industrial_demand = pathlib.Path(
+            #    SECDIR_path,
+            #    "demand",
+            #    "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
+            #),
             energy_totals = pathlib.Path(
                 SECDIR_path,
                 "energy_totals_{demand}_{planning_horizons}.csv"
@@ -205,6 +208,22 @@ if USE_ENERGY_PLUS:
                     "gas_network_elec_s{simpl}_{clusters}.csv"
                 )
             ),
+            industrial_heating_egs_supply_curves=pathlib.Path(
+                SECDIR_path,
+                "industrial_heating_egs_supply_curves_s{simpl}_{clusters}.csv"
+            ),
+            industrial_heating_demands=pathlib.Path(
+                SECDIR_path,
+                "industrial_heating_demands_s{simpl}_{clusters}.csv"
+            ),
+            industrial_heating_costs=pathlib.Path(
+                SECDIR_path,
+                "industrial_heating_costs.csv"
+            ),
+            egs_potentials_egs=pathlib.Path(SECDIR_path,"geothermal_data/potential_egs_s{simpl}_{clusters}.csv"),
+            egs_potentials_hs=pathlib.Path(SECDIR_path,"geothermal_data/potential_hs_s{simpl}_{clusters}.csv"),
+		# Uncomment the following file after Lukas' PR merged in submodule
+            #district_heating_geothermal_supply_curves=pathlib.Path(SECDIR_path,"district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"),
 
 
 localrules:
@@ -369,7 +388,7 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_resstock_space_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1AMsr9bs9klMVdFYJDhevSW6M9ezLc_Gr?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1LFGl8rgMkKeyoaikk6lCMc-Db8OYdN2-?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_space_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus","resstock","heating_cooling_summaries","heating","2018"),
@@ -385,8 +404,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "heating",
-                    "2018",                     
+                    "heating",         
+		    "2018",            
                 )
             ),         
         script:
@@ -394,7 +413,7 @@ if config["US"].get("retrieve_US_databundle", True):
     
     rule retrieve_resstock_warmwater_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1Xu3774JF8MeZPuNjzGo_zxXhiZSSeQkG?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1NBUXUxGt8WPhBgBuz28Mryy7UBvN0lz6?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_warmwater_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","warm_water","2018"),
@@ -410,8 +429,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "warm_water",
-                    "2018",                     
+                    "warm_water",     
+		    "2018",              
                 )
             ),         
         script:
@@ -419,7 +438,7 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_resstock_space_cooling:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1XR6oGSi98y08nwWPyninnh0MNVwTM4GJ?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1N9uGeX_EfjUFPhYu8ZN6ou8R4ZMgb2sO?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "restock_space_cooling",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","cooling","2018"),
@@ -435,8 +454,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "cooling",
-                    "2018",                     
+                    "cooling",    
+		    "2018",               
                 )
             ),         
         script:
@@ -444,7 +463,7 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_comstock_space_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/13KzCy6on4ZQt9mkNX0s1wJC2fGIon2mY?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1iHog11gx2LgWkFI15XnRAh7dku5vemob?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_space_heating",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","heating","2018"),
@@ -460,8 +479,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "heating",
-                    "2018",                     
+                    "heating",   
+	 	    "2018",              
                 )
             ),         
         script:
@@ -469,7 +488,7 @@ if config["US"].get("retrieve_US_databundle", True):
     
     rule retrieve_comstock_warmwater_heating:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1p24dXnYSi4eYNOCkc6CjXahiaUm_9mG_?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1i56pKUf3vw3JAVqPV89p6ZbrSE0iCvae?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_warm_water",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
@@ -485,8 +504,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "warm_water",
-                    "2018",                     
+                    "warm_water", 
+		    "2018",                   
                 )
             ),         
         script:
@@ -494,7 +513,7 @@ if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_comstock_space_cooling:
         params:
-            gdrive_url="https://drive.google.com/drive/folders/1-vKF6YFk4T0xklvNszwxYD-nxvUsrhPR?usp=drive_link",
+            gdrive_url="https://drive.google.com/drive/folders/1XGr2EF-0qsaJ5TYFQfeaBSK2tPMJpglH?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
             cookie_filename = "comstock_space_cooling",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
@@ -510,8 +529,8 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "cooling",
-                    "2018",                     
+                    "cooling",     
+		    "2018",           
                 )
             ),         
         script:
@@ -1065,6 +1084,7 @@ rule plot_and_extract_summaries:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -1073,8 +1093,10 @@ rule plot_and_extract_summaries:
             **config["export"],
         ),
     output:
-        plot_path=directory(pathlib.Path("analysis", "plots", "summary_plots")),
-        output_path=directory(pathlib.Path("analysis", "outputs", "summary_outputs")),
+        plot_path=directory(pathlib.Path("analysis", "plots", SECDIR, "summary_plots")),
+        output_path=directory(
+            pathlib.Path("analysis", "outputs", SECDIR, "summary_outputs")
+        ),
     script:
         "analysis/scripts/plot_and_extract_summaries.py"
 
@@ -1104,6 +1126,7 @@ rule summary:
                 "workflow",
                 "pypsa-earth",
                 "results",
+                SECDIR,
                 "postnetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
             ),
@@ -1111,4 +1134,4 @@ rule summary:
             **config["costs"],
             **config["export"],
         ),
-        pathlib.Path("analysis", "plots", "summary_plots"),
+        pathlib.Path("analysis", "plots", SECDIR, "summary_plots"),

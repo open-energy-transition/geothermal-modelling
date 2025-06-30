@@ -105,7 +105,9 @@ def modify_electricity_totals(df_demand, energy_totals, industry_demand, country
     service_elec_ratio = elec_services / (elec_services + elec_residential)
     elec_residential_ratio = elec_residential / (elec_services + elec_residential)
 
-    industry_electricity_demand = industry_demand["electricity"].sum() / 1e6  # in TWh
+    # industry_electricity_demand = industry_demand["electricity"].sum() / 1e6  # in TWh
+    industry_electricity_demand = 0  # already included in the demand from EIA
+
     # demand profiles have one hour granularity
     total_electricity_demand = df_demand.sum().sum() / 1e6  # in TWh
     replace_demand = (
@@ -120,6 +122,20 @@ def modify_electricity_totals(df_demand, energy_totals, industry_demand, country
     energy_totals.loc[country, "services electricity"] = (
         replace_demand * service_elec_ratio
     )
+
+    return energy_totals
+
+
+def drop_unrequired_sector_totals(energy_totals):
+    """
+    To drop all demands except electricity/heat related ones
+    """
+    sector_keys = ["oil", "gas", "biomass", "aviation", "navigation", "road", "rail"]
+    for key in sector_keys:
+        filtered_cols = energy_totals.filter(like=key)
+        checked_cols = [x for x in filtered_cols if "heat" not in x]
+        checked_cols = [x for x in checked_cols if "electricity" not in x]
+        energy_totals.loc["US", checked_cols] = 0
 
     return energy_totals
 
@@ -152,4 +168,7 @@ if __name__ == "__main__":
     modified_energy_totals = modify_electricity_totals(
         df_demand, energy_totals, industrial_demand, country
     )
+
+    modified_energy_totals = drop_unrequired_sector_totals(energy_totals)
+
     modified_energy_totals.to_csv(output_path)
