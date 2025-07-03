@@ -162,8 +162,8 @@ renewable:
 costs:
   year: 2050
   version: v0.11.0
-  financial_case: "Market" 
-  scenario: "Advanced" 
+  financial_case: "Market"
+  scenario: "Advanced"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
   fill_values:

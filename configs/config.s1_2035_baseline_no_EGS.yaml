@@ -73,7 +73,7 @@ crs:
   area_crs: ESRI:54009  # projection for area measurements only. Possible recommended values are Global Mollweide "ESRI:54009"
 
 cluster_options:
-  alternative_clustering: False  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
   simplify_network:
     s_threshold_fetch_isolated: 0.0 # [-] a share of the national load for merging an isolated network into a backbone network
 
