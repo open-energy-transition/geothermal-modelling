@@ -210,20 +210,19 @@ if USE_ENERGY_PLUS:
             ),
             industrial_heating_egs_supply_curves=pathlib.Path(
                 SECDIR_path,
-                "industrial_heating_egs_supply_curves_s{simpl}_{clusters}.csv"
+                "industrial_heating_egs_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
             ),
             industrial_heating_demands=pathlib.Path(
                 SECDIR_path,
-                "industrial_heating_demands_s{simpl}_{clusters}.csv"
+                "industrial_heating_demands_s{simpl}_{clusters}_{planning_horizons}.csv"
             ),
             industrial_heating_costs=pathlib.Path(
                 SECDIR_path,
                 "industrial_heating_costs.csv"
             ),
-            egs_potentials_egs=pathlib.Path(SECDIR_path,"geothermal_data/potential_egs_s{simpl}_{clusters}.csv"),
-            egs_potentials_hs=pathlib.Path(SECDIR_path,"geothermal_data/potential_hs_s{simpl}_{clusters}.csv"),
-		# Uncomment the following file after Lukas' PR merged in submodule
-            #district_heating_geothermal_supply_curves=pathlib.Path(SECDIR_path,"district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"),
+            egs_potentials_egs=pathlib.Path(SECDIR_path,"geothermal_data/potential_egs_s{simpl}_{clusters}_{planning_horizons}.csv"),
+            egs_potentials_hs=pathlib.Path(SECDIR_path,"geothermal_data/potential_hs_s{simpl}_{clusters}_{planning_horizons}.csv"),
+            district_heating_geothermal_supply_curves=pathlib.Path(SECDIR_path,"district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"),
 
 
 localrules:
