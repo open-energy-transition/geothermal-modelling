@@ -48,8 +48,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050" # use this to keep track of runs with different settings
-  sector_name: "US_2050"
+  name: "US_2050_flexible_EGS" # use this to keep track of runs with different settings
+  sector_name: "US_2050_flexible_EGS"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -78,6 +78,8 @@ crs:
 
 cluster_options:
   alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
+  simplify_network:
+    s_threshold_fetch_isolated: 0.05 # [-] a share of the national load for merging an isolated network into a backbone network
 
 build_shape_options:
   gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
@@ -100,7 +102,7 @@ electricity:
   extendable_carriers:
     Generator: [solar, onwind, offwind-ac, offwind-dc, nuclear, CCGT]
     StorageUnit: []  # battery, H2
-    Store: [battery, H2]
+    Store: [battery]
     Link: []  # H2 pipeline
 
   powerplants_filter: (DateOut > 2050 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1990) and (Fueltype != 'CCGT' or DateIn >= 2015) and (Fueltype != 'OCGT' or DateIn >= 2015)
@@ -161,9 +163,18 @@ costs:
   year: 2050
   version: v0.11.0
   financial_case: "Market"
-  scenario: "Moderate"
+  scenario: "Advanced"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
+  fill_values:
+    FOM: 0
+    VOM: 0
+    efficiency: 1
+    fuel: 0
+    investment: 0
+    lifetime: 25
+    CO2 intensity: 0
+    discount rate: 0.07
   fuel:
     biogas: 72.864 #79.2 $/MWhth , conversion rate considered USD_to_EUR = 0.92
 

@@ -23,6 +23,7 @@ US:
   demand_projection:
     planning_horizon: 2035 # Year to be considered for future demand projections between 2030-2050
     scenario: "Reference" # Choices - [Reference, Moderate, High]
+    thermal_scenario: "reference case"
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
     generation_comparison: false # to validate energy generations in electricity only model
@@ -43,8 +44,8 @@ enable:
   progress_bar: true # show progress bar during downloading routines and other long-running tasks
 
 run:
-  name: "US_2035" # use this to keep track of runs with different settings
-  sector_name: "US_2035"
+  name: "US_2035_flexible_EGS" # use this to keep track of runs with different settings
+  sector_name: "US_2035_flexible_EGS"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -61,8 +62,8 @@ scenario:
   - "DF"
 
 snapshots:
-  start: "2013-01-01"
-  end: "2014-01-01"
+  start: "2018-01-01"
+  end: "2019-01-01"
   inclusive: "left" # end is not inclusive
 
 # definition of the Coordinate Reference Systems
@@ -72,7 +73,10 @@ crs:
   area_crs: ESRI:54009  # projection for area measurements only. Possible recommended values are Global Mollweide "ESRI:54009"
 
 cluster_options:
-  alternative_clustering: true  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
+  simplify_network:
+    s_threshold_fetch_isolated: 0.05 # [-] a share of the national load for merging an isolated network into a backbone network
+
 
 build_shape_options:
   gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
@@ -96,7 +100,7 @@ electricity:
   extendable_carriers:
     Generator: [solar, onwind, offwind-ac, offwind-dc]
     StorageUnit: []  # battery, H2
-    Store: [battery, H2]
+    Store: [battery]
     Link: []  # H2 pipeline
 
   powerplants_filter: (DateOut >= 2035 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1975)
@@ -105,22 +109,41 @@ electricity:
   conventional_carriers: [nuclear, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
 
+atlite:
+  nprocesses: 4
+  cutouts:
+    cutout-2018-era5:
+      module: era5
+      dx: 0.3
+      dy: 0.3
+
 renewable:
   onwind:
+    cutout: cutout-2018-era5
     capacity_per_sqkm: 5.9 # conservative, ScholzPhd Tab 4.3.1: 10MW/km^2
     # correction_factor: 0.93
+    #
   offwind-ac:
+    cutout: cutout-2018-era5
     capacity_per_sqkm: 4
 
   offwind-dc:
+    cutout: cutout-2018-era5
     capacity_per_sqkm: 4
 
   solar:
+    cutout: cutout-2018-era5
     capacity_per_sqkm: 87 # From 1.7 to 4.6 addresses issue #361
 
   csp:
+    cutout: cutout-2018-era5
     csp_model: simple # simple or advanced
+
+  hydro:
+    cutout: cutout-2018-era5
+
   enhanced_geothermal:
+    cutout: cutout-2018-era5
     power_heat_ratio_steps: 3
     lifetime: 25
     max_network_diameter: 20. # km
@@ -137,9 +160,9 @@ costs:
   year: 2035
   version: v0.11.0
   financial_case: "Market"
-  scenario: "Advanced"
+  scenario: "Moderate"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
-  USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
+  USD2013_to_EUR2013: 0.92 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
   fill_values:
     FOM: 0
     VOM: 0
@@ -149,16 +172,7 @@ costs:
     lifetime: 25
     CO2 intensity: 0
     discount rate: 0.07
-  marginal_cost: # EUR/MWh
-    #solar: 0.01
-      #onwind: 0.015
-      #offwind: 0.015
-      #hydro: 0.
-    H2: 1000.
-      #electrolysis: 0.
-    fuel cell: 1000.
-      #battery: 0.
-    #battery inverter: 0.
+
   emission_prices: # in currency per tonne emission, only used with the option Ep
     co2: 0.
 
@@ -193,7 +207,7 @@ sector:
     DF_2035: 0.00 # 0.053 (Reference) 0.275 (Medium) 0.332 (High)
 
   shipping_hydrogen_share: #1.0
-    DF_2035: 0.05 #same share as DF_2030 
+    DF_2035: 0.00 #same share as DF_2030 
 
   conventional_generation: # generator : carrier
     OCGT: gas
