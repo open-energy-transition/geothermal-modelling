@@ -194,11 +194,11 @@ export:
   h2export: [0]
 
 sector:
-  electricity_distribution_grid: False
-  
-  co2_network: False
+  electricity_distribution_grid: false
 
-  biomass_transport: False
+  co2_network: false
+
+  biomass_transport: false
 
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating

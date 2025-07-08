@@ -162,7 +162,7 @@ renewable:
 costs:
   year: 2050
   version: v0.11.0
-  financial_case: "Market" 
+  financial_case: "Market"
   scenario: "Moderate" #the cost of renewables to be manually set high
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
@@ -194,11 +194,11 @@ export:
   h2export: [0]
 
 sector:
-  electricity_distribution_grid: False
+  electricity_distribution_grid: false
 
-  co2_network: False
+  co2_network: false
 
-  biomass_transport: False
+  biomass_transport: false
 
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
