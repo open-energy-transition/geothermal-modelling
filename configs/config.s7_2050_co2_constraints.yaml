@@ -61,7 +61,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "12H"
+  - "120H-gtflex"
   demand:
   - "DF"
 
@@ -99,7 +99,7 @@ build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetM
   group_tolerance_buses: 10000  # [m] (default 5000) Tolerance in meters of the close buses to merge
 
 electricity:
-  co2base: 1.660e+9
+  co2base: 1.376e+9
   extendable_carriers:
     Generator: [solar, onwind, offwind-ac, offwind-dc, nuclear, CCGT]
     StorageUnit: []  # battery, H2
@@ -195,6 +195,12 @@ export:
   h2export: [0]
 
 sector:
+  electricity_distribution_grid: False
+
+  co2_network: False
+
+  biomass_transport: False
+
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share

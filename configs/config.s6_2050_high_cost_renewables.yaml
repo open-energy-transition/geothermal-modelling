@@ -48,8 +48,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050_flexible_EGS" # use this to keep track of runs with different settings
-  sector_name: "US_2050_flexible_EGS"
+  name: "US_2050_high_cost_ren" # use this to keep track of runs with different settings
+  sector_name: "US_2050_high_cost_ren"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -60,8 +60,8 @@ scenario:
   opts: [3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
-  sopts:
-  - "12H"
+  sopt:
+  - "120H-gtflex"
   demand:
   - "DF"
 
@@ -163,7 +163,7 @@ costs:
   year: 2050
   version: v0.11.0
   financial_case: "Market" 
-  scenario: "Advanced" 
+  scenario: "Moderate" #the cost of renewables to be manually set high
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
   fill_values:
@@ -194,6 +194,12 @@ export:
   h2export: [0]
 
 sector:
+  electricity_distribution_grid: False
+
+  co2_network: False
+
+  biomass_transport: False
+
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share

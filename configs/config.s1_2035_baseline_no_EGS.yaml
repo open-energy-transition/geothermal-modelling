@@ -190,6 +190,12 @@ existing_capacities:
   - uranium
 
 sector:
+  electricity_distribution_grid: False
+  
+  co2_network: False
+
+  biomass_transport: False
+
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share

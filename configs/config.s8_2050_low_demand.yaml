@@ -24,7 +24,7 @@ US:
   # Config options to scale demand to future years based on NREL EFS study
   demand_projection:
     planning_horizon: 2050 # Year to be considered for future demand projections between 2030-2050
-    scenario: "Moderate" # Choices - [Reference, Moderate, High]
+    scenario: "Medium" # Choices - [Reference, Medium, High]
     thermal_scenario: "reference case"
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
@@ -61,7 +61,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "12H"
+  - "120H-gtflex"
   demand:
   - "DF"
 
@@ -194,6 +194,12 @@ export:
   h2export: [0]
 
 sector:
+  electricity_distribution_grid: False
+
+  co2_network: False
+
+  biomass_transport: False
+
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share
