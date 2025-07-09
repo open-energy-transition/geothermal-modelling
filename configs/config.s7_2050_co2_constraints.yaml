@@ -48,8 +48,8 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050" # use this to keep track of runs with different settings
-  sector_name: "US_2050"
+  name: "US_2050_co2_constraints" # use this to keep track of runs with different settings
+  sector_name: "US_2050_co2_constraints"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
@@ -57,11 +57,11 @@ scenario:
   simpl: ['']
   ll: ['copt']
   clusters: [100]
-  opts: [3H]
+  opts: [Co2L0.0-3H, Co2L0.2-3H, Co2L0.5-3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "12H"
+  - "120H-gtflex"
   demand:
   - "DF"
 
@@ -78,6 +78,8 @@ crs:
 
 cluster_options:
   alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
+  simplify_network:
+    s_threshold_fetch_isolated: 0.05 # [-] a share of the national load for merging an isolated network into a backbone network
 
 build_shape_options:
   gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
@@ -97,10 +99,11 @@ build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetM
   group_tolerance_buses: 10000  # [m] (default 5000) Tolerance in meters of the close buses to merge
 
 electricity:
+  co2base: 1.376e+9
   extendable_carriers:
     Generator: [solar, onwind, offwind-ac, offwind-dc, nuclear, CCGT]
     StorageUnit: []  # battery, H2
-    Store: [battery, H2]
+    Store: [battery]
     Link: []  # H2 pipeline
 
   powerplants_filter: (DateOut > 2050 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1990) and (Fueltype != 'CCGT' or DateIn >= 2015) and (Fueltype != 'OCGT' or DateIn >= 2015)
@@ -164,6 +167,15 @@ costs:
   scenario: "Moderate"
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
+  fill_values:
+    FOM: 0
+    VOM: 0
+    efficiency: 1
+    fuel: 0
+    investment: 0
+    lifetime: 25
+    CO2 intensity: 0
+    discount rate: 0.07
   fuel:
     biogas: 72.864 #79.2 $/MWhth , conversion rate considered USD_to_EUR = 0.92
 
@@ -183,6 +195,12 @@ export:
   h2export: [0]
 
 sector:
+  electricity_distribution_grid: false
+
+  co2_network: false
+
+  biomass_transport: false
+
   district_heating:
     potential: 0 #maximum fraction of urban demand which can be supplied by district heating
     #increase of today's district heating demand to potential maximum district heating share
