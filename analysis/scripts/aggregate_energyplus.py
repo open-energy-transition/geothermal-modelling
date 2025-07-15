@@ -19,6 +19,7 @@ FILTER_ISLAND_PUMAS = False
 DATA_IS_SCALED = (
     True  # post processing was done externally to workflow, presented as MWh
 )
+FILTER_ISLAND_PUMAS = False
 
 # TODO Revise the scaling part accounting for the projections
 # Assuming that heating & cooling loads are ~25% of the electricity consumption
