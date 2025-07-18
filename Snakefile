@@ -1003,10 +1003,10 @@ rule aggregate_energyplus:
     script:
         "analysis/scripts/aggregate_energyplus.py"
 
-if run_name == 'US_2050_high_cost_ren':
+if config["US"].get("scale_costs",True):
     rule scale_cost_assumptions:
         params:
-            cost_scaling_factor=2
+            cost_scaling_factor=2,
         input: 
             pypsa_network_path=expand(
                 pathlib.Path(
@@ -1047,7 +1047,7 @@ if run_name == 'US_2050_high_cost_ren':
                     "pypsa-earth",
                     "results",
                     SECDIR,
-                    "postnetworks",
+                    "prenetworks",
                     "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_costscaling.nc",
                 ),
                 **config["scenario"],
@@ -1061,7 +1061,7 @@ if run_name == 'US_2050_high_cost_ren':
                     "pypsa-earth",
                     "results",
                     SECDIR,
-                    "postnetworks",
+                    "prenetworks",
                     "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
                 ),
                 **config["scenario"],
@@ -1069,7 +1069,7 @@ if run_name == 'US_2050_high_cost_ren':
                 **config["export"],
             ),
         shell:
-            mv input[0] output[0]
+            "mv {input} {output}"
 
 rule modify_energy_totals:
     params:
