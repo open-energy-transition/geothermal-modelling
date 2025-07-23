@@ -70,6 +70,7 @@ def scale_renewable_costs(pypsa_network, scaling_factor, technology_list):
     """
     for tech in technology_list:
         pypsa_network.generators.loc[pypsa_network.generators.carrier == tech,"marginal_cost"] *= scaling_factor
+        pypsa_network.generators.loc[pypsa_network.generators.carrier == tech,"capital_cost"] *= scaling_factor
 
     return pypsa_network
 
@@ -95,9 +96,11 @@ if __name__ == "__main__":
 
     pypsa_network = parse_inputs(default_path)
 
-    scaled_pypsa_network = scale_renewable_costs(pypsa_network, scaling_factor)
+    technology_list = ['solar','csp','onwind','offwind-ac','offwind-dc']
+
+    scaled_pypsa_network = scale_renewable_costs(pypsa_network, scaling_factor, technology_list)
 
     pypsa_output_network_path = pathlib.Path(
         default_path, snakemake.output.pypsa_network_modified_path[0]
     )
-    scaled_pypsa_network.to_netcdf(pypsa_output_network_path)
+    scaled_pypsa_network.export_to_netcdf(pypsa_output_network_path)
