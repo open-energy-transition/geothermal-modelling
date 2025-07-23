@@ -1006,7 +1006,7 @@ rule aggregate_energyplus:
 if config["US"].get("scale_costs",True):
     rule scale_cost_assumptions:
         params:
-            cost_scaling_factor=2,
+            cost_scaling_factor=config["US"]["cost_scaling_factor"],
         input: 
             pypsa_network_path=expand(
                 pathlib.Path(
