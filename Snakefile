@@ -220,10 +220,22 @@ if USE_ENERGY_PLUS:
                 SECDIR_path,
                 "industrial_heating_costs.csv"
             ),
-            egs_potentials_egs=pathlib.Path(SECDIR_path,"geothermal_data/potential_egs_s{simpl}_{clusters}_{planning_horizons}.csv"),
-            egs_potentials_hs=pathlib.Path(SECDIR_path,"geothermal_data/potential_hs_s{simpl}_{clusters}_{planning_horizons}.csv"),
-            district_heating_geothermal_supply_curves=pathlib.Path(SECDIR_path,"district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"),
-
+            egs_potentials_egs=pathlib.Path(
+                SECDIR_path,
+                "geothermal_data/potential_egs_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            egs_potentials_hs=pathlib.Path(
+                SECDIR_path,
+                "geothermal_data/potential_hs_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            district_heating_geothermal_supply_curves=pathlib.Path(
+                SECDIR_path,
+                "district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
+            district_cooling_geothermal_supply_curves=pathlib.Path(
+                SECDIR_path,
+                "district_cooling_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
+            ),
 
 localrules:
     all,
