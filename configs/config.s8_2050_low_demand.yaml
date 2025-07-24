@@ -26,7 +26,7 @@ US:
     planning_horizon: 2050 # Year to be considered for future demand projections between 2030-2050
     scenario: "Medium" # Choices - [Reference, Medium, High]
     thermal_scenario: "reference case"
-  scale_costs: False
+  scale_costs: false
   cost_scaling_factor: 2
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model

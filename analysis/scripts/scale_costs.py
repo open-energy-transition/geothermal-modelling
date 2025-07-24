@@ -30,9 +30,9 @@ Description
 """
 
 import pathlib
-import pandas as pd
 import datetime as dt
 import pypsa
+
 
 def parse_inputs(default_path):
     """
@@ -54,6 +54,7 @@ def parse_inputs(default_path):
     pypsa_network = pypsa.Network(pypsa_network_path)
     return pypsa_network
 
+
 def scale_renewable_costs(pypsa_network, scaling_factor, technology_list):
     """
     Renewable cost scaling
@@ -69,10 +70,15 @@ def scale_renewable_costs(pypsa_network, scaling_factor, technology_list):
     pypsa_network: PyPSA Model modified prenetwork file
     """
     for tech in technology_list:
-        pypsa_network.generators.loc[pypsa_network.generators.carrier == tech,"marginal_cost"] *= scaling_factor
-        pypsa_network.generators.loc[pypsa_network.generators.carrier == tech,"capital_cost"] *= scaling_factor
+        pypsa_network.generators.loc[
+            pypsa_network.generators.carrier == tech, "marginal_cost"
+        ] *= scaling_factor
+        pypsa_network.generators.loc[
+            pypsa_network.generators.carrier == tech, "capital_cost"
+        ] *= scaling_factor
 
     return pypsa_network
+
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -96,9 +102,11 @@ if __name__ == "__main__":
 
     pypsa_network = parse_inputs(default_path)
 
-    technology_list = ['solar','csp','onwind','offwind-ac','offwind-dc']
+    technology_list = ["solar", "csp", "onwind", "offwind-ac", "offwind-dc"]
 
-    scaled_pypsa_network = scale_renewable_costs(pypsa_network, scaling_factor, technology_list)
+    scaled_pypsa_network = scale_renewable_costs(
+        pypsa_network, scaling_factor, technology_list
+    )
 
     pypsa_output_network_path = pathlib.Path(
         default_path, snakemake.output.pypsa_network_modified_path[0]
