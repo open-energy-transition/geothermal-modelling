@@ -69,7 +69,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "12H"
+  - "3H-noEGS"
   demand:
   - "DF"
 
