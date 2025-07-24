@@ -24,6 +24,8 @@ US:
     planning_horizon: 2035 # Year to be considered for future demand projections between 2030-2050
     scenario: "Reference" # Choices - [Reference, Moderate, High]
     thermal_scenario: "reference case"
+  scale_costs: false
+  cost_scaling_factor: 2
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
     generation_comparison: false # to validate energy generations in electricity only model
@@ -57,7 +59,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2035
   sopts:
-  - "120H"
+  - "3H"
   demand:
   - "DF"
 
@@ -187,6 +189,7 @@ unload_time: 24 # hours for 48h see Hampp2021
 existing_capacities:
   conventional_carriers:
   - lignite
+  - oil
   - coal
   - uranium
 

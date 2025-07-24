@@ -30,6 +30,8 @@ US:
     # "low zero-carbon technology cost","alternative electricity",
     # "alternative transportation"]
     thermal_scenario: "reference case"
+  scale_costs: false
+  cost_scaling_factor: 2
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
     generation_comparison: false # to validate energy generations in electricity only model
@@ -63,7 +65,7 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2035
   sopts:
-  - "3H"
+  - "3H-noEGS"
   demand:
   - "DF"
 

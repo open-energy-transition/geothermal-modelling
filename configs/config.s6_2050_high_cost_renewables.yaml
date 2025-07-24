@@ -26,6 +26,8 @@ US:
     planning_horizon: 2050 # Year to be considered for future demand projections between 2030-2050
     scenario: "Reference" # Choices - [Reference, Moderate, High]
     thermal_scenario: "reference case"
+  scale_costs: true
+  cost_scaling_factor: 2
   summary:
     installed_capacity_comparison: false # to validate capacities in electricity only model
     generation_comparison: false # to validate energy generations in electricity only model
@@ -60,8 +62,8 @@ scenario:
   opts: [3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
-  sopt:
-  - "120H-gtflex"
+  sopts:
+  - "3H-gtflex"
   demand:
   - "DF"
 

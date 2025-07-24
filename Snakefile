@@ -1003,6 +1003,73 @@ rule aggregate_energyplus:
     script:
         "analysis/scripts/aggregate_energyplus.py"
 
+if config["US"].get("scale_costs",True):
+    rule scale_cost_assumptions:
+        params:
+            cost_scaling_factor=config["US"]["cost_scaling_factor"],
+        input: 
+            pypsa_network_path=expand(
+                pathlib.Path(
+                    "workflow",
+                    "pypsa-earth",
+                    "results",
+                    SECDIR,
+                    "prenetworks",
+                    "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+                ),
+                **config["scenario"],
+                **config["costs"],
+                **config["export"],
+            ),
+        output:
+            pypsa_network_modified_path = expand(
+                pathlib.Path(
+                    "workflow",
+                    "pypsa-earth",
+                    "results",
+                    SECDIR,
+                    "prenetworks",
+                    "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_costscaling.nc",
+                ),
+                **config["scenario"],
+                **config["costs"],
+                **config["export"],
+            ),
+        script:
+            "analysis/scripts/scale_costs.py"
+
+
+    rule replace_prenetwork:
+        input:
+            pypsa_network_modified = expand(
+                pathlib.Path(
+                    "workflow",
+                    "pypsa-earth",
+                    "results",
+                    SECDIR,
+                    "prenetworks",
+                    "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export_costscaling.nc",
+                ),
+                **config["scenario"],
+                **config["costs"],
+                **config["export"],
+            ),
+        output:
+            pypsa_earth_results_path=expand(
+                pathlib.Path(
+                    "workflow",
+                    "pypsa-earth",
+                    "results",
+                    SECDIR,
+                    "prenetworks",
+                    "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_{h2export}export.nc",
+                ),
+                **config["scenario"],
+                **config["costs"],
+                **config["export"],
+            ),
+        shell:
+            "mv {input} {output}"
 
 rule modify_energy_totals:
     params:
