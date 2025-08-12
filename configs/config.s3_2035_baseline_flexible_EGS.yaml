@@ -191,6 +191,9 @@ existing_capacities:
   - coal
   - uranium
 
+export:
+  h2export: [0]
+
 sector:
   electricity_distribution_grid: false
 
