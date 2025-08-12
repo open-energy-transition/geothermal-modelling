@@ -14,7 +14,7 @@ logging.basicConfig(
 # TODO Put the parameters into the config
 SHARE_WATER_SH_DEMAND = 0.20
 RATIO_SERV_TO_RESID = 1
-SIMPLIFIED_WRMWATER = True
+SIMPLIFIED_WRMWATER = False
 FILTER_ISLAND_PUMAS = False
 DATA_IS_SCALED = (
     True  # post processing was done externally to workflow, presented as MWh
