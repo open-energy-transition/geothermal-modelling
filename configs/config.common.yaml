@@ -207,7 +207,7 @@ sector:
       efficiency_static: 1 # efficiency of distribution grid (i.e. 3% loses)
 
   land_transport_fuel_cell_share: # 1 means all FCEVs HERE
-    DF_2035: 0.00    
+    DF_2035: 0.00
     DF_2050: 0.00
 
 

@@ -137,7 +137,7 @@ def drop_unrequired_sector_totals(energy_totals):
         energy_totals.loc["US", checked_cols] = 0
 
     # Since rail oil = total rail - electricity oil, if total rail is not assigned to electricity rail, it will lead to unrequired oil behavior
-    energy_totals.loc["US","total rail"] = energy_totals.loc["US","electricity rail"]
+    energy_totals.loc["US", "total rail"] = energy_totals.loc["US", "electricity rail"]
     return energy_totals
 
 
