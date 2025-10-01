@@ -207,13 +207,19 @@ sector:
       efficiency_static: 1 # efficiency of distribution grid (i.e. 3% loses)
 
   land_transport_fuel_cell_share: # 1 means all FCEVs HERE
+    DF_2035: 0.00    
     DF_2050: 0.00
+
 
   land_transport_electric_share: # 1 means all EVs  # This leads to problems when non-zero HERE
+    DF_2035: 0.00
     DF_2050: 0.00
 
+
   shipping_hydrogen_share: #1.0
+    DF_2035: 0.00
     DF_2050: 0.00
+
 
   conventional_generation: # generator : carrier
     OCGT: gas
