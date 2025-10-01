@@ -78,7 +78,7 @@ cluster_options:
     s_threshold_fetch_isolated: false
 
 lines:
-  s_nom_max_min: 400 
+  s_nom_max_min: 400
 
 links:
   p_nom_max_min: 400 # in MW
