@@ -77,6 +77,12 @@ cluster_options:
     p_threshold_merge_isolated: false # [MW] isolated buses are being merged into a single isolated bus if a bus mean power is below the specified threshold
     s_threshold_fetch_isolated: false
 
+lines:
+  s_nom_max_min: 400 
+
+links:
+  p_nom_max_min: 400 # in MW
+
 build_shape_options:
   gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
   # simplify_gadm: true # When true, shape polygons are simplified else no

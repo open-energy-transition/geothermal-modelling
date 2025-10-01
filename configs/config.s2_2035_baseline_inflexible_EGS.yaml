@@ -19,7 +19,7 @@ run:
 
 scenario:
   simpl: ['']
-  ll: ['copt']
+  ll: ['l1.5']
   clusters: [100]
   opts: [3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
