@@ -53,4 +53,3 @@ costs:
   financial_case: "Market"
   scenario: "Moderate" #the cost of renewables to be manually set high
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
-
