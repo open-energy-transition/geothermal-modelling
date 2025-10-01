@@ -11,6 +11,7 @@ sys.path.append("workflow/pypsa-earth/scripts")
 
 configfile: "workflow/pypsa-earth/config.default.yaml"
 configfile: "workflow/pypsa-earth/configs/bundle_config.yaml"
+configfile: "configs/config.common.yaml"
 
 
 # configfile: "configs/config.usa_baseline.yaml"

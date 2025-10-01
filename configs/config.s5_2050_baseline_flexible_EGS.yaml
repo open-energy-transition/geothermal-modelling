@@ -2,52 +2,13 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
-version: 0.3.0
-tutorial: false
-
-logging:
-  level: INFO
-  format: "%(levelname)s:%(name)s:%(message)s"
-
-# countries: ["NG", "BJ"]
-countries: ["US"]
-# Can be replaced by country ["NG", "BJ"], continent ["Africa"] or user-specific region, see more at https://pypsa-earth.readthedocs.io/en/latest/configuration.html#top-level-configuration
-
 # Options specific to geothermal project
 US:
-  retrieve_US_databundle: true # Exclusive for US data
-  demand_year: 2023 # base demand year to be used for electricity demand modelling
-  demand_modelling:
-    holes_area_threshold: 100 # to ignore holes smaller than this area in sq.km (CRS 6372)
-    nprocesses: 4
-    plotting: false
   # Config options to scale demand to future years based on NREL EFS study
   demand_projection:
     planning_horizon: 2050 # Year to be considered for future demand projections between 2030-2050
     scenario: "Reference" # Choices - [Reference, Moderate, High]
     thermal_scenario: "reference case"
-  scale_costs: false
-  cost_scaling_factor: 2
-  summary:
-    installed_capacity_comparison: false # to validate capacities in electricity only model
-    generation_comparison: false # to validate energy generations in electricity only model
-    network_comparison: false # to validate transmission network in electricity only model
-    energy_carriers: [electricity, heat, H2, oil, gas, biomass, battery, cooling] # energy carriers to be plotted 
-  area_crs: 6372
-
-
-enable:
-  retrieve_databundle: true  #  Recommended 'true', for the first run. Otherwise data might be missing.
-  retrieve_cost_data: true  # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
-  download_osm_data: true  # If 'true', OpenStreetMap data will be downloaded for the above given countries
-  build_natura_raster: false  # If True, then an exclusion raster will be build
-  build_cutout: false
-  # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
-  # requires cds API key https://cds.climate.copernicus.eu/api-how-to
-  # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
-  progress_bar: true # show progress bar during downloading routines and other long-running tasks
-
-custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
   name: "US_2050_flexible_EGS" # use this to keep track of runs with different settings
@@ -63,42 +24,10 @@ scenario:
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
   sopts:
-  - "120H-gtflex"
+  - "3H-gtflex"
   demand:
   - "DF"
 
-snapshots:
-  start: "2018-01-01"
-  end: "2019-01-01"
-  inclusive: "left" # end is not inclusive
-
-# definition of the Coordinate Reference Systems
-crs:
-  geo_crs: EPSG:4326  # general geographic projection, not used for metric measures. "EPSG:4326" is the standard used by OSM and google maps
-  distance_crs: EPSG:3857  # projection for distance measurements only. Possible recommended values are "EPSG:3857" (used by OSM and Google Maps)
-  area_crs: ESRI:54009  # projection for area measurements only. Possible recommended values are Global Mollweide "ESRI:54009"
-
-cluster_options:
-  alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
-  simplify_network:
-    s_threshold_fetch_isolated: 0.05 # [-] a share of the national load for merging an isolated network into a backbone network
-
-build_shape_options:
-  gadm_layer_id: 1  # GADM level area used for the gadm_shapes. Codes are country-dependent but roughly: 0: country, 1: region/county-like, 2: municipality-like
-  # simplify_gadm: true # When true, shape polygons are simplified else no
-  # simplify_tolerance: 0.01 # Value considered only when simplify_gadm is True
-  update_file: false  # When true, all the input files are downloaded again and replace the existing files
-  out_logging: true  # When true, logging is printed to console
-  year: 2020  # reference year used to derive shapes, info on population and info on GDP
-  nprocesses: 3  # number of processes to be used in build_shapes
-  worldpop_method: "standard"  # "standard" pulls from web 1kmx1km raster, "api" pulls from API 100mx100m raster, false (not "false") no pop addition to shape which is useful when generating only cutout
-  gdp_method: "standard"  # "standard" pulls from web 1x1km raster, false (not "false") no gdp addition to shape which useful when generating only cutout
-  contended_flag: "set_by_country" # "set_by_country" assigns the contended areas to the countries according to the GADM database, "drop" drops these contended areas from the model
-  gadm_file_prefix: "gadm41_"
-  gadm_url_prefix: "https://geodata.ucdavis.edu/gadm/gadm4.1/gpkg/"
-
-build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetMap
-  group_tolerance_buses: 10000  # [m] (default 5000) Tolerance in meters of the close buses to merge
 
 electricity:
   extendable_carriers:
@@ -114,51 +43,6 @@ electricity:
   renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
 
 
-atlite:
-  nprocesses: 4
-  cutouts:
-    cutout-2018-era5:
-      module: era5
-      dx: 0.3
-      dy: 0.3
-
-renewable:
-  onwind:
-    cutout: cutout-2018-era5
-    capacity_per_sqkm: 5.9 # conservative, ScholzPhd Tab 4.3.1: 10MW/km^2
-    # correction_factor: 0.93
-    #
-  offwind-ac:
-    cutout: cutout-2018-era5
-    capacity_per_sqkm: 4
-
-  offwind-dc:
-    cutout: cutout-2018-era5
-    capacity_per_sqkm: 4
-
-  solar:
-    cutout: cutout-2018-era5
-    capacity_per_sqkm: 87 # From 1.7 to 4.6 addresses issue #361
-
-  csp:
-    cutout: cutout-2018-era5
-    csp_model: simple # simple or advanced
-
-  hydro:
-    cutout: cutout-2018-era5
-
-  enhanced_geothermal:
-    cutout: cutout-2018-era5
-    power_heat_ratio_steps: 3
-    lifetime: 25
-    max_network_diameter: 20. # km
-    min_network_average_capacity: 10. # MWh
-    max_network_average_capacity: 30. # MWh
-    piping_cost: 1_300_000 # $/km
-    industrial_heating_n_cost_steps: 2
-    heat_distribution_network_efficiency: 0.9
-    supply_curve_steps: 10
-
 # TODO: Needs to be adjusted for Africa.
 # Costs Configuration (Do not remove, needed for Sphynx documentation).
 costs:
@@ -166,88 +50,4 @@ costs:
   version: v0.11.0
   financial_case: "Market"
   scenario: "Moderate"
-  rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
-  USD2013_to_EUR2013: 0.92 #0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
-  fill_values:
-    FOM: 0
-    VOM: 0
-    efficiency: 1
-    fuel: 0
-    investment: 0
-    lifetime: 25
-    CO2 intensity: 0
-    discount rate: 0.07
-  fuel:
-    biogas: 72.864 #79.2 $/MWhth , conversion rate considered USD_to_EUR = 0.92
 
-
-# ------------------- SECTOR OPTIONS -------------------
-fossil_reserves:
-  oil: 1000 #TWh Maybe redundant
-
-existing_capacities:
-  conventional_carriers:
-  - lignite
-  - coal
-  - oil
-  - uranium
-
-export:
-  h2export: [0]
-
-sector:
-  electricity_distribution_grid: false
-
-  co2_network: false
-
-  biomass_transport: false
-
-  chp: false
-
-  district_heating:
-    potential: 0 #maximum fraction of urban demand which can be supplied by district heating
-    #increase of today's district heating demand to potential maximum district heating share
-    #progress = 0 means today's district heating share, progress=-1 means maximum fraction of urban demand is supplied by district heating
-    progress: 0
-
-  land_transport_fuel_cell_share: # 1 means all FCEVs HERE
-    DF_2050: 0.00
-
-  land_transport_electric_share: # 1 means all EVs  # This leads to problems when non-zero HERE
-    DF_2050: 0.00
-
-  shipping_hydrogen_share: #1.0
-    DF_2050: 0.00
-
-  conventional_generation: # generator : carrier
-    OCGT: gas
-    CCGT: gas
-    oil: oil
-    coal: coal
-    lignite: lignite
-    biomass: biomass
-  keep_existing_capacities: true
-
-solving:
-  options:
-    formulation: kirchhoff
-    load_shedding: false
-    noisy_costs: true
-    min_iterations: 4
-    max_iterations: 6
-    clip_p_max_pu: 0.01
-    skip_iterations: true
-    track_iterations: false
-    #nhours: 10
-  solver:
-    name: gurobi
-  solver_options:
-    gurobi-default:
-      threads: 8
-    # method: 2 # barrier (=ipm)
-    # crossover: 0
-    # BarConvTol: 1.e-5
-    # FeasibilityTol: 1.e-6
-    # AggFill: 0
-    # PreDual: 0
-    # GURO_PAR_BARDENSETHRESH: 200
