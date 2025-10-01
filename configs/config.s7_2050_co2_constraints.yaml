@@ -50,15 +50,15 @@ enable:
 custom_rules: []  # Default empty [] or link to custom rule file e.g. ["my_folder/my_rules.smk"] that add rules to Snakefile
 
 run:
-  name: "US_2050_co2_constraints" # use this to keep track of runs with different settings
-  sector_name: "US_2050_co2_constraints"
+  name: "US_2050_co2_constraints_reeds_vbis" # use this to keep track of runs with different settings
+  sector_name: "US_2050_co2_constraints_reeds_vbis"
   shared_cutouts: true  # set to true to share the default cutout(s) across runs
                         # Note: value false requires build_cutout to be enabled
 
 scenario:
   simpl: ['']
   ll: ['copt']
-  clusters: [150]
+  clusters: [100]
   opts: [Co2L0.0-3H] #, Co2L0.2-3H,Co2L0.0-3H]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2050
@@ -79,8 +79,11 @@ crs:
   area_crs: ESRI:54009  # projection for area measurements only. Possible recommended values are Global Mollweide "ESRI:54009"
 
 cluster_options:
-  alternative_clustering: false  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering: true  # "False" use Voronoi shapes, "True" use GADM shapes
+  alternative_clustering_shapefile: "data/reeds_voronoi_bis_fix_geomcollection.geojson"
+  custom_network_capacities: true
   simplify_network:
+    remove_stubs: false
     s_threshold_fetch_isolated: 0.05 # [-] a share of the national load for merging an isolated network into a backbone network
 
 build_shape_options:
@@ -102,6 +105,7 @@ build_osm_network:  # Options of the build_osm_network script; osm = OpenStreetM
 
 electricity:
   co2base: 1.376e+9
+  s_max_pu: 1
   extendable_carriers:
     Generator: [solar, onwind, offwind-ac, offwind-dc, nuclear, CCGT]
     StorageUnit: []  # battery, H2
@@ -197,6 +201,10 @@ export:
   h2export: [0]
 
 sector:
+  hydrogen:
+    network: false
+    gas_network_repurposing: false
+
   electricity_distribution_grid: false
 
   co2_network: false
