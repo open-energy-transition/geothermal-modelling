@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
+#
+# SPDX-License-Identifier: CC0-1.0
+
+version: 0.3.0
+tutorial: false
+
+logging:
+  level: INFO
+  format: "%(levelname)s:%(name)s:%(message)s"
+
+countries: ["US"]
+
+# Options specific to geothermal project
+US:
+  # Config options to scale demand to future years based on NREL EFS study
+  demand_projection:
+    planning_horizon: 2035 # Year to be considered for future demand projections between 2030-2050
+    scenario: "Reference" # Choices - [Reference, Moderate, High]
+    thermal_scenario: "reference case"
+
+
+run:
+  name: "US_2035_BBB" # use this to keep track of runs with different settings
+  sector_name: "US_2025_BBB"
+  shared_cutouts: true  # set to true to share the default cutout(s) across runs
+                        # Note: value false requires build_cutout to be enabled
+
+scenario:
+  simpl: ['']
+  ll: ['l1.5']
+  clusters: [100]
+  opts: [3H]
+  planning_horizons: # investment years for myopic and perfect; or costs year for overnight
+  - 2035
+  sopts:
+  - "3H-gtflex-BBB2034" # 2034 leads to a ~25% CAPEX reduction of geothermal projects
+  demand:
+  - "DF"
+
+electricity:
+  extendable_carriers:
+    Generator: [solar, onwind, offwind-ac, offwind-dc]
+    StorageUnit: []  # battery, H2
+    Store: [battery]
+    Link: []  # H2 pipeline
+
+  powerplants_filter: (DateOut >= 2035 or DateOut != DateOut) and (Fueltype != 'nuclear' or DateIn >= 1975)
+  custom_powerplants: "replace" #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
+
+  conventional_carriers: [nuclear, OCGT, CCGT, coal, lignite, geothermal, biomass]
+  renewable_carriers: [solar, csp, onwind, offwind-ac, offwind-dc, hydro]
+
+
+# TODO: Needs to be adjusted for Africa.
+# Costs Configuration (Do not remove, needed for Sphynx documentation).
+costs:
+  year: 2035
+  version: v0.11.0
+  financial_case: "Market"
+  scenario: "Moderate"
