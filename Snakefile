@@ -26,7 +26,7 @@ module pypsa_earth:
         "workflow/pypsa-earth"
 
 
-use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles
+use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles, prepare_sector_network
 # A temporaly solution to switch-on custom inputs for heating/cooling
 USE_ENERGY_PLUS = True
 
@@ -237,6 +237,9 @@ if USE_ENERGY_PLUS:
                 SECDIR_path,
                 "district_cooling_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
             ),
+
+else:
+    use rule prepare_sector_network from pypsa_earth
 
 localrules:
     all,

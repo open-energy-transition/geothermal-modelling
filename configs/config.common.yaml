@@ -75,10 +75,11 @@ cluster_options:
     remove_stubs: false
     p_threshold_drop_isolated: 0 # [MW] isolated buses are being discarded if bus mean power is below the specified threshold
     p_threshold_merge_isolated: false # [MW] isolated buses are being merged into a single isolated bus if a bus mean power is below the specified threshold
-    s_threshold_fetch_isolated: false
+    s_threshold_fetch_isolated: 0.0005
 
 lines:
   s_nom_max_min: 400
+  s_max_pu: 1
 
 links:
   p_nom_max_min: 400 # in MW
