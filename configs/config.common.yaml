@@ -78,7 +78,7 @@ cluster_options:
     s_threshold_fetch_isolated: 0.0005
 
 lines:
-  s_nom_max_min: 400 
+  s_nom_max_min: 400
   s_max_pu: 1
 
 links:
