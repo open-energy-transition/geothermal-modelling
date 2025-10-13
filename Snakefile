@@ -27,6 +27,8 @@ module pypsa_earth:
 
 
 use rule * from pypsa_earth exclude copy_custom_powerplants, build_demand_profiles, prepare_sector_network
+
+
 # A temporaly solution to switch-on custom inputs for heating/cooling
 USE_ENERGY_PLUS = True
 
@@ -41,14 +43,12 @@ RDIR_path = pathlib.Path(
     "pypsa-earth",
     "resources",
     run_name,
-
 )
 SECDIR_path = pathlib.Path(
     "workflow",
     "pypsa-earth",
     "resources",
     SECDIR,
-
 )
 RESDIR_path = pathlib.Path(
     "workflow",
@@ -63,6 +63,7 @@ DATDIR_path = pathlib.Path(
 )
 
 if USE_ENERGY_PLUS:
+
     use rule prepare_sector_network from pypsa_earth as prepare_sector_network with:
         input:
             network=pathlib.Path(
@@ -73,14 +74,8 @@ if USE_ENERGY_PLUS:
                 "prenetworks",
                 "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}_{demand}_presec.nc",
             ),
-            costs=pathlib.Path(
-                RDIR_path,
-                "costs_{planning_horizons}.csv"
-            ),
-            cooling_costs=pathlib.Path(
-                DATDIR_path,
-                "costs_cooling.csv"
-            ),
+            costs=pathlib.Path(RDIR_path, "costs_{planning_horizons}.csv"),
+            cooling_costs=pathlib.Path(DATDIR_path, "costs_cooling.csv"),
             h2_cavern=pathlib.Path(
                 DATDIR_path,
                 "hydrogen_salt_cavern_potentials.csv",
@@ -112,32 +107,25 @@ if USE_ENERGY_PLUS:
                 "nodal_transport_data_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             overrides=pathlib.Path(DATDIR_path, "override_component_attrs"),
-            clustered_pop_layout = pathlib.Path(
+            clustered_pop_layout=pathlib.Path(
                 SECDIR_path,
                 "population_shares",
-                "pop_layout_elec_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "pop_layout_elec_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             #industrial_demand = pathlib.Path(
             #    SECDIR_path,
             #    "demand",
             #    "industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}_{demand}.csv"
             #),
-            energy_totals = pathlib.Path(
-                SECDIR_path,
-                "energy_totals_{demand}_{planning_horizons}.csv"
+            energy_totals=pathlib.Path(
+                SECDIR_path, "energy_totals_{demand}_{planning_horizons}.csv"
             ),
-            airports = pathlib.Path(
-                SECDIR_path,
-                "airports.csv"
-            ),
-            ports = pathlib.Path(
-                SECDIR_path,
-                "ports.csv"
-            ),
+            airports=pathlib.Path(SECDIR_path, "airports.csv"),
+            ports=pathlib.Path(SECDIR_path, "ports.csv"),
             heat_demand=pathlib.Path(
                 SECDIR_path,
-                "demand", 
-                "heat",    
+                "demand",
+                "heat",
                 "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
                 # "heat_demand_AB_s_10_2030_ep.csv",
             ),
@@ -147,99 +135,98 @@ if USE_ENERGY_PLUS:
                 "heat",
                 "cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
                 # "cooling_demand_AB_s_10_2030_ep.csv",
-            ),        
-            ashp_cop = pathlib.Path(
+            ),
+            ashp_cop=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "ashp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "ashp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            gshp_cop = pathlib.Path(
+            gshp_cop=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "gshp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "gshp_cop_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            solar_thermal = pathlib.Path(
+            solar_thermal=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "solar_thermal_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "solar_thermal_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            cop_hp_cooling_total = pathlib.Path(
+            cop_hp_cooling_total=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "cop_hp_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "cop_hp_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            cop_ac_cooling_total = pathlib.Path(
+            cop_ac_cooling_total=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "cop_ac_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "cop_ac_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            capft_abch_cooling_total = pathlib.Path(
+            capft_abch_cooling_total=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "capft_abch_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "capft_abch_cooling_total_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            district_heat_share = pathlib.Path(
+            district_heat_share=pathlib.Path(
                 SECDIR_path,
                 "demand",
                 "heat",
-                "district_heat_share_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "district_heat_share_{demand}_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
-            biomass_transport_costs = pathlib.Path(
-                DATDIR_path,
-                "temp_hard_coded",
-                "biomass_transport_costs.csv"
+            biomass_transport_costs=pathlib.Path(
+                DATDIR_path, "temp_hard_coded", "biomass_transport_costs.csv"
             ),
-            shapes_path = pathlib.Path(
+            shapes_path=pathlib.Path(
                 RDIR_path,
                 "bus_regions",
-                "regions_onshore_elec_s{simpl}_{clusters}.geojson"
+                "regions_onshore_elec_s{simpl}_{clusters}.geojson",
             ),
-            pipelines = (
+            pipelines=(
                 pathlib.Path("data", "custom", "pipelines.csv")
                 if config["custom_data"]["gas_network"]
                 else pathlib.Path(
                     SECDIR_path,
                     "gas_networks",
-                    "gas_network_elec_s{simpl}_{clusters}.csv"
+                    "gas_network_elec_s{simpl}_{clusters}.csv",
                 )
             ),
             industrial_heating_egs_supply_curves=pathlib.Path(
                 SECDIR_path,
-                "industrial_heating_egs_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "industrial_heating_egs_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             industrial_heating_demands=pathlib.Path(
                 SECDIR_path,
-                "industrial_heating_demands_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "industrial_heating_demands_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             industrial_heating_costs=pathlib.Path(
-                SECDIR_path,
-                "industrial_heating_costs.csv"
+                SECDIR_path, "industrial_heating_costs.csv"
             ),
             egs_potentials_egs=pathlib.Path(
                 SECDIR_path,
-                "geothermal_data/potential_egs_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "geothermal_data/potential_egs_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             egs_potentials_hs=pathlib.Path(
                 SECDIR_path,
-                "geothermal_data/potential_hs_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "geothermal_data/potential_hs_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             district_heating_geothermal_supply_curves=pathlib.Path(
                 SECDIR_path,
-                "district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "district_heating_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
             district_cooling_geothermal_supply_curves=pathlib.Path(
                 SECDIR_path,
-                "district_cooling_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv"
+                "district_cooling_geothermal_supply_curves_s{simpl}_{clusters}_{planning_horizons}.csv",
             ),
 
 else:
+
     use rule prepare_sector_network from pypsa_earth
+
 
 localrules:
     all,
@@ -286,6 +273,7 @@ rule build_custom_powerplants:
     script:
         "analysis/scripts/build_custom_powerplants.py"
 
+
 if config["US"].get("retrieve_US_databundle", True):
 
     rule retrieve_data:
@@ -295,7 +283,7 @@ if config["US"].get("retrieve_US_databundle", True):
             cookie_filename="geothermal_data",
             output_directory=pathlib.Path("analysis", "gdrive_data", "data"),
             delta_months=5,
-            merge_files=False,            
+            merge_files=False,
         output:
             expand(
                 "analysis/gdrive_data/data/powerplant_data/{filename}",
@@ -346,14 +334,27 @@ if config["US"].get("retrieve_US_databundle", True):
                     "demand_data/table_10_EIA_utility_sales.xlsx",
                     "demand_data/Electric_Retail_Service_Territories.geojson",
                 ],
-            ), 
-            expand(
-                pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","EIA930_{demand_year}_Jan_Jun_opt.csv"), **config["US"], 
-            ), 
-            expand(
-                pathlib.Path("analysis","gdrive_data","data","electricity_demand_data","EIA930_{demand_year}_Jul_Dec_opt.csv"), **config["US"], 
             ),
-
+            expand(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "electricity_demand_data",
+                    "EIA930_{demand_year}_Jan_Jun_opt.csv",
+                ),
+                **config["US"],
+            ),
+            expand(
+                pathlib.Path(
+                    "analysis",
+                    "gdrive_data",
+                    "data",
+                    "electricity_demand_data",
+                    "EIA930_{demand_year}_Jul_Dec_opt.csv",
+                ),
+                **config["US"],
+            ),
             directory(
                 pathlib.Path(
                     "analysis",
@@ -371,24 +372,26 @@ if config["US"].get("retrieve_US_databundle", True):
             #gdrive_url="https://drive.google.com/drive/folders/1sWDPC1EEzVtgixBb8C-OqZiEX3dmTOec",
             gdrive_url="https://drive.google.com/drive/folders/1A8rA2p1a1cv1poPYlBRvAuLeYxENA-KK?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "pumas",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "utilities","ipums_puma_2010"),
+            cookie_filename="pumas",
+            output_directory=pathlib.Path(
+                "analysis", "gdrive_data", "data", "utilities", "ipums_puma_2010"
+            ),
             delta_months=5,
-            merge_files=False,            
+            merge_files=False,
         output:
-#            expand(
-#                "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
-#                filename=[
-#                    "ipums_puma_2010.CPG",
-#                    "ipums_puma_2010.sbn",
-#                    "ipums_puma_2010.shp.xml",
-#                    "ipums_puma_2010.dbf",
-#                    "ipums_puma_2010.sbx",
-#                    "ipums_puma_2010.shx",
-#                    "ipums_puma_2010.prj",
-#                    "ipums_puma_2010.shp",
-#                ],
-#            ),
+            #            expand(
+            #                "analysis/gdrive_data/data/utilities/ipums_puma_2010/{filename}",
+            #                filename=[
+            #                    "ipums_puma_2010.CPG",
+            #                    "ipums_puma_2010.sbn",
+            #                    "ipums_puma_2010.shp.xml",
+            #                    "ipums_puma_2010.dbf",
+            #                    "ipums_puma_2010.sbx",
+            #                    "ipums_puma_2010.shx",
+            #                    "ipums_puma_2010.prj",
+            #                    "ipums_puma_2010.shp",
+            #                ],
+            #            ),
             directory(
                 pathlib.Path(
                     "analysis",
@@ -405,11 +408,20 @@ if config["US"].get("retrieve_US_databundle", True):
         params:
             gdrive_url="https://drive.google.com/drive/folders/1LFGl8rgMkKeyoaikk6lCMc-Db8OYdN2-?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "restock_space_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data", "EnergyPlus","resstock","heating_cooling_summaries","heating","2018"),
+            cookie_filename="restock_space_heating",
+            output_directory=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "EnergyPlus",
+                "resstock",
+                "heating_cooling_summaries",
+                "heating",
+                "2018",
+            ),
             delta_months=5,
             merge_files=True,
-        # TODO check that recursive retrieval works    
+        # TODO check that recursive retrieval works
         output:
             directory(
                 pathlib.Path(
@@ -419,22 +431,31 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "heating",         
-		    "2018",            
+                    "heating",
+                    "2018",
                 )
-            ),         
+            ),
         script:
             "analysis/scripts/download_from_gdrive.py"
-    
+
     rule retrieve_resstock_warmwater_heating:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1NBUXUxGt8WPhBgBuz28Mryy7UBvN0lz6?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "restock_warmwater_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","warm_water","2018"),
+            cookie_filename="restock_warmwater_heating",
+            output_directory=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "EnergyPlus",
+                "resstock",
+                "heating_cooling_summaries",
+                "warm_water",
+                "2018",
+            ),
             delta_months=5,
             merge_files=True,
-        # TODO check that recursive retrieval works    
+        # TODO check that recursive retrieval works
         output:
             directory(
                 pathlib.Path(
@@ -444,22 +465,31 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "warm_water",     
-		    "2018",              
+                    "warm_water",
+                    "2018",
                 )
-            ),         
+            ),
         script:
-            "analysis/scripts/download_from_gdrive.py"            
+            "analysis/scripts/download_from_gdrive.py"
 
     rule retrieve_resstock_space_cooling:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1N9uGeX_EfjUFPhYu8ZN6ou8R4ZMgb2sO?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "restock_space_cooling",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","resstock","heating_cooling_summaries","cooling","2018"),
+            cookie_filename="restock_space_cooling",
+            output_directory=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "EnergyPlus",
+                "resstock",
+                "heating_cooling_summaries",
+                "cooling",
+                "2018",
+            ),
             delta_months=5,
             merge_files=True,
-        # TODO check that recursive retrieval works    
+        # TODO check that recursive retrieval works
         output:
             directory(
                 pathlib.Path(
@@ -469,22 +499,31 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "resstock",
                     "heating_cooling_summaries",
-                    "cooling",    
-		    "2018",               
+                    "cooling",
+                    "2018",
                 )
-            ),         
+            ),
         script:
-            "analysis/scripts/download_from_gdrive.py"            
+            "analysis/scripts/download_from_gdrive.py"
 
     rule retrieve_comstock_space_heating:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1iHog11gx2LgWkFI15XnRAh7dku5vemob?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "comstock_space_heating",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","heating","2018"),
+            cookie_filename="comstock_space_heating",
+            output_directory=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "EnergyPlus",
+                "comstock",
+                "heating_cooling_summaries",
+                "heating",
+                "2018",
+            ),
             delta_months=5,
             merge_files=True,
-        # TODO check that recursive retrieval works    
+        # TODO check that recursive retrieval works
         output:
             directory(
                 pathlib.Path(
@@ -494,22 +533,31 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "heating",   
-	 	    "2018",              
+                    "heating",
+                    "2018",
                 )
-            ),         
+            ),
         script:
             "analysis/scripts/download_from_gdrive.py"
-    
+
     rule retrieve_comstock_warmwater_heating:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1i56pKUf3vw3JAVqPV89p6ZbrSE0iCvae?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "comstock_warm_water",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","warm_water","2018"),
+            cookie_filename="comstock_warm_water",
+            output_directory=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "EnergyPlus",
+                "comstock",
+                "heating_cooling_summaries",
+                "warm_water",
+                "2018",
+            ),
             delta_months=5,
-            merge_files=True,            
-        # TODO check that recursive retrieval works    
+            merge_files=True,
+        # TODO check that recursive retrieval works
         output:
             directory(
                 pathlib.Path(
@@ -519,22 +567,31 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "warm_water", 
-		    "2018",                   
+                    "warm_water",
+                    "2018",
                 )
-            ),         
+            ),
         script:
-            "analysis/scripts/download_from_gdrive.py"         
+            "analysis/scripts/download_from_gdrive.py"
 
     rule retrieve_comstock_space_cooling:
         params:
             gdrive_url="https://drive.google.com/drive/folders/1XGr2EF-0qsaJ5TYFQfeaBSK2tPMJpglH?usp=drive_link",
             cookies_path=pathlib.Path(".cache", "gdown"),
-            cookie_filename = "comstock_space_cooling",
-            output_directory=pathlib.Path("analysis", "gdrive_data", "data","EnergyPlus","comstock","heating_cooling_summaries","cooling","2018"),
+            cookie_filename="comstock_space_cooling",
+            output_directory=pathlib.Path(
+                "analysis",
+                "gdrive_data",
+                "data",
+                "EnergyPlus",
+                "comstock",
+                "heating_cooling_summaries",
+                "cooling",
+                "2018",
+            ),
             delta_months=5,
-            merge_files=True,            
-        # TODO check that recursive retrieval works    
+            merge_files=True,
+        # TODO check that recursive retrieval works
         output:
             directory(
                 pathlib.Path(
@@ -544,12 +601,12 @@ if config["US"].get("retrieve_US_databundle", True):
                     "EnergyPlus",
                     "comstock",
                     "heating_cooling_summaries",
-                    "cooling",     
-		    "2018",           
+                    "cooling",
+                    "2018",
                 )
-            ),         
+            ),
         script:
-            "analysis/scripts/download_from_gdrive.py"            
+            "analysis/scripts/download_from_gdrive.py"
 
 
 if config["US"].get("network_comparison", True):
@@ -905,7 +962,7 @@ rule build_demand_profiles_from_eia:
 
 
 rule aggregate_energyplus:
-    params: 
+    params:
         snapshot_start=config["snapshots"]["start"],
         thermal_proj_year=config["US"]["demand_projection"]["planning_horizon"],
         thermal_scenario=config["US"]["demand_projection"]["thermal_scenario"],
@@ -931,13 +988,13 @@ rule aggregate_energyplus:
             "heating_cooling_summaries",
             "warm_water",
             "2018",
-        ),        
+        ),
         state_resstock_cool_dir=pathlib.Path(
             "analysis",
             "gdrive_data",
             "data",
             "EnergyPlus",
-            "resstock",            
+            "resstock",
             "heating_cooling_summaries",
             "cooling",
             "2018",
@@ -961,7 +1018,7 @@ rule aggregate_energyplus:
             "heating_cooling_summaries",
             "warm_water",
             "2018",
-        ),        
+        ),
         state_comstock_cool_dir=pathlib.Path(
             "analysis",
             "gdrive_data",
@@ -980,7 +1037,7 @@ rule aggregate_energyplus:
                 run_name,
                 "bus_regions",
                 "regions_onshore_elec_s{simpl}_{clusters}.geojson",
-                ),
+            ),
             **config["scenario"],
         ),
         puma_path=pathlib.Path(
@@ -989,23 +1046,21 @@ rule aggregate_energyplus:
             "data",
             "utilities",
             "ipums_puma_2010",
-            #r"ipums_puma_2010.shp",
+            # r"ipums_puma_2010.shp",
         ),
         states_path=pathlib.Path(
             "data",
             "states_centroids_abbr.csv",
         ),
-        growth_path=pathlib.Path(
-            "data",
-            "growth_rates_normal_data.csv"
-        ),
+        growth_path=pathlib.Path("data", "growth_rates_normal_data.csv"),
     output:
         cool_demand_path=expand(
             pathlib.Path(
                 SECDIR_path,
-                #"cooling_demand_DF_s_100_2050_ep.csv"
+                # "cooling_demand_DF_s_100_2050_ep.csv"
                 "demand/heat/cooling_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
-            ), ** config["scenario"]
+            ),
+            **config["scenario"],
         ),
         heat_demand_path=expand(
             pathlib.Path(
@@ -1013,16 +1068,19 @@ rule aggregate_energyplus:
                 "demand",
                 "heat",
                 "heat_demand_{demand}_s{simpl}_{clusters}_{planning_horizons}_ep.csv",
-            ), ** config["scenario"]
+            ),
+            **config["scenario"],
         ),
     script:
         "analysis/scripts/aggregate_energyplus.py"
 
-if config["US"].get("scale_costs",True):
+
+if config["US"].get("scale_costs", True):
+
     rule scale_cost_assumptions:
         params:
             cost_scaling_factor=config["US"]["cost_scaling_factor"],
-        input: 
+        input:
             pypsa_network_path=expand(
                 pathlib.Path(
                     "workflow",
@@ -1037,7 +1095,7 @@ if config["US"].get("scale_costs",True):
                 **config["export"],
             ),
         output:
-            pypsa_network_modified_path = expand(
+            pypsa_network_modified_path=expand(
                 pathlib.Path(
                     "workflow",
                     "pypsa-earth",
@@ -1053,10 +1111,9 @@ if config["US"].get("scale_costs",True):
         script:
             "analysis/scripts/scale_costs.py"
 
-
     rule replace_prenetwork:
         input:
-            pypsa_network_modified = expand(
+            pypsa_network_modified=expand(
                 pathlib.Path(
                     "workflow",
                     "pypsa-earth",
@@ -1085,6 +1142,7 @@ if config["US"].get("scale_costs",True):
             ),
         shell:
             "mv {input} {output}"
+
 
 rule modify_energy_totals:
     params:
