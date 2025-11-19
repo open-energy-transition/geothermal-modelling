@@ -53,3 +53,9 @@ costs:
   financial_case: "Market"
   scenario: "Moderate"
 
+sector:
+  # the target values from Energy Outlook 2050
+  residential_heat_total: 2373.3e+3 # 8.1 quads
+  services_heat_total: 797.0e+3   # 2.72 quads
+  residential_cool_total: 612.4e+3 # 2.09 quads 
+  services_cool_total: 366.3e+3 # 1.25 quads
