@@ -42,16 +42,17 @@ Description
 -----------
 """
 
-import pathlib
 import datetime as dt
-import geopandas as gpd
-import pandas as pd
 import os
-from shapely.validation import make_valid
-import numpy as np
-import plotly.express as px
+import pathlib
 import sys
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import plotly.express as px
 from _helpers_usa import get_colors
+from shapely.validation import make_valid
 
 
 def parse_inputs(default_path, demand_year):

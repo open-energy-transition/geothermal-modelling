@@ -1,17 +1,17 @@
-# coding=utf-8# -*- coding: utf-8 -*-
 # # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 # #
 # # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # # -*- coding: utf-8 -*-
 
-import gdown
-import pathlib
-import requests
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-import shutil
 import os
+import pathlib
+import shutil
+from datetime import datetime
+
+import gdown
+import requests
+from dateutil.relativedelta import relativedelta
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -78,7 +78,6 @@ if __name__ == "__main__":
         )
     except Exception as e:
         print("Error", e)
-        pass
 
     if snakemake.params.merge_files:
         extra_dir_path = pathlib.Path(download_path, "Set2")
