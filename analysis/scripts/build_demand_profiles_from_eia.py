@@ -41,15 +41,16 @@ Description
 -----------
 """
 
-import pathlib
 import datetime as dt
-import pandas as pd
-import geopandas as gpd
-from _helpers_usa import get_colors
-import numpy as np
-import pypsa
-import os
 import math
+import os
+import pathlib
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import pypsa
+from _helpers_usa import get_colors
 
 
 def parse_inputs(default_path, distance_crs):
@@ -156,9 +157,9 @@ def build_demand_profiles(
 
     # temporal scaling factor
     df_utility_centroid["temp_scale"] = df_utility_centroid.apply(
-        lambda x: df_ba_demand[f"E_{x['EIAcode']}_D"].sum()
-        / 1e3
-        / x["Sales (Megawatthours)"],
+        lambda x: (
+            df_ba_demand[f"E_{x['EIAcode']}_D"].sum() / 1e3 / x["Sales (Megawatthours)"]
+        ),
         axis=1,
     )
 
