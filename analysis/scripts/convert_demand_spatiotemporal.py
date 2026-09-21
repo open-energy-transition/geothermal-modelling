@@ -1,9 +1,9 @@
-import pandas as pd
-import geopandas as gpd
 import pathlib
-import numpy as np
-import pypsa
 
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import pypsa
 from _helpers_usa import get_colors
 
 if __name__ == "__main__":
@@ -73,9 +73,9 @@ if __name__ == "__main__":
 
     # temporal scaling factor
     df_utility_centroid["temp_scale"] = df_utility_centroid.apply(
-        lambda x: df_ba_demand[f"E_{x['EIAcode']}_D"].sum()
-        / 1e3
-        / x["Sales (Megawatthours)"],
+        lambda x: (
+            df_ba_demand[f"E_{x['EIAcode']}_D"].sum() / 1e3 / x["Sales (Megawatthours)"]
+        ),
         axis=1,
     )
 
