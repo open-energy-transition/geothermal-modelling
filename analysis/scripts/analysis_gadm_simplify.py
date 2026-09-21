@@ -1,7 +1,7 @@
-import geopandas as gpd
-import pathlib
 import os
+import pathlib
 
+import geopandas as gpd
 
 base_path = "../../"
 geojson_path = pathlib.Path(

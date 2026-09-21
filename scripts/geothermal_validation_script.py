@@ -1,5 +1,3 @@
-# coding=utf-8
-
 ##################################################
 #                                                #
 # Author: Fabrizio Finozzi	                     #
@@ -31,10 +29,10 @@
 #                                                           #
 #############################################################
 
-import pathlib
-import os
-import subprocess
 import datetime as dt
+import os
+import pathlib
+import subprocess
 
 # Initial configurations
 

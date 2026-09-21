@@ -1,21 +1,21 @@
-# coding=utf-8# -*- coding: utf-8 -*-
 # # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 # #
 # # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # # -*- coding: utf-8 -*-
 
+import os
+import pathlib
+import random
+import re
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import re
-import yaml
-import pathlib
-import os
 import snakemake as sm
+import yaml
 from pypsa.descriptors import Dict
 from snakemake.script import Snakemake
-import random
 
 generators_aggregation_strategies_dict = {
     "p_nom": "sum",
