@@ -29,8 +29,9 @@ Description
 -----------
 """
 
-import pathlib
 import datetime as dt
+import pathlib
+
 import pypsa
 
 
