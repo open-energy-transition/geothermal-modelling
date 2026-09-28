@@ -1,19 +1,19 @@
-# coding=utf-8# -*- coding: utf-8 -*-
 # # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 # #
 # # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # # -*- coding: utf-8 -*-
 
-import pathlib
 import datetime as dt
-import pandas as pd
-import pypsa
-import matplotlib.pyplot as plt
+import pathlib
+
 import cartopy.crs as ccrs
-from matplotlib.patches import Patch
-from _helpers_usa import get_state_node, get_gadm_mapping, rename_carrier
+import matplotlib.pyplot as plt
+import pandas as pd
 import plotly.express as px
+import pypsa
+from _helpers_usa import get_gadm_mapping, get_state_node, rename_carrier
+from matplotlib.patches import Patch
 
 
 def parse_inputs(base_path):
@@ -362,16 +362,20 @@ def plot_capacity_state_by_state_comparison(
         lambda x: x["installed_capacity_eia"] - x["installed_capacity_pypsa"], axis=1
     )
     df_compare["error_pypsa"] = df_compare.apply(
-        lambda x: (x["installed_capacity_eia"] - x["installed_capacity_pypsa"])
-        * 100
-        / x["installed_capacity_eia"],
+        lambda x: (
+            (x["installed_capacity_eia"] - x["installed_capacity_pypsa"])
+            * 100
+            / x["installed_capacity_eia"]
+        ),
         axis=1,
     )
     tot_capacity = df_compare.sum()["installed_capacity_eia"]
     df_compare["error2_pypsa"] = df_compare.apply(
-        lambda x: (x["installed_capacity_eia"] - x["installed_capacity_pypsa"])
-        * 100
-        / tot_capacity,
+        lambda x: (
+            (x["installed_capacity_eia"] - x["installed_capacity_pypsa"])
+            * 100
+            / tot_capacity
+        ),
         axis=1,
     )
 
@@ -379,9 +383,11 @@ def plot_capacity_state_by_state_comparison(
         lambda x: x["installed_capacity_eia"] - x["Capacity"], axis=1
     )
     df_compare["error_custom"] = df_compare.apply(
-        lambda x: (x["installed_capacity_eia"] - x["Capacity"])
-        * 100
-        / x["installed_capacity_eia"],
+        lambda x: (
+            (x["installed_capacity_eia"] - x["Capacity"])
+            * 100
+            / x["installed_capacity_eia"]
+        ),
         axis=1,
     )
     tot_capacity = df_compare.sum()["installed_capacity_eia"]
@@ -498,7 +504,7 @@ def plot_capacity_country_comparison(
     df_pypsa_capacity = df_pypsa_capacity.round(2)
     df_pypsa_capacity.name = pypsa_name
 
-    log_output_file.write("Installed capacity: {} \n".format(df_pypsa_capacity))
+    log_output_file.write(f"Installed capacity: {df_pypsa_capacity} \n")
 
     # prepare the EIA reference data
     eia_reference.index = eia_reference.index.str.lower()

@@ -37,19 +37,20 @@ To-do
 3. Reflection of colors as in the config file
 """
 
-import pypsa
+import datetime as dt
 import pathlib
+
+import numpy as np
 import pandas as pd
 import plotly.express as px
-import datetime as dt
 import plotly.graph_objects as go
+import pypsa
 from _helpers_usa import (
+    drop_carriers,
     get_component,
     get_component_list,
     get_energy_carriers_key,
-    drop_carriers,
 )
-import numpy as np
 
 
 def parse_inputs(default_path):
