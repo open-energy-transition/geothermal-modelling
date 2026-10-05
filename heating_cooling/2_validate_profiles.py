@@ -11,11 +11,10 @@
 # 2) add a blending effect for cooling
 
 
-import atlite
+import datetime as dt
 import os
 
-
-import datetime as dt
+import atlite
 import numpy as np
 import pandas as pd
 
