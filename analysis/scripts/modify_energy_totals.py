@@ -29,9 +29,10 @@ Description
 -----------
 """
 
-import pathlib
-import pandas as pd
 import datetime as dt
+import pathlib
+
+import pandas as pd
 
 
 def parse_inputs(default_path):
