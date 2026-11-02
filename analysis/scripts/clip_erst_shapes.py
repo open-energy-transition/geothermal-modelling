@@ -1,5 +1,6 @@
-import geopandas as gpd
 import pathlib
+
+import geopandas as gpd
 import pandas as pd
 from shapely.validation import make_valid
 
