@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 # In[199]:
 
 
-import pandas as pd
 import pathlib
-import numpy as np
 
+import numpy as np
+import pandas as pd
 
 # In[200]:
 
