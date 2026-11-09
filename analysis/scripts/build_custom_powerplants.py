@@ -1,8 +1,9 @@
-import pathlib
 import datetime as dt
+import pathlib
+
+import numpy as np
 import pandas as pd
 from _helpers_usa import eia_to_pypsa_terminology
-import numpy as np
 from swifter import swifter  # noqa
 
 
