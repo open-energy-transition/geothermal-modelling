@@ -1,21 +1,21 @@
-# coding=utf-8# -*- coding: utf-8 -*-
 # # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 # #
 # # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
-import cartopy.crs as ccrs
 import datetime as dt
+import logging
+import pathlib
+import sys
+
+import cartopy.crs as ccrs
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import logging
 import numpy as np
 import pandas as pd
-import pathlib
 import plotly.express as px
 import pypsa
 import shapely as spl
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def plot_network_topology_comparison(
     )
     eia_df.loc[eia_df["v_nom_class"] == voltage_class].plot(ax=ax2, color="orange")
 
-    fig.suptitle("Comparison for voltage class: {}".format(voltage_class))
+    fig.suptitle(f"Comparison for voltage class: {voltage_class}")
     ax1.set_aspect("equal")
     ax1.title.set_text(pypsa_title)
     ax2.set_aspect("equal")
@@ -239,12 +239,12 @@ def plot_network_crossings(
             x="coalesce",
             y=["delta_PyPSA", "delta_PyPSA_parallel"],
             color_discrete_map=color_dictionary,
-            title="Voltage class: {}".format(voltage_class),
+            title=f"Voltage class: {voltage_class}",
         ).update_layout(xaxis_title="States", yaxis_title="Error (%)")
         fig.write_image(
             pathlib.Path(
                 plot_base_path,
-                "gadm_state_crossings_counts_for_voltage_{}.png".format(voltage_class),
+                f"gadm_state_crossings_counts_for_voltage_{voltage_class}.png",
             )
         )
 
@@ -400,12 +400,12 @@ def plot_network_crossings(
             x="coalesce",
             y=["delta_PyPSA", "delta_PyPSA_parallel"],
             color_discrete_map=color_dictionary,
-            title="Voltage class: {}".format(voltage_class),
+            title=f"Voltage class: {voltage_class}",
         ).update_layout(xaxis_title="IPM Region", yaxis_title="Error (%)")
         fig.write_image(
             pathlib.Path(
                 plot_base_path,
-                "ipm_region_crossings_counts_for_voltage_{}.png".format(voltage_class),
+                f"ipm_region_crossings_counts_for_voltage_{voltage_class}.png",
             )
         )
 
@@ -878,14 +878,10 @@ def place_line_boundaries(
         ]
         lines_dataframe_modified["geometry"] = lines_dataframe_modified["sub_0_coors"]
     log_file.write(
-        " --> shape of {} before sub_0 spatial join {} \n".format(
-            lines_dataframe_name, lines_dataframe.shape
-        )
+        f" --> shape of {lines_dataframe_name} before sub_0 spatial join {lines_dataframe.shape} \n"
     )
     logger.info(
-        " --> shape of {} before sub_0 spatial join {} \n".format(
-            lines_dataframe_name, lines_dataframe.shape
-        )
+        f" --> shape of {lines_dataframe_name} before sub_0 spatial join {lines_dataframe.shape} \n"
     )
     spatial_join_gadm_sub_0 = (
         lines_dataframe_modified.sjoin(gadm_dataframe, how="left")
@@ -912,34 +908,22 @@ def place_line_boundaries(
         on=id_column_name,
     )
     log_file.write(
-        " --> shape of {} after sub_0 spatial join with gadm {} \n".format(
-            lines_dataframe_name, spatial_join_gadm_sub_0.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_0 spatial join with gadm {spatial_join_gadm_sub_0.shape} \n"
     )
     log_file.write(
-        " --> shape of {} after sub_0 spatial join with ipm {} \n".format(
-            lines_dataframe_name, spatial_join_ipm_sub_0.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_0 spatial join with ipm {spatial_join_ipm_sub_0.shape} \n"
     )
     log_file.write(
-        " --> shape of {} after sub_0 spatial join {} \n".format(
-            lines_dataframe_name, spatial_join_sub_0.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_0 spatial join {spatial_join_sub_0.shape} \n"
     )
     logger.info(
-        " --> shape of {} after sub_0 spatial join with gadm {} \n".format(
-            lines_dataframe_name, spatial_join_gadm_sub_0.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_0 spatial join with gadm {spatial_join_gadm_sub_0.shape} \n"
     )
     logger.info(
-        " --> shape of {} after sub_0 spatial join with ipm {} \n".format(
-            lines_dataframe_name, spatial_join_ipm_sub_0.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_0 spatial join with ipm {spatial_join_ipm_sub_0.shape} \n"
     )
     logger.info(
-        " --> shape of {} after sub_0 spatial join {} \n".format(
-            lines_dataframe_name, spatial_join_sub_0.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_0 spatial join {spatial_join_sub_0.shape} \n"
     )
 
     # Spatially join Bus 1 with the GADM and IPM shapes.
@@ -955,14 +939,10 @@ def place_line_boundaries(
         ]
         lines_dataframe_modified["geometry"] = lines_dataframe_modified["sub_1_coors"]
     log_file.write(
-        " --> shape of {} before sub_1 spatial join {} \n".format(
-            lines_dataframe_name, lines_dataframe_modified.shape
-        )
+        f" --> shape of {lines_dataframe_name} before sub_1 spatial join {lines_dataframe_modified.shape} \n"
     )
     logger.info(
-        " --> shape of {} before sub_1 spatial join {} \n".format(
-            lines_dataframe_name, lines_dataframe_modified.shape
-        )
+        f" --> shape of {lines_dataframe_name} before sub_1 spatial join {lines_dataframe_modified.shape} \n"
     )
     spatial_join_gadm_sub_1 = (
         lines_dataframe_modified.sjoin(gadm_dataframe, how="left")
@@ -989,34 +969,22 @@ def place_line_boundaries(
         on=id_column_name,
     )
     log_file.write(
-        " --> shape of {} after sub_1 spatial join with gadm {} \n".format(
-            lines_dataframe_name, spatial_join_gadm_sub_1.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_1 spatial join with gadm {spatial_join_gadm_sub_1.shape} \n"
     )
     log_file.write(
-        " --> shape of {} after sub_1 spatial join with ipm {} \n".format(
-            lines_dataframe_name, spatial_join_ipm_sub_1.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_1 spatial join with ipm {spatial_join_ipm_sub_1.shape} \n"
     )
     log_file.write(
-        " --> shape of {} after sub_1 spatial join {} \n".format(
-            lines_dataframe_name, spatial_join_sub_1.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_1 spatial join {spatial_join_sub_1.shape} \n"
     )
     logger.info(
-        " --> shape of {} after sub_1 spatial join with gadm {} \n".format(
-            lines_dataframe_name, spatial_join_gadm_sub_1.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_1 spatial join with gadm {spatial_join_gadm_sub_1.shape} \n"
     )
     logger.info(
-        " --> shape of {} after sub_1 spatial join with ipm {} \n".format(
-            lines_dataframe_name, spatial_join_ipm_sub_1.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_1 spatial join with ipm {spatial_join_ipm_sub_1.shape} \n"
     )
     logger.info(
-        " --> shape of {} after sub_1 spatial join {} \n".format(
-            lines_dataframe_name, spatial_join_sub_1.shape
-        )
+        f" --> shape of {lines_dataframe_name} after sub_1 spatial join {spatial_join_sub_1.shape} \n"
     )
 
     # --> Inner join the results
@@ -1033,14 +1001,10 @@ def place_line_boundaries(
     lines_dataframe["reeds_0"] = lines_dataframe["reeds_0"].astype(str)
     lines_dataframe["reeds_1"] = lines_dataframe["reeds_1"].astype(str)
     log_file.write(
-        " --> shape of {} after the inner joins {} \n".format(
-            lines_dataframe_name, lines_dataframe.shape
-        )
+        f" --> shape of {lines_dataframe_name} after the inner joins {lines_dataframe.shape} \n"
     )
     logger.info(
-        " --> shape of {} after the inner joins {} \n".format(
-            lines_dataframe_name, lines_dataframe.shape
-        )
+        f" --> shape of {lines_dataframe_name} after the inner joins {lines_dataframe.shape} \n"
     )
 
     return lines_dataframe
@@ -1113,17 +1077,13 @@ def parse_inputs(base_path, log_file):
     log_file.write("        \n")
     log_file.write(" Data preparation on the EIA base network \n")
     log_file.write(
-        " --> shape of eia_base_network after reading it in {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after reading it in {eia_base_network.shape} \n"
     )
     logger.info("        \n")
     logger.info("        \n")
     logger.info(" Data preparation on the EIA base network \n")
     logger.info(
-        " --> shape of eia_base_network after reading it in {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after reading it in {eia_base_network.shape} \n"
     )
 
     # add positions for the start- and end-points of the transmission lines
@@ -1145,14 +1105,10 @@ def parse_inputs(base_path, log_file):
         ]
 
     log_file.write(
-        " --> shape of eia_base_network after excluding multilinestrings {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after excluding multilinestrings {eia_base_network.shape} \n"
     )
     logger.info(
-        " --> shape of eia_base_network after excluding multilinestrings {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after excluding multilinestrings {eia_base_network.shape} \n"
     )
 
     # --> Compute the start- and end-points of a line
@@ -1160,14 +1116,10 @@ def parse_inputs(base_path, log_file):
         eia_base_network["geometry"].boundary.explode(index_parts=True).unstack()
     )
     log_file.write(
-        " --> shape of eia_base_network after computing boundaries {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after computing boundaries {eia_base_network.shape} \n"
     )
     logger.info(
-        " --> shape of eia_base_network after computing boundaries {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after computing boundaries {eia_base_network.shape} \n"
     )
 
     # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
@@ -1193,27 +1145,19 @@ def parse_inputs(base_path, log_file):
     # --> Remove lines corresponding to voltage = -999999.0 kV
     eia_base_network = eia_base_network.loc[eia_base_network["v_nom"] != -999999.0]
     log_file.write(
-        " --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {eia_base_network.shape} \n"
     )
     logger.info(
-        " --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after removing the lines with voltage -999999.0 kV {eia_base_network.shape} \n"
     )
 
     # --> Remove lines corresponding to voltage class 'DC'. All lines in the base.nc are AC
     eia_base_network = eia_base_network.loc[eia_base_network["v_nom_class"] != "Dc"]
     log_file.write(
-        " --> shape of eia_base_network after removing the lines with voltage class 'Dc' {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after removing the lines with voltage class 'Dc' {eia_base_network.shape} \n"
     )
     logger.info(
-        " --> shape of eia_base_network after removing the lines with voltage class 'Dc' {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after removing the lines with voltage class 'Dc' {eia_base_network.shape} \n"
     )
 
     # --> Remove lines corresponding to voltage class 'Not Available'
@@ -1221,14 +1165,10 @@ def parse_inputs(base_path, log_file):
         eia_base_network["v_nom_class"] != "Not Available"
     ]
     log_file.write(
-        " --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {eia_base_network.shape} \n"
     )
     logger.info(
-        " --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {} \n".format(
-            eia_base_network.shape
-        )
+        f" --> shape of eia_base_network after removing the lines with voltage class 'Not Available' {eia_base_network.shape} \n"
     )
 
     #################
@@ -1246,14 +1186,10 @@ def parse_inputs(base_path, log_file):
         lines_osm_raw["geometry"].boundary.explode(index_parts=True).unstack()
     )
     log_file.write(
-        " --> shape of lines_osm_raw after computing boundaries {} \n".format(
-            lines_osm_raw.shape
-        )
+        f" --> shape of lines_osm_raw after computing boundaries {lines_osm_raw.shape} \n"
     )
     logger.info(
-        " --> shape of lines_osm_raw after computing boundaries {} \n".format(
-            lines_osm_raw.shape
-        )
+        f" --> shape of lines_osm_raw after computing boundaries {lines_osm_raw.shape} \n"
     )
 
     # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
@@ -1286,14 +1222,10 @@ def parse_inputs(base_path, log_file):
         lines_osm_clean["geometry"].boundary.explode(index_parts=True).unstack()
     )
     log_file.write(
-        " --> shape of lines_osm_clean after computing boundaries {} \n".format(
-            lines_osm_clean.shape
-        )
+        f" --> shape of lines_osm_clean after computing boundaries {lines_osm_clean.shape} \n"
     )
     logger.info(
-        " --> shape of lines_osm_clean after computing boundaries {} \n".format(
-            lines_osm_clean.shape
-        )
+        f" --> shape of lines_osm_clean after computing boundaries {lines_osm_clean.shape} \n"
     )
 
     # --> Determine where the start- and end-points of the line are located. In particular, we perform the spatial
@@ -1327,14 +1259,10 @@ def parse_inputs(base_path, log_file):
     #  -) the GADM shapes (level 1) to get the US state
     #  -) the IPM shapes to get the IPM region
     log_file.write(
-        " --> shape of pypsa-earth base network after reading it in {} \n".format(
-            base_network_pypsa_earth.lines.shape
-        )
+        f" --> shape of pypsa-earth base network after reading it in {base_network_pypsa_earth.lines.shape} \n"
     )
     logger.info(
-        " --> shape of pypsa-earth base network after reading it in {} \n".format(
-            base_network_pypsa_earth.lines.shape
-        )
+        f" --> shape of pypsa-earth base network after reading it in {base_network_pypsa_earth.lines.shape} \n"
     )
 
     base_network_pypsa_earth.lines = place_line_boundaries(
@@ -1401,14 +1329,10 @@ def parse_inputs(base_path, log_file):
         base_network_pypsa_usa["geometry"].boundary.explode(index_parts=True).unstack()
     )
     log_output_file.write(
-        " --> shape of pypsa-usa lines_gis after computing boundaries {} \n".format(
-            base_network_pypsa_usa.shape
-        )
+        f" --> shape of pypsa-usa lines_gis after computing boundaries {base_network_pypsa_usa.shape} \n"
     )
     logger.info(
-        " --> shape of pypsa-usa lines_gis after computing boundaries {} \n".format(
-            base_network_pypsa_usa.shape
-        )
+        f" --> shape of pypsa-usa lines_gis after computing boundaries {base_network_pypsa_usa.shape} \n"
     )
 
     # --> Determine where the start- and end-points of the lines are located. In particular, we perform the spatial
@@ -1416,14 +1340,10 @@ def parse_inputs(base_path, log_file):
     #  -) the GADM shapes (level 1) to get the US state
     #  -) the IPM shapes to get the IPM region
     log_file.write(
-        " --> shape of pypsa-usa lines_gis after reading it in {} \n".format(
-            base_network_pypsa_usa.shape
-        )
+        f" --> shape of pypsa-usa lines_gis after reading it in {base_network_pypsa_usa.shape} \n"
     )
     logger.info(
-        " --> shape of pypsa-usa lines_gis after reading it in {} \n".format(
-            base_network_pypsa_usa.shape
-        )
+        f" --> shape of pypsa-usa lines_gis after reading it in {base_network_pypsa_usa.shape} \n"
     )
 
     base_network_pypsa_usa = place_line_boundaries(
@@ -1535,9 +1455,7 @@ if __name__ == "__main__":
         for selected_voltage_class in eia_voltage_classes:
             fig_name_map = pathlib.Path(
                 plot_path,
-                "network_comparison_pearth_for_voltage_class_{}.png".format(
-                    str(selected_voltage_class)
-                ),
+                f"network_comparison_pearth_for_voltage_class_{selected_voltage_class!s}.png",
             )
             plot_network_topology_comparison(
                 network_pypsa_earth_df,
@@ -1548,9 +1466,7 @@ if __name__ == "__main__":
             )
             fig_name_intersection = pathlib.Path(
                 plot_path,
-                "network_comparison_intersection_{}.png".format(
-                    str(selected_voltage_class)
-                ),
+                f"network_comparison_intersection_{selected_voltage_class!s}.png",
             )
             plot_network_topology_intersection(
                 network_pypsa_earth_df,
