@@ -1,16 +1,16 @@
-# coding=utf-8# -*- coding: utf-8 -*-
 # # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 # #
 # # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # # -*- coding: utf-8 -*-
 
-import pathlib
 import datetime as dt
-import pandas as pd
-import pypsa
-import plotly.express as px
+import pathlib
+
 import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.express as px
+import pypsa
 from _helpers_usa import extract_time_res, get_gadm_mapping
 
 
@@ -74,9 +74,7 @@ def plot_state_by_state_comparison(
     ]
     if year_to_use not in year_list:
         raise Exception(
-            "{} is not allowed. Please use choose a year from the list: {}".format(
-                year_to_use, year_list
-            )
+            f"{year_to_use} is not allowed. Please use choose a year from the list: {year_list}"
         )
 
     # select the relevant year and relevant rows
@@ -197,7 +195,7 @@ def plot_country_comparison(
         eia_reference["Period"] == year_to_use
     ].squeeze()
 
-    log_output_file.write("Electricity generation: {} \n".format(df_pypsa_generation))
+    log_output_file.write(f"Electricity generation: {df_pypsa_generation} \n")
 
     # prepare the EIA reference data
     pypsa_cols = [
@@ -255,13 +253,11 @@ def plot_country_comparison(
     )
 
     log_file.write("====")
-    log_file.write(
-        "\nMarginal costs of electricity: {}".format(marginal_costs.round(3))
-    )
+    log_file.write(f"\nMarginal costs of electricity: {marginal_costs.round(3)}")
 
-    log_file.write("\nTotal electricity generation ({}):".format(year_to_use))
-    log_file.write("EIA: {} TWh \n".format(df_eia_generation_year.sum().round(2)))
-    log_file.write("PyPSA: {} TWh \n".format(df_pypsa_generation.sum().round(2)))
+    log_file.write(f"\nTotal electricity generation ({year_to_use}):")
+    log_file.write(f"EIA: {df_eia_generation_year.sum().round(2)} TWh \n")
+    log_file.write(f"PyPSA: {df_pypsa_generation.sum().round(2)} TWh \n")
     log_file.write("====")
 
 
