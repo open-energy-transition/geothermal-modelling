@@ -8,7 +8,7 @@ df_ppl = pd.read_csv("../../Data/custom_powerplants_eia.csv")
 
 
 def map_geo(gdf, point):
-    for j in range(0, len(gdf)):
+    for j in range(len(gdf)):
         reg = gdf.iloc[j]
         geo = reg["geometry"]
         if geo.contains(point):
